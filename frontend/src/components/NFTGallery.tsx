@@ -311,20 +311,20 @@ export default function NFTGallery() {
                   }}
                 >
                   <div>
-                    <h3 style={{ margin: 0 }}>{nftInfo.title}</h3>
+                    <h3 style={{ margin: 0 }}>{nftInfo?.metadata?.title}</h3>
                     <p style={{ color: "#666", margin: "0.25rem 0" }}>
-                      #{nftInfo.id}
+                      #{nftInfo?.metadata?.id}
                     </p>
                   </div>
                   <span
                     style={{
                       padding: "0.25rem 0.75rem",
                       background:
-                        nftInfo.rarity === 0
+                        nftInfo?.metadata?.rarity === 0
                           ? "#6c757d"
-                          : nftInfo.rarity === 1
+                          : nftInfo?.metadata?.rarity === 1
                           ? "#007bff"
-                          : nftInfo.rarity === 2
+                          : nftInfo?.metadata?.rarity === 2
                           ? "#6f42c1"
                           : "#ffc107",
                       color: "white",
@@ -333,7 +333,7 @@ export default function NFTGallery() {
                       fontWeight: "bold",
                     }}
                   >
-                    {RARITY_NAMES[nftInfo.rarity]}
+                    {RARITY_NAMES[nftInfo?.metadata?.rarity]}
                   </span>
                 </div>
 
@@ -351,10 +351,10 @@ export default function NFTGallery() {
                     overflow: "hidden",
                   }}
                 >
-                  {nftInfo.imageURL ? (
+                  {nftInfo?.metadata?.imageURL ? (
                     <img
-                      src={nftInfo.imageURL}
-                      alt={nftInfo.title}
+                      src={nftInfo?.metadata?.imageURL}
+                      alt={nftInfo?.metadata?.title}
                       style={{
                         maxWidth: "100%",
                         maxHeight: "100%",
@@ -372,7 +372,7 @@ export default function NFTGallery() {
                 </div>
 
                 {/* Description */}
-                <p style={{ marginBottom: "1rem" }}>{nftInfo.description}</p>
+                <p style={{ marginBottom: "1rem" }}>{nftInfo?.metadata?.description}</p>
 
                 {/* Metadata Grid */}
                 <div
@@ -386,30 +386,30 @@ export default function NFTGallery() {
                     <div style={{ fontWeight: "bold", fontSize: "0.875rem" }}>
                       Category
                     </div>
-                    <div>{CATEGORY_NAMES[nftInfo.category]}</div>
+                    <div>{CATEGORY_NAMES[nftInfo?.metadata?.category]}</div>
                   </div>
                   <div>
                     <div style={{ fontWeight: "bold", fontSize: "0.875rem" }}>
                       Upgrade Count
                     </div>
-                    <div>{nftInfo.upgradeCount}</div>
+                    <div>{nftInfo?.metadata?.upgradeCount}</div>
                   </div>
                   <div>
                     <div style={{ fontWeight: "bold", fontSize: "0.875rem" }}>
                       Created
                     </div>
                     <div>
-                      {new Date(nftInfo.timestamp * 1000).toLocaleDateString()}
+                      {new Date(nftInfo?.metadata?.timestamp * 1000).toLocaleDateString()}
                     </div>
                   </div>
-                  {nftInfo.location && (
+                  {nftInfo?.metadata?.location && (
                     <div>
                       <div style={{ fontWeight: "bold", fontSize: "0.875rem" }}>
                         Location
                       </div>
                       <div>
-                        {nftInfo.location.placeName ||
-                          nftInfo.location.city ||
+                        {nftInfo?.metadata?.metadata.location.placeName ||
+                          nftInfo?.metadata?.metadata.location.city ||
                           "Unknown"}
                       </div>
                     </div>
@@ -417,19 +417,19 @@ export default function NFTGallery() {
                 </div>
 
                 {/* Javanese Text */}
-                {nftInfo.javaneseText && (
+                {nftInfo?.metadata?.javaneseText && (
                   <div style={{ marginTop: "1rem" }}>
                     <div style={{ fontWeight: "bold", fontSize: "0.875rem" }}>
                       Javanese Script
                     </div>
                     <div style={{ fontSize: "1.5rem", marginTop: "0.5rem" }}>
-                      {nftInfo.javaneseText}
+                      {nftInfo?.metadata?.javaneseText}
                     </div>
                   </div>
                 )}
 
                 {/* Tags */}
-                {nftInfo.tags && nftInfo.tags.length > 0 && (
+                {nftInfo?.metadata?.tags && nftInfo?.metadata?.tags.length > 0 && (
                   <div style={{ marginTop: "1rem" }}>
                     <div style={{ fontWeight: "bold", fontSize: "0.875rem" }}>
                       Tags
@@ -442,7 +442,7 @@ export default function NFTGallery() {
                         flexWrap: "wrap",
                       }}
                     >
-                      {nftInfo.tags.map((tag, index) => (
+                      {nftInfo?.metadata?.tags.map((tag, index) => (
                         <span
                           key={index}
                           style={{

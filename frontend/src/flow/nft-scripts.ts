@@ -23,100 +23,58 @@ export const GET_NFT_IDS = `
 export const GET_NFT_INFO = `
   import "NFTMoment"
 
-  access(all) struct NFTInfo {
-    access(all) let id: UInt64
-    access(all) let title: String
-    access(all) let description: String
-    access(all) let imageURL: String
-    access(all) let thumbnailURL: String
-    access(all) let category: UInt8
-    access(all) let rarity: UInt8
-    access(all) let timestamp: UFix64
-    access(all) let location: NFTMoment.Location?
-    access(all) let javaneseText: String?
-    access(all) let tags: [String]
-    access(all) let upgradeCount: UInt64
+  // Get full details for a specific NFT
+  access(all) struct NFTDetails {
+      access(all) let id: UInt64
+      access(all) let metadata: &NFTMoment.MomentMetadata
+      access(all) let rarity: UInt8
+      access(all) let createdBy: Address
+      access(all) let partnerAddress: Address?
+      access(all) let upgradeCount: UInt64
+      access(all) let mergedFrom: &[UInt64]
 
-    init(
-      id: UInt64,
-      title: String,
-      description: String,
-      imageURL: String,
-      thumbnailURL: String,
-      category: UInt8,
-      rarity: UInt8,
-      timestamp: UFix64,
-      location: NFTMoment.Location?,
-      javaneseText: String?,
-      tags: [String],
-      upgradeCount: UInt64
-    ) {
-      self.id = id
-      self.title = title
-      self.description = description
-      self.imageURL = imageURL
-      self.thumbnailURL = thumbnailURL
-      self.category = category
-      self.rarity = rarity
-      self.timestamp = timestamp
-      self.location = location
-      self.javaneseText = javaneseText
-      self.tags = tags
-      self.upgradeCount = upgradeCount
-    }
+      init(
+          id: UInt64,
+          metadata: &NFTMoment.MomentMetadata,
+          rarity: UInt8,
+          createdBy: Address,
+          partnerAddress: Address?,
+          upgradeCount: UInt64,
+          mergedFrom: &[UInt64]
+      ) {
+          self.id = id
+          self.metadata = metadata
+          self.rarity = rarity
+          self.createdBy = createdBy
+          self.partnerAddress = partnerAddress
+          self.upgradeCount = upgradeCount
+          self.mergedFrom = mergedFrom
+      }
   }
 
-  access(all) fun main(address: Address, id: UInt64): NFTInfo? {
-    let account = getAccount(address)
+  access(all) fun main(address: Address, id: UInt64): NFTDetails? {
+      let account = getAccount(address)
 
-    let collectionRef = account.capabilities.borrow<&NFTMoment.Collection>(
-      NFTMoment.CollectionPublicPath
-    )
+      let collectionRef = account.capabilities.borrow<&NFTMoment.Collection>(
+          NFTMoment.CollectionPublicPath
+      ) ?? panic("Could not borrow collection reference")
 
-    if collectionRef == nil {
-      return nil
-    }
+      let nft = collectionRef.borrowNFT(id: id)
+      if nft == nil {
+          return nil
+      }
 
-    let nft = collectionRef!.borrowNFTMoment(id: id)
-    if nft == nil {
-      return nil
-    }
-
-    let metadata = nft!.metadata
-
-    // Copy location if it exists
-    var locationCopy: NFTMoment.Location? = nil
-    if let loc = metadata.location {
-      locationCopy = NFTMoment.Location(
-        latitude: loc.latitude,
-        longitude: loc.longitude,
-        placeName: loc.placeName,
-        city: loc.city,
-        country: loc.country
+      return NFTDetails(
+          id: nft!.id,
+          metadata: nft!.metadata,
+          rarity: nft!.rarity.rawValue,
+          createdBy: nft!.createdBy,
+          partnerAddress: nft!.partnerAddress,
+          upgradeCount: nft!.upgradeCount,
+          mergedFrom: nft!.mergedFrom
       )
-    }
-
-    // Copy tags array
-    let tagsCopy: [String] = []
-    for tag in metadata.tags {
-      tagsCopy.append(tag)
-    }
-
-    return NFTInfo(
-      id: nft!.id,
-      title: metadata.title,
-      description: metadata.description,
-      imageURL: metadata.imageURL,
-      thumbnailURL: metadata.thumbnailURL,
-      category: metadata.category.rawValue,
-      rarity: nft!.rarity.rawValue,
-      timestamp: metadata.timestamp,
-      location: locationCopy,
-      javaneseText: metadata.javaneseText,
-      tags: tagsCopy,
-      upgradeCount: nft!.upgradeCount
-    )
   }
+
 `;
 
 // Check if user has collection initialized
