@@ -1,0 +1,692 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>Product Requirements Doc (DPR)</title><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 3px;
+	padding: 1rem;
+}
+
+figure {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.collection-content td {
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.column-list {
+	display: flex;
+	justify-content: space-between;
+}
+
+.column {
+	padding: 0 1em;
+}
+
+.column:first-child {
+	padding-left: 0;
+}
+
+.column:last-child {
+	padding-right: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding: 0.125rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+	border-collapse: collapse;
+}
+
+table {
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+	margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-block;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	transform: scale(1.5);
+	margin-right: 0.6em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+blockquote.quote-large {
+	font-size: 1.25em;
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(50, 48, 44, 1);
+}
+.highlight-gray {
+	color: rgba(115, 114, 110, 1);
+	fill: rgba(115, 114, 110, 1);
+}
+.highlight-brown {
+	color: rgba(159, 107, 83, 1);
+	fill: rgba(159, 107, 83, 1);
+}
+.highlight-orange {
+	color: rgba(217, 115, 13, 1);
+	fill: rgba(217, 115, 13, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 145, 47, 1);
+	fill: rgba(203, 145, 47, 1);
+}
+.highlight-teal {
+	color: rgba(68, 131, 97, 1);
+	fill: rgba(68, 131, 97, 1);
+}
+.highlight-blue {
+	color: rgba(51, 126, 169, 1);
+	fill: rgba(51, 126, 169, 1);
+}
+.highlight-purple {
+	color: rgba(144, 101, 176, 1);
+	fill: rgba(144, 101, 176, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(205, 60, 58, 1);
+	fill: rgba(205, 60, 58, 1);
+}
+.highlight-default_background {
+	color: rgba(50, 48, 44, 1);
+}
+.highlight-gray_background {
+	background: rgba(248, 248, 247, 1);
+}
+.highlight-brown_background {
+	background: rgba(244, 238, 238, 1);
+}
+.highlight-orange_background {
+	background: rgba(251, 236, 221, 1);
+}
+.highlight-yellow_background {
+	background: rgba(251, 243, 219, 1);
+}
+.highlight-teal_background {
+	background: rgba(237, 243, 236, 1);
+}
+.highlight-blue_background {
+	background: rgba(231, 243, 248, 1);
+}
+.highlight-purple_background {
+	background: rgba(248, 243, 252, 1);
+}
+.highlight-pink_background {
+	background: rgba(252, 241, 246, 1);
+}
+.highlight-red_background {
+	background: rgba(253, 235, 236, 1);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(115, 114, 110, 1);
+	fill: rgba(115, 114, 110, 1);
+}
+.block-color-brown {
+	color: rgba(159, 107, 83, 1);
+	fill: rgba(159, 107, 83, 1);
+}
+.block-color-orange {
+	color: rgba(217, 115, 13, 1);
+	fill: rgba(217, 115, 13, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 145, 47, 1);
+	fill: rgba(203, 145, 47, 1);
+}
+.block-color-teal {
+	color: rgba(68, 131, 97, 1);
+	fill: rgba(68, 131, 97, 1);
+}
+.block-color-blue {
+	color: rgba(51, 126, 169, 1);
+	fill: rgba(51, 126, 169, 1);
+}
+.block-color-purple {
+	color: rgba(144, 101, 176, 1);
+	fill: rgba(144, 101, 176, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(205, 60, 58, 1);
+	fill: rgba(205, 60, 58, 1);
+}
+.block-color-default_background {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray_background {
+	background: rgba(248, 248, 247, 1);
+}
+.block-color-brown_background {
+	background: rgba(244, 238, 238, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 236, 221, 1);
+}
+.block-color-yellow_background {
+	background: rgba(251, 243, 219, 1);
+}
+.block-color-teal_background {
+	background: rgba(237, 243, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(231, 243, 248, 1);
+}
+.block-color-purple_background {
+	background: rgba(248, 243, 252, 1);
+}
+.block-color-pink_background {
+	background: rgba(252, 241, 246, 1);
+}
+.block-color-red_background {
+	background: rgba(253, 235, 236, 1);
+}
+.select-value-color-default { background-color: rgba(42, 28, 0, 0.07); }
+.select-value-color-gray { background-color: rgba(28, 19, 1, 0.11); }
+.select-value-color-brown { background-color: rgba(127, 51, 0, 0.156); }
+.select-value-color-orange { background-color: rgba(196, 88, 0, 0.203); }
+.select-value-color-yellow { background-color: rgba(174, 130, 0, 0.223); }
+.select-value-color-green { background-color: rgba(0, 96, 38, 0.156); }
+.select-value-color-blue { background-color: rgba(0, 99, 174, 0.172); }
+.select-value-color-purple { background-color: rgba(92, 0, 163, 0.141); }
+.select-value-color-pink { background-color: rgba(183, 0, 78, 0.152); }
+.select-value-color-red { background-color: rgba(206, 24, 0, 0.164); }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style></head><body><article id="2616cd19-ce7a-809a-8d98-fcf704412efc" class="page sans"><header><div class="page-header-icon undefined"><img class="icon" src="https://www.notion.so/icons/pencil_gray.svg"/></div><h1 class="page-title">Product Requirements Doc (DPR)</h1><p class="page-description"></p></header><div class="page-body"><figure class="block-color-gray_background callout" style="white-space:pre-wrap;display:flex" id="2616cd19-ce7a-818d-9443-edf85f0eb6e7"><div style="width:100%"><p id="2616cd19-ce7a-818b-adc9-e5139d806d25" class=""><em>Your words help me improve </em></p></div></figure><div id="2616cd19-ce7a-8165-bb88-c95dfe622ae4" class="column-list"><div id="2616cd19-ce7a-81d3-af47-c5f9915fa0e3" style="width:18.75%" class="column"><nav id="2616cd19-ce7a-818f-ae5a-f1165fe2eaaa" class="block-color-gray table_of_contents"><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2616cd19-ce7a-813f-b87b-f2414331f0f0">📌 <strong>Project Overview</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2616cd19-ce7a-812f-a60a-e41086ab17c1">👤 User Personas</a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2616cd19-ce7a-81c9-9e1b-d0600b47cd19">🖥️ User Stories</a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2616cd19-ce7a-81be-82dd-e9aeee364bc3"><strong>🎯 Objective</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2626cd19-ce7a-80f4-bdef-d67e285b02a1"><strong>Must Have (MVP)</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2626cd19-ce7a-80a6-8604-dace05ddd61d"><strong>Should Have</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2626cd19-ce7a-80e8-afec-eba9e36a02f4"><strong>Could Have</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2616cd19-ce7a-8180-bb57-cebd10d71ace">✅ Success Metrics / KPIs</a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2626cd19-ce7a-80d0-8d2c-e763e5e68740">Phase 1 – MVP </a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2626cd19-ce7a-80c6-b160-e105a60486a4"><strong>Phase 2 – Growth</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2626cd19-ce7a-8089-8f97-ea6562e103a9"><strong>Phase 3 – Ecosystem</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2626cd19-ce7a-80c5-b79d-ed75a7605106"><strong>Phase 4 – Vision</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2616cd19-ce7a-812e-80f9-ceddc649feac"><strong>🧩 Key Features / Requirements</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2616cd19-ce7a-8166-8c61-e3e44588e25f">📐 UX &amp; Design</a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2616cd19-ce7a-81c5-b4be-d895d600cc25">🧪 Scope of Work</a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2616cd19-ce7a-81a8-a2ea-cbaa02299da3">🛠 Technical Requirements</a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2616cd19-ce7a-8100-b282-f40e3b655e8b">🧱 Dependencies</a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2616cd19-ce7a-8192-aae2-f2db9622d530">🗓️ Timeline</a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2616cd19-ce7a-81f8-9b5e-cd669d5de22b">🧠 Open Questions / Risks</a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2616cd19-ce7a-816a-a3ff-c51879d07780">📚 Supporting Documents</a></div></nav></div><div id="2616cd19-ce7a-81f0-a967-dc6b46639609" style="width:81.25%" class="column"><h3 id="2616cd19-ce7a-813f-b87b-f2414331f0f0" class="">📌 <strong>Project Overview</strong></h3><hr id="2616cd19-ce7a-8193-990e-f16c3a2e8284"/><div id="2616cd19-ce7a-8107-a432-cb63de66d2c5" class="column-list"><div id="2616cd19-ce7a-8146-92f7-df2003750999" style="width:100%" class="column"><figure class="block-color-default_background callout" style="white-space:pre-wrap;display:flex" id="2616cd19-ce7a-81ed-ac6f-cebb4b14fff4"><div style="font-size:1.5em"><img class="icon" src="https://www.notion.so/icons/package_blue.svg"/></div><div style="width:100%"><p id="2616cd19-ce7a-81e2-9b37-ca99f2312829" class=""><strong>Product:</strong></p></div></figure><figure class="block-color-default_background callout" style="white-space:pre-wrap;display:flex" id="2616cd19-ce7a-819d-b602-f0190995170c"><div style="font-size:1.5em"><img class="icon" src="https://www.notion.so/icons/calendar-month_green.svg"/></div><div style="width:100%"><p id="2616cd19-ce7a-8178-b401-f625194924b9" class=""><strong>Last Updated:</strong></p></div></figure></div><div id="2616cd19-ce7a-8116-8a99-e581960cabae" style="width:100%" class="column"><figure class="block-color-default_background callout" style="white-space:pre-wrap;display:flex" id="2616cd19-ce7a-8125-b909-f7247b11732a"><div style="font-size:1.5em"><img class="icon" src="https://www.notion.so/icons/user-circle_pink.svg"/></div><div style="width:100%"><p id="2616cd19-ce7a-810f-b539-e0fdf4119498" class=""><strong>Prepared By:</strong></p></div></figure><figure class="block-color-default_background callout" style="white-space:pre-wrap;display:flex" id="2616cd19-ce7a-8105-bcb0-ef131421e691"><div style="font-size:1.5em"><img class="icon" src="https://www.notion.so/icons/list-indent_purple.svg"/></div><div style="width:100%"><p id="2616cd19-ce7a-8102-93ab-d43968c26256" class=""><strong>Version:</strong></p></div></figure><p id="2626cd19-ce7a-8055-904f-fde83f9edf5b" class="">
+</p></div><div id="2616cd19-ce7a-81b9-860b-e085a2fe1e3d" style="width:100%" class="column"><figure class="block-color-default_background callout" style="white-space:pre-wrap;display:flex" id="2616cd19-ce7a-8117-b97b-e3a1da3374e2"><div style="font-size:1.5em"><img class="icon" src="https://www.notion.so/icons/calendar-month_blue.svg"/></div><div style="width:100%"><p id="2616cd19-ce7a-81b1-ba44-f57a104541b7" class=""><strong>Date Created:</strong></p></div></figure><p id="2616cd19-ce7a-81f4-9e3b-df15c7292216" class="">
+</p></div></div><h3 id="2616cd19-ce7a-812f-a60a-e41086ab17c1" class="">👤 User Personas</h3><blockquote id="2616cd19-ce7a-81a2-9f7b-de7d0a2821da" class=""><em>Who are you building this for?</em></blockquote><ul id="2616cd19-ce7a-8104-bd12-d5d0b533dcf2" class="bulleted-list"><li style="list-style-type:disc"><strong>Owner</strong> → Pemilik platform, penyedia NFT khusus, audio, aksara Jawa, batik border, dll.</li></ul><ul id="2616cd19-ce7a-819a-a54d-f865e3b3e6a0" class="bulleted-list"><li style="list-style-type:disc"><strong>Partner</strong> → Brand/komunitas/organisasi yang bisa buat NFT, set rules, kasih benefit, sebar QR code/radius minting.</li></ul><ul id="2616cd19-ce7a-81d8-b13b-cf78333bdd67" class="bulleted-list"><li style="list-style-type:disc"><strong>User</strong> → Pengguna umum, bisa mint, koleksi, upgrade, merge, dan nikmati benefit NFT.</li></ul><hr id="2616cd19-ce7a-8171-9a57-cee3e23cd0f7"/><h3 id="2616cd19-ce7a-81c9-9e1b-d0600b47cd19" class="">🖥️ User Stories</h3><hr id="2616cd19-ce7a-8125-8b0d-c3187888d24a"/><blockquote id="2616cd19-ce7a-8195-af45-ec4d97da8dea" class=""><em>Written from the user&#x27;s , owner, partners perspective.</em></blockquote><p id="2626cd19-ce7a-80dd-ab02-f31e84ee4d09" class="">by user prespective</p><ul id="2616cd19-ce7a-8048-a02d-cf5e9e425c9e" class="toggle"><li><details open=""><summary>as user</summary><ul id="2626cd19-ce7a-8085-9872-db7efaff026a" class="bulleted-list"><li style="list-style-type:disc">Aku ingin <strong>membuat NFT moment</strong> sehingga aku bisa menyimpan cuaca, waktu, lokasi, dan kondisi saat aku mint.</li></ul><ul id="2626cd19-ce7a-8046-8bda-ca4f093b7f45" class="bulleted-list"><li style="list-style-type:disc">Aku ingin <strong>menambahkan border, sticker, font, filter, dan audio</strong> agar NFT-ku unik dan personal.</li></ul><ul id="2626cd19-ce7a-8001-9ef4-e3382296ae03" class="bulleted-list"><li style="list-style-type:disc">Aku ingin <strong>menggunakan aksara Jawa, kata-kata Jawa, gamelan, batik border</strong> supaya NFT punya identitas budaya.</li></ul><ul id="2626cd19-ce7a-802f-9a7c-e9a7d06f42e1" class="bulleted-list"><li style="list-style-type:disc">Aku ingin <strong>scan QR code</strong> untuk bisa claim NFT yang disebarkan offline.</li></ul><ul id="2626cd19-ce7a-8026-b61d-cafb7a6dea44" class="bulleted-list"><li style="list-style-type:disc">Aku ingin <strong>mint NFT dalam radius tertentu</strong> agar terasa eksklusif di lokasi tertentu.</li></ul><ul id="2626cd19-ce7a-80f6-99f8-f210a42821cb" class="bulleted-list"><li style="list-style-type:disc">Aku ingin <strong>meng-upgrade NFT</strong> untuk mengubah detail atau menambahkan elemen baru.</li></ul><ul id="2626cd19-ce7a-807a-acac-face456b3892" class="bulleted-list"><li style="list-style-type:disc">Aku ingin <strong>merge/fusion dua NFT</strong> supaya bisa menciptakan NFT baru yang lebih rare.</li></ul><ul id="2626cd19-ce7a-80d1-9c80-c138277d014f" class="bulleted-list"><li style="list-style-type:disc">Aku ingin <strong>menyusun gallery NFT</strong> sehingga orang lain bisa melihat koleksiku.</li></ul><ul id="2626cd19-ce7a-80ce-9cd7-d937264499bd" class="bulleted-list"><li style="list-style-type:disc">Aku ingin <strong>punya timeline NFT</strong> untuk melihat perjalanan koleksi ku secara kronologis.</li></ul><ul id="2626cd19-ce7a-8017-a22c-d4b110ce3a58" class="bulleted-list"><li style="list-style-type:disc">Aku ingin <strong>mendapatkan achievement</strong> jika berhasil kumpulin kategori tertentu (misal makanan + landmark).</li></ul><ul id="2626cd19-ce7a-8038-98ef-eab18289b143" class="bulleted-list"><li style="list-style-type:disc">Aku ingin <strong>mendapatkan benefit nyata</strong> (diskon, tiket event, hadiah) dengan mengoleksi kategori NFT tertentu.</li></ul><ul id="2616cd19-ce7a-80f3-a940-e551c9104933" class="bulleted-list"><li style="list-style-type:disc"></li></ul></details></li></ul><ul id="2626cd19-ce7a-8048-bb8d-f3038e89f49a" class="toggle"><li><details open=""><summary>as partner</summary><ul id="2626cd19-ce7a-8043-96e5-db2f380f25e0" class="bulleted-list"><li style="list-style-type:disc">Aku ingin <strong>membuat NFT sendiri</strong> dengan branding agar komunitasku bisa berinteraksi di platform.</li></ul><ul id="2626cd19-ce7a-805e-94a1-c81cf1374d08" class="bulleted-list"><li style="list-style-type:disc">Aku ingin <strong>menambahkan rules untuk NFT-ku</strong> (misal hanya bisa di-mint saat event, di radius tertentu, atau syarat scan QR code).</li></ul><ul id="2626cd19-ce7a-80ae-bf62-c430a1c993d1" class="bulleted-list"><li style="list-style-type:disc">Aku ingin <strong>menetapkan kegunaan NFT</strong> (contoh: tiket konser, voucher makan, membership card).</li></ul><ul id="2626cd19-ce7a-80cb-98c9-e576555b417b" class="bulleted-list"><li style="list-style-type:disc">Aku ingin <strong>memberikan benefit</strong> ke user yang mengoleksi kategori NFT tertentu.</li></ul><ul id="2626cd19-ce7a-80fa-87ac-f8e2dd36b18e" class="bulleted-list"><li style="list-style-type:disc">Aku ingin <strong>menciptakan achievement mission</strong> agar kolektor lebih engage dengan NFT partner-ku.</li></ul><ul id="2626cd19-ce7a-80d3-a0fe-f07f7284d99a" class="bulleted-list"><li style="list-style-type:disc"></li></ul></details></li></ul><ul id="2626cd19-ce7a-8060-845a-e97977004222" class="toggle"><li><details open=""><summary>as owner</summary><ul id="2626cd19-ce7a-8046-92ec-e4b25d843aab" class="bulleted-list"><li style="list-style-type:disc">Aku ingin <strong>menyediakan NFT special edition</strong> (dengan audio, aksara Jawa, batik border) untuk menarik user.</li></ul><ul id="2626cd19-ce7a-809f-b934-ebdc6a91320c" class="bulleted-list"><li style="list-style-type:disc">Aku ingin <strong>mengatur rarity system</strong> sehingga ada NFT yang lebih berharga/limited.</li></ul><ul id="2626cd19-ce7a-80be-a776-e0678da5490b" class="bulleted-list"><li style="list-style-type:disc">Aku ingin <strong>mengatur komponen kustomisasi</strong> (border, sticker, font, filter, audio) agar ekosistem terus fresh.</li></ul><ul id="2626cd19-ce7a-803b-99a2-dc7338db8081" class="bulleted-list"><li style="list-style-type:disc">Aku ingin <strong>membuat event global</strong> dengan radius minting (misal di Candi Borobudur hanya bisa mint saat Waisak).</li></ul><ul id="2626cd19-ce7a-80c6-b693-dc84f067495d" class="bulleted-list"><li style="list-style-type:disc">Aku ingin <strong>memungkinkan partner</strong> menambahkan NFT mereka sendiri agar platform lebih beragam.</li></ul><ul id="2626cd19-ce7a-80b4-bfa4-d583f7fb409c" class="bulleted-list"><li style="list-style-type:disc">Aku ingin <strong>memberikan reward/royalty</strong> dari transaksi NFT ke partner &amp; creator.</li></ul><ul id="2626cd19-ce7a-80a4-ae56-fbc574aecc27" class="bulleted-list"><li style="list-style-type:disc"></li></ul></details></li></ul><ul id="2626cd19-ce7a-8053-a6c0-def601f6f64f" class="toggle"><li><details open=""><summary>cross role</summary><ul id="2626cd19-ce7a-809d-b7f4-f24222fa57ee" class="bulleted-list"><li style="list-style-type:disc"><strong>Sebagai User/Partner/Owner</strong>, aku ingin <strong>NFT-ku bisa ditampilkan di gallery publik</strong> agar orang lain bisa melihat karya/koleksiku.</li></ul><ul id="2626cd19-ce7a-80d3-9de0-d99a69ecd2fc" class="bulleted-list"><li style="list-style-type:disc"><strong>Sebagai User/Partner</strong>, aku ingin <strong>bisa verifikasi NFT via QR code atau blockchain explorer</strong> agar yakin keasliannya.</li></ul><ul id="2626cd19-ce7a-8064-89de-ee2b15e4a88e" class="bulleted-list"><li style="list-style-type:disc"><strong>Sebagai User</strong>, aku ingin <strong>bisa share NFT-ku ke sosial media</strong> biar moment-ku dikenal.</li></ul><ul id="2626cd19-ce7a-804a-ba69-de03047fc0b6" class="bulleted-list"><li style="list-style-type:disc"></li></ul></details></li></ul><p id="2626cd19-ce7a-80a5-93a4-e89bcae568af" class="">by feature prespective</p><ul id="2626cd19-ce7a-80c7-9e50-f1b7ecba57be" class="toggle"><li><details open=""><summary>NFT Creation</summary><ul id="2626cd19-ce7a-8033-8642-ce0e497f8545" class="bulleted-list"><li style="list-style-type:disc"><strong>Sebagai user</strong>, aku bisa membuat NFT untuk menyimpan moment pribadiku (foto/video/audio), sehingga moment itu tersimpan secara onchain.</li></ul><ul id="2626cd19-ce7a-80c4-95c0-de8a772c6df7" class="bulleted-list"><li style="list-style-type:disc"><strong>Sebagai user</strong>, saat aku mint NFT, sistem otomatis menambahkan metadata cuaca, waktu, kecepatan angin, ketinggian, siang/malam, dan lokasi, sehingga NFT-ku unik dengan kondisi real-time saat mint.</li></ul><ul id="2626cd19-ce7a-8042-987f-e5477362f153" class="bulleted-list"><li style="list-style-type:disc"><strong>Sebagai user</strong>, aku bisa menambahkan deskripsi atau judul pada NFT-ku, sehingga lebih personal.</li></ul><ul id="2626cd19-ce7a-80da-8e82-cfa087c2b955" class="bulleted-list"><li style="list-style-type:disc"><strong>Sebagai user</strong>, aku bisa memilih kategori NFT (misalnya makanan, event, landmark), sehingga NFT masuk ke koleksi tematik tertentu.</li></ul><ul id="2626cd19-ce7a-8056-a02f-e496c131cf12" class="bulleted-list"><li style="list-style-type:disc"><strong>Sebagai owner</strong>, aku bisa membuat NFT khusus dengan konten premium (audio gamelan, aksara Jawa, quotes, dll) sehingga NFT memiliki value kultural.</li></ul><ul id="2626cd19-ce7a-801e-a4f9-c48faebb675f" class="bulleted-list"><li style="list-style-type:disc"></li></ul></details></li></ul><ul id="2626cd19-ce7a-807e-8309-c7614cd26608" class="toggle"><li><details open=""><summary>NFT Customization (Border, Sticker, Filter, Font, Audio)</summary><ul id="2626cd19-ce7a-8024-b382-d0524fcff11b" class="bulleted-list"><li style="list-style-type:disc"><strong>Sebagai user</strong>, aku bisa memilih border, sticker, font, sound, dan filter (seperti IG filter) untuk mempercantik NFT-ku.</li></ul><ul id="2626cd19-ce7a-8048-a832-ccd38403585c" class="bulleted-list"><li style="list-style-type:disc"><strong>Sebagai user</strong>, aku bisa membeli atau mendapatkan border/sticker khusus dari marketplace atau event tertentu.</li></ul><ul id="2626cd19-ce7a-8069-8f7c-f3d2e85f1189" class="bulleted-list"><li style="list-style-type:disc"><strong>Sebagai partner</strong>, aku bisa menyediakan border/sticker eksklusif untuk event/brand-ku, sehingga user bisa mint NFT dengan identitas event tersebut.</li></ul><ul id="2626cd19-ce7a-8083-93db-e2acaf0a0a56" class="bulleted-list"><li style="list-style-type:disc"><strong>Sebagai owner</strong>, aku bisa menjual/airdrop border, font, sound eksklusif (misalnya batik border, audio gamelan, aksara Jawa).</li></ul><ul id="2626cd19-ce7a-80c0-aa03-e2ff04878272" class="bulleted-list"><li style="list-style-type:disc"></li></ul></details></li></ul><ul id="2626cd19-ce7a-80a9-9826-c662383f5a02" class="toggle"><li><details open=""><summary><strong>NFT Reward, Benefit, &amp; Rarity</strong></summary><ul id="2626cd19-ce7a-80f9-8a22-c3a4f4e03d09" class="bulleted-list"><li style="list-style-type:disc"><strong>Sebagai user</strong>, aku bisa mendapatkan NFT dengan rarity berbeda (common, rare, epic, legendary) yang mempengaruhi koleksi dan value.</li></ul><ul id="2626cd19-ce7a-80dc-b14b-c461dfc18c78" class="bulleted-list"><li style="list-style-type:disc"><strong>Sebagai partner</strong>, aku bisa menambahkan rule khusus untuk NFT-ku (contoh: hanya bisa di-claim jika hadir di event, beli produk tertentu, atau menyelesaikan challenge).</li></ul><ul id="2626cd19-ce7a-80fe-b642-f5a7d223b8a6" class="bulleted-list"><li style="list-style-type:disc"><strong>Sebagai user</strong>, jika aku mengoleksi kategori NFT tertentu (misalnya 5 landmark dalam kota), aku bisa membuka <strong>achievement NFT</strong> atau benefit (diskon, voucher, akses VIP).</li></ul><ul id="2626cd19-ce7a-8026-a3d7-f483ef39c5f2" class="bulleted-list"><li style="list-style-type:disc"><strong>Sebagai user</strong>, aku bisa menukar atau redeem NFT tertentu untuk benefit nyata dari partner (contoh: diskon makanan, tiket konser, dll).</li></ul><ul id="2626cd19-ce7a-8087-8b37-eb3b6789031a" class="bulleted-list"><li style="list-style-type:disc"></li></ul></details></li></ul><ul id="2626cd19-ce7a-80ed-b91b-dfe5bb312f64" class="toggle"><li><details open=""><summary><strong> Location-based &amp; QR NFT</strong></summary><ul id="2626cd19-ce7a-8030-8b59-c0195adc98d1" class="bulleted-list"><li style="list-style-type:disc"><strong>Sebagai user</strong>, aku bisa scan QR code di lokasi tertentu untuk mendapatkan NFT eksklusif.</li></ul><ul id="2626cd19-ce7a-80e9-a414-e1856a1d62ee" class="bulleted-list"><li style="list-style-type:disc"><strong>Sebagai user</strong>, aku hanya bisa mint NFT jika aku berada dalam radius tertentu yang sudah ditentukan oleh partner/owner (geo-fencing mint).</li></ul><ul id="2626cd19-ce7a-80ae-be3a-d8dea9976bf8" class="bulleted-list"><li style="list-style-type:disc"><strong>Sebagai partner</strong>, aku bisa membuat NFT yang hanya bisa di-claim di event offline dengan scan QR atau lokasi GPS.</li></ul><ul id="2626cd19-ce7a-80d9-87bc-f3938a66fa2d" class="bulleted-list"><li style="list-style-type:disc"><strong>Sebagai user</strong>, aku bisa melihat peta NFT (map) yang menunjukkan di mana lokasi-lokasi NFT bisa di-claim.</li></ul><ul id="2626cd19-ce7a-807a-9ad3-cdb6c01e0208" class="bulleted-list"><li style="list-style-type:disc"></li></ul></details></li></ul><ul id="2626cd19-ce7a-80b9-81ac-e708061e5616" class="toggle"><li><details open=""><summary>Upgrade &amp; Merge NFT</summary><ul id="2626cd19-ce7a-800e-b1bf-f748f419e72b" class="bulleted-list"><li style="list-style-type:disc"><strong>Sebagai user</strong>, aku bisa meng-upgrade NFT milikku untuk mengubah detail tertentu (misalnya border baru, audio tambahan, rarity meningkat).</li></ul><ul id="2626cd19-ce7a-80ae-90fd-cbc899927f87" class="bulleted-list"><li style="list-style-type:disc"><strong>Sebagai user</strong>, aku bisa menggabungkan (merge/fusion) dua atau lebih NFT untuk membuat NFT baru dengan atribut gabungan.</li></ul><ul id="2626cd19-ce7a-807c-a3b7-f318ec84c902" class="bulleted-list"><li style="list-style-type:disc"><strong>Sebagai user</strong>, NFT hasil fusion bisa memiliki rarity lebih tinggi atau efek unik.</li></ul><ul id="2626cd19-ce7a-8076-8b34-da0aa5ff3f40" class="bulleted-list"><li style="list-style-type:disc"><strong>Sebagai partner</strong>, aku bisa mengatur syarat khusus untuk fusion tertentu (misalnya hanya bisa dilakukan dengan NFT event A + NFT makanan B → unlock NFT spesial).</li></ul></details></li></ul><ul id="2626cd19-ce7a-8023-8ada-e0a4f2be0566" class="toggle"><li><details open=""><summary>Gallery &amp; Timeline</summary><ul id="2626cd19-ce7a-80f8-bf13-e8e7d7b6dcaa" class="bulleted-list"><li style="list-style-type:disc"><strong>Sebagai user</strong>, aku bisa menampilkan semua NFT-ku di sebuah <strong>gallery pribadi</strong> yang bisa diakses publik atau privat.</li></ul><ul id="2626cd19-ce7a-8029-9fff-d5d0f55cfaf2" class="bulleted-list"><li style="list-style-type:disc"><strong>Sebagai user</strong>, aku bisa melihat NFT-ku dalam bentuk <strong>timeline</strong>, sehingga koleksiku membentuk cerita perjalanan hidup atau pengalaman.</li></ul><ul id="2626cd19-ce7a-8077-872a-f2d468033964" class="bulleted-list"><li style="list-style-type:disc"><strong>Sebagai user</strong>, aku bisa mengatur NFT ke dalam <strong>album/koleksi</strong> berdasarkan kategori atau event.</li></ul><ul id="2626cd19-ce7a-8060-a65a-cf3ef7209b9d" class="bulleted-list"><li style="list-style-type:disc"><strong>Sebagai user</strong>, aku bisa share gallery/timeline NFT ke sosial media dengan link unik.</li></ul></details></li></ul><ul id="2626cd19-ce7a-8063-9647-ff04da78243e" class="toggle"><li><details open=""><summary><strong>Partner Features</strong></summary><ul id="2626cd19-ce7a-805f-a069-d6a8d0f21f74" class="bulleted-list"><li style="list-style-type:disc"><strong>Sebagai partner</strong>, aku bisa membuat NFT event/brand sendiri dengan rule custom (location, waktu, syarat tertentu).</li></ul><ul id="2626cd19-ce7a-80bf-b89c-cc2893bc7fce" class="bulleted-list"><li style="list-style-type:disc"><strong>Sebagai partner</strong>, aku bisa mengatur benefit NFT-ku (voucher, akses VIP, free gift).</li></ul><ul id="2626cd19-ce7a-804d-a93b-d91d82497b07" class="bulleted-list"><li style="list-style-type:disc"><strong>Sebagai partner</strong>, aku bisa melihat analytics siapa saja yang meng-claim NFT event-ku (demografi, lokasi, engagement).</li></ul><ul id="2626cd19-ce7a-8004-a2b1-c721bf72ea21" class="bulleted-list"><li style="list-style-type:disc"><strong>Sebagai partner</strong>, aku bisa membuat achievement series (misalnya koleksi 5 NFT event → dapat NFT golden pass).</li></ul></details></li></ul><ul id="2626cd19-ce7a-80b6-a1d4-f714e273dd0a" class="toggle"><li><details open=""><summary>Owner Features (Platform-level)</summary><ul id="2626cd19-ce7a-8074-9e40-ff60c134b46f" class="bulleted-list"><li style="list-style-type:disc"><strong>Sebagai owner</strong>, aku bisa mengatur sistem rarity, supply NFT, dan komponen premium (aksara Jawa, gamelan audio, batik border).</li></ul><ul id="2626cd19-ce7a-80cd-91dd-f077c60e7394" class="bulleted-list"><li style="list-style-type:disc"><strong>Sebagai owner</strong>, aku bisa mengatur revenue share dengan partner dari penjualan NFT atau item kustomisasi.</li></ul><ul id="2626cd19-ce7a-800c-bbe4-fec14d2dd2ec" class="bulleted-list"><li style="list-style-type:disc"><strong>Sebagai owner</strong>, aku bisa melakukan moderation (report NFT, banned user, validasi partner).</li></ul><ul id="2626cd19-ce7a-805d-9878-c8bfca0790fd" class="bulleted-list"><li style="list-style-type:disc"><strong>Sebagai owner</strong>, aku bisa membuat NFT eksklusif platform sebagai koleksi utama yang menjadi rare asset.</li></ul></details></li></ul><ul id="2626cd19-ce7a-80c0-9ec7-c7822c015f16" class="toggle"><li><details open=""><summary>Social &amp; Community Features (Opsional fase lanjut)</summary><ul id="2626cd19-ce7a-806c-96b7-f971b4b4dd8f" class="bulleted-list"><li style="list-style-type:disc"><strong>Sebagai user</strong>, aku bisa memberikan like atau komentar pada NFT teman.</li></ul><ul id="2626cd19-ce7a-8048-8eaf-de752db1945a" class="bulleted-list"><li style="list-style-type:disc"><strong>Sebagai user</strong>, aku bisa trade NFT dengan user lain (P2P marketplace).</li></ul><ul id="2626cd19-ce7a-8043-a8b7-db7c16064300" class="bulleted-list"><li style="list-style-type:disc"><strong>Sebagai user</strong>, aku bisa join komunitas berdasarkan kategori NFT tertentu (makanan, landmark, budaya).</li></ul></details></li></ul><h3 id="2616cd19-ce7a-81be-82dd-e9aeee364bc3" class=""><strong>🎯 Objective</strong></h3><blockquote id="2616cd19-ce7a-8151-9978-cb74708dbc91" class=""><em>What are you trying to build and why?</em></blockquote><h3 id="2626cd19-ce7a-80f4-bdef-d67e285b02a1" class=""><strong>Must Have (MVP)</strong></h3><ul id="2626cd19-ce7a-803b-8027-cb49a21d8bc5" class="bulleted-list"><li style="list-style-type:disc">Mint NFT moment (dengan metadata otomatis: cuaca, lokasi, waktu)</li></ul><ul id="2626cd19-ce7a-8063-ad5a-df24563deabc" class="bulleted-list"><li style="list-style-type:disc">Gallery &amp; timeline NFT</li></ul><ul id="2626cd19-ce7a-80b1-8884-ce7d5eaf3026" class="bulleted-list"><li style="list-style-type:disc">QR scan &amp; location-based mint</li></ul><ul id="2626cd19-ce7a-80fc-8284-fb1069f77014" class="bulleted-list"><li style="list-style-type:disc">Partner bisa bikin NFT event sendiri (Optional Dulu)</li></ul><h3 id="2626cd19-ce7a-80a6-8604-dace05ddd61d" class=""><strong>Should Have</strong></h3><ul id="2626cd19-ce7a-80cb-8eab-f4532c65efc4" class="bulleted-list"><li style="list-style-type:disc">NFT customization (border, sticker, filter)</li></ul><ul id="2626cd19-ce7a-80eb-8a4a-f3661e09a962" class="bulleted-list"><li style="list-style-type:disc">NFT rarity &amp; achievement collection</li></ul><ul id="2626cd19-ce7a-80e9-aa3f-eaaebef97bc7" class="bulleted-list"><li style="list-style-type:disc">Benefit redeem system</li></ul><h3 id="2626cd19-ce7a-80e8-afec-eba9e36a02f4" class=""><strong>Could Have</strong></h3><ul id="2626cd19-ce7a-808a-bef5-f46a36f9bb4d" class="bulleted-list"><li style="list-style-type:disc">NFT upgrade &amp; merge</li></ul><ul id="2626cd19-ce7a-800e-b72f-f1ded475d1f6" class="bulleted-list"><li style="list-style-type:disc">Premium content (audio gamelan, aksara Jawa, dll)</li></ul><ul id="2626cd19-ce7a-80a9-bf5a-c25df830edd9" class="bulleted-list"><li style="list-style-type:disc">NFT map explorer</li></ul><hr id="2616cd19-ce7a-8161-b0c0-e534deaa2d80"/><h3 id="2616cd19-ce7a-8180-bb57-cebd10d71ace" class="">✅ Success Metrics / KPIs</h3><blockquote id="2616cd19-ce7a-8188-852f-c2bdd5f4214c" class=""><em>How will we measure success?</em></blockquote><h2 id="2626cd19-ce7a-80d0-8d2c-e763e5e68740" class="">Phase 1 – MVP </h2><p id="2626cd19-ce7a-802a-93a2-f8daabb98a4f" class="">🎯 Fokus: <strong>Proof of Concept &amp; Core Experience</strong></p><p id="2626cd19-ce7a-801d-8fad-c108bc0206d6" class="">Target: User bisa <strong>mint NFT momen unik</strong>, Partner bisa <strong>buat drop sederhana</strong>, ada basic engagement.</p><p id="2626cd19-ce7a-80dd-81b8-e1de0a63c7d5" class=""><strong>Fitur untuk User (Core):</strong></p><ul id="2626cd19-ce7a-8066-87d2-d1e8d9456fd1" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Social Login or Wallet Login</span><div class="indented"></div></li></ul><ul id="2626cd19-ce7a-800f-8de3-f938d9a88af5" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Mint NFT dengan metadata unik: lokasi, waktu, cuaca (ambil API cuaca real-time).</span><div class="indented"></div></li></ul><ul id="2626cd19-ce7a-807c-a62a-f8b3fc3aa390" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Customisasi sederhana: pilih border / sticker dasar.</span><div class="indented"></div></li></ul><ul id="2626cd19-ce7a-80ad-a848-fa9303bc3f40" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Personal Gallery (timeline NFT moment, share sosmed).</span><div class="indented"></div></li></ul><p id="2626cd19-ce7a-8009-b41a-cef7132bb8db" class=""><strong>Fitur untuk Partner (Basic):</strong></p><ul id="2626cd19-ce7a-8080-89a6-e934329c7544" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Dashboard sederhana → buat NFT drop (nama, deskripsi, cover, jumlah mint).</span><div class="indented"></div></li></ul><ul id="2626cd19-ce7a-800e-921d-ef19d02a35f5" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Rule dasar: location-based mint <strong>atau</strong> QR scan.</span><div class="indented"></div></li></ul><ul id="2626cd19-ce7a-801e-b3ce-f406617b1339" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Benefit basic: diskon / voucher (code langsung muncul setelah mint).</span><div class="indented"></div></li></ul><p id="2626cd19-ce7a-8021-be7e-c5bf1dec5748" class=""><strong>Smart Contract / Infra:</strong></p><ul id="2626cd19-ce7a-80db-b309-db1ef04a7244" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">NFT contract (ERC-721 / ERC-1155) dengan metadata.</span><div class="indented"></div></li></ul><ul id="2626cd19-ce7a-8040-97c3-c95be814b40f" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Metadata hybrid (on-chain + IPFS).</span><div class="indented"></div></li></ul><ul id="2626cd19-ce7a-807d-b070-e9ba2989b096" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Indexer (Ponder/Drizzle setup).</span><div class="indented"></div></li></ul><h2 id="2626cd19-ce7a-80c6-b160-e105a60486a4" class=""><strong>Phase 2 – Growth</strong></h2><p id="2626cd19-ce7a-8040-b044-c5621882d528" class="">🎯 Fokus: <strong>Retention &amp; Engagement</strong></p><p id="2626cd19-ce7a-8033-9b75-f63728ab6102" class="">Target: User untuk pengalaman user,dan Partner bikin campaign kreatif.</p><p id="2626cd19-ce7a-800f-9e70-fab901b064a6" class=""><strong>Fitur untuk User:</strong></p><ul id="2626cd19-ce7a-8070-a56c-fe9e85842023" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Achievement/quest → mint 7 hari berturut-turut = unlock batik border.</span><div class="indented"></div></li></ul><ul id="2626cd19-ce7a-8052-956f-ea06c76c6024" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Rarity system (common, rare, legendary) → bikin collectible feel.</span><div class="indented"></div></li></ul><ul id="2626cd19-ce7a-80c2-bcf9-d481c3bbddc0" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Social sharing card (export NFT).</span><div class="indented"></div></li></ul><p id="2626cd19-ce7a-8006-ad7d-f4b5c9c32ee3" class=""><strong>Fitur untuk Partner:</strong></p><ul id="2626cd19-ce7a-8003-aa83-d992fb021e17" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Partner rule:</span><div class="indented"><ul id="2626cd19-ce7a-8032-b827-c7352d7f0d1f" class="bulleted-list"><li style="list-style-type:disc">hanya untuk user dengan koleksi tertentu</li></ul><ul id="2626cd19-ce7a-8053-92df-c756d858b99d" class="bulleted-list"><li style="list-style-type:disc">syarat join event / purchase product.</li></ul></div></li></ul><ul id="2626cd19-ce7a-80fd-aa71-ddd7cf3280b8" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Analytics basic: jumlah mint, user aktif, top collector.</span><div class="indented"></div></li></ul><ul id="2626cd19-ce7a-8018-93fa-f9fe37be2c37" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Multi-benefit: NFT bisa jadi tiket event, akses eksklusif, membership digital.</span><div class="indented"></div></li></ul><p id="2626cd19-ce7a-8003-8ce5-e0c6e98a4886" class=""><strong>Smart Contract / Infra:</strong></p><ul id="2626cd19-ce7a-8092-9fb1-f0e091229f50" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">NFTCardModule, SpendingLimit (untuk daily cap misalnya untuk voucher).</span><div class="indented"></div></li></ul><ul id="2626cd19-ce7a-80bd-9259-d2629325a764" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Paymaster  → gasless minting untuk user.</span><div class="indented"></div></li></ul><hr id="2626cd19-ce7a-80be-8c3f-c2a82b09a303"/><h2 id="2626cd19-ce7a-8089-8f97-ea6562e103a9" class=""><strong>Phase 3 – Ecosystem</strong></h2><p id="2626cd19-ce7a-80ed-9253-cceab5342a8f" class="">🎯 Fokus: <strong>Utility nyata + Ekosistem berkembang</strong></p><p id="2626cd19-ce7a-8097-b388-fe96bcef0fe0" class="">Target: <strong>Web3 Moments</strong> yang dipakai brand, komunitas, event organizer.</p><p id="2626cd19-ce7a-802c-b2aa-ce30d125bffa" class=""><strong>Fitur untuk User:</strong></p><ul id="2626cd19-ce7a-8046-99d0-e99d02783e66" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Multi-card NFT (punya banyak NFT card dengan setting berbeda, daily limit, dsb).</span><div class="indented"></div></li></ul><ul id="2626cd19-ce7a-80ce-bfe7-c68891719feb" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">NFT + NFC → kartu fisik yang bisa dipakai buat check-in event / pembayaran.</span><div class="indented"></div></li></ul><ul id="2626cd19-ce7a-8004-9757-e3de9e5fb2ce" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Offline transactions (queue mint/claim walau tanpa internet → broadcast saat online). (masih ragu gua)</span><div class="indented"></div></li></ul><p id="2626cd19-ce7a-8060-993a-c71d367b0210" class=""><strong>Fitur untuk Partner:</strong></p><ul id="2626cd19-ce7a-80b3-8c22-fcf879cbad73" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Full dashboard → drag-and-drop NFT campaign builder.</span><div class="indented"></div></li></ul><ul id="2626cd19-ce7a-80cf-a1e9-c54911c07a78" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Custom reward system (point, cashback, loyalty tier).</span><div class="indented"></div></li></ul><p id="2626cd19-ce7a-80c9-a41f-fa4e3490fb24" class=""><strong>Smart Contract / Infra:</strong></p><ul id="2626cd19-ce7a-80e9-b604-f50703b07076" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">NFT benefit on-chain → programmable rules (NFT = akses gratis Wi-Fi 3 jam utility di dunia nyata)</span><div class="indented"></div></li></ul><hr id="2626cd19-ce7a-8027-b244-c6a59b379ab3"/><h2 id="2626cd19-ce7a-80c5-b79d-ed75a7605106" class=""><strong>Phase 4 – Vision</strong></h2><p id="2626cd19-ce7a-8041-a822-dca36b41e4b4" class="">🎯 Fokus: <strong>Scale &amp; Monetization</strong></p><p id="2626cd19-ce7a-800e-8c89-cf4e260611cf" class="">Target: Jadi standar baru untuk “moment-based NFT + partner ecosystem”.</p><p id="2626cd19-ce7a-80cc-9374-e65e347f15d6" class=""><strong>Fitur Monetisasi:</strong></p><ul id="2626cd19-ce7a-80a6-bbfd-c60c8b660e4c" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Subscription Partner → bayar bulanan untuk akses dashboard campaign.</span><div class="indented"></div></li></ul><ul id="2626cd19-ce7a-8067-9060-e1155e771b3f" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Transaction fee → ambil % dari setiap mint/benefit claim.</span><div class="indented"></div></li></ul><ul id="2626cd19-ce7a-808c-bfc5-f18cabb1ecc5" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Premium customization untuk user → border/sticker premium.</span><div class="indented"></div></li></ul><ul id="2626cd19-ce7a-80c2-98a7-f9fdc12d68e0" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Marketplace → jual/beli NFT moment unik.</span><div class="indented"></div></li></ul><p id="2626cd19-ce7a-801a-929c-d9598fab943d" class=""><strong>Ekspansi:</strong></p><ul id="2626cd19-ce7a-8092-920f-efaa034c2147" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">UMKM adoption → NFT loyalty card digital.</span><div class="indented"></div></li></ul><ul id="2626cd19-ce7a-8024-b924-e534e62c85b7" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Pemerintah / NGO → subsidi, BLT, event edukasi berbasis NFT moment.</span><div class="indented"></div></li></ul><ul id="2626cd19-ce7a-802c-a506-ec28e369cef9" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Global culture </span><div class="indented"></div></li></ul><h3 id="2616cd19-ce7a-812e-80f9-ceddc649feac" class=""><strong>🧩 Key Features / Requirements</strong></h3><hr id="2616cd19-ce7a-81fe-aa13-d0c71db4962e"/><blockquote id="2616cd19-ce7a-8190-bd41-e9962e8a2da2" class=""><em>What exactly needs to be built?</em></blockquote><div id="2616cd19-ce7a-8125-9ec7-c14eb3afddd5" class="collection-content"><h4 class="collection-title">Key Features</h4><table class="collection-content"><thead><tr><th><span class="icon property-icon"><img src="https://www.notion.so/icons/stairs_gray.svg" style="width:14px;height:14px;display:block"/></span>Status</th><th><span class="icon property-icon"><div data-testid="/icons/font_gray.svg" style="width:14px;height:14px;flex-shrink:0;transform:scale(1.2);mask:url(/icons/font_gray.svg?mode=light) no-repeat center;-webkit-mask:url(/icons/font_gray.svg?mode=light) no-repeat center;background-color:rgba(71, 70, 68, 0.6);fill:rgba(71, 70, 68, 0.6)"></div></span>Feature</th><th><span class="icon property-icon"><img src="https://www.notion.so/icons/info-alternate_gray.svg" style="width:14px;height:14px;display:block"/></span>Description</th><th><span class="icon property-icon"><img src="https://www.notion.so/icons/priority-high_gray.svg" style="width:14px;height:14px;display:block"/></span>Priority</th></tr></thead><tbody><tr id="2616cd19-ce7a-8151-8375-e436e8a1d6c9"><td class="cell-ua|S"><div class="checkbox checkbox-on"></div></td><td class="cell-title"><a href="Product%20Requirements%20Doc%20(DPR)%202616cd19ce7a809a8d98fcf704412efc/Key%20Features%202616cd19ce7a81259ec7c14eb3afddd5/User%20Authentication%202616cd19ce7a81518375e436e8a1d6c9.html"><img class="icon" src="https://www.notion.so/icons/key_gray.svg"/>User Authentication</a></td><td class="cell-i?o;">Implement secure login/logout functionality with social media integration and two-factor authentication.</td><td class="cell-kt=L"><span class="selected-value select-value-color-red">High</span></td></tr><tr id="2616cd19-ce7a-81fe-95ae-c7fcb5a15060"><td class="cell-ua|S"><div class="checkbox checkbox-off"></div></td><td class="cell-title"><a href="Product%20Requirements%20Doc%20(DPR)%202616cd19ce7a809a8d98fcf704412efc/Key%20Features%202616cd19ce7a81259ec7c14eb3afddd5/Mobile%20Responsiveness%202616cd19ce7a81fe95aec7fcb5a15060.html"><img class="icon" src="https://www.notion.so/icons/key_gray.svg"/>Mobile Responsiveness</a></td><td class="cell-i?o;">Ensure all application features work seamlessly across different devices and screen sizes.</td><td class="cell-kt=L"><span class="selected-value select-value-color-red">High</span></td></tr><tr id="2616cd19-ce7a-818a-8d41-fe674e3c332a"><td class="cell-ua|S"><div class="checkbox checkbox-off"></div></td><td class="cell-title"><a href="Product%20Requirements%20Doc%20(DPR)%202616cd19ce7a809a8d98fcf704412efc/Key%20Features%202616cd19ce7a81259ec7c14eb3afddd5/Dashboard%20Analytics%202616cd19ce7a818a8d41fe674e3c332a.html"><img class="icon" src="https://www.notion.so/icons/key_gray.svg"/>Dashboard Analytics</a></td><td class="cell-i?o;">Create a visual dashboard displaying key metrics and performance indicators with customizable views.</td><td class="cell-kt=L"><span class="selected-value select-value-color-yellow">Medium</span></td></tr></tbody></table><br/><br/></div><h3 id="2616cd19-ce7a-8166-8c61-e3e44588e25f" class="">📐 UX &amp; Design</h3><hr id="2616cd19-ce7a-81db-abe4-f2f76f77f895"/><blockquote id="2616cd19-ce7a-81a4-a910-e71be3085f2b" class=""><em>Include any design constraints or brand guidelines.</em></blockquote><ul id="2616cd19-ce7a-8108-803a-f1c433ea1940" class="bulleted-list"><li style="list-style-type:disc">Wireframes: [Link to Figma or Notion page]</li></ul><ul id="2616cd19-ce7a-8157-88b3-d19c2e5efa0a" class="bulleted-list"><li style="list-style-type:disc">UI mockups: [Add image/file or embed Figma]</li></ul><ul id="2616cd19-ce7a-81b1-8943-de08bf37c5a4" class="bulleted-list"><li style="list-style-type:disc">Design notes:</li></ul><h3 id="2616cd19-ce7a-81c5-b4be-d895d600cc25" class="">🧪 Scope of Work</h3><hr id="2616cd19-ce7a-811a-8671-ec1bb2a8dfad"/><blockquote id="2616cd19-ce7a-81e5-8fb4-decbd27d1fbd" class=""><em>What’s in scope and what’s out?</em></blockquote><p id="2616cd19-ce7a-81b2-909a-d26d8581c566" class=""><strong>In Scope:</strong></p><ul id="2616cd19-ce7a-8108-a32d-d4fc057ecc33" class="bulleted-list"><li style="list-style-type:disc">List items clearly</li></ul><p id="2616cd19-ce7a-810c-b114-d5505d8c567b" class=""><strong>Out of Scope:</strong></p><ul id="2616cd19-ce7a-8170-804b-eba843e6096d" class="bulleted-list"><li style="list-style-type:disc">List anything being intentionally left out (for now)</li></ul><h3 id="2616cd19-ce7a-81a8-a2ea-cbaa02299da3" class="">🛠 Technical Requirements</h3><hr id="2616cd19-ce7a-8190-b8a6-e9427d020c7b"/><blockquote id="2616cd19-ce7a-8134-9115-d82d41f16ba5" class=""><em>For the engineering team</em></blockquote><ul id="2616cd19-ce7a-8121-b3f0-c2ade99ff7ff" class="bulleted-list"><li style="list-style-type:disc">Platforms (Web, iOS, Android?)</li></ul><ul id="2616cd19-ce7a-8174-8b5d-c2c1ac5cfb21" class="bulleted-list"><li style="list-style-type:disc">Backend dependencies</li></ul><ul id="2616cd19-ce7a-8180-a0fa-d4ac1c30c197" class="bulleted-list"><li style="list-style-type:disc">APIs needed</li></ul><ul id="2616cd19-ce7a-81fa-af44-f1d12b2cc4b0" class="bulleted-list"><li style="list-style-type:disc">Tech constraints or legacy considerations</li></ul><h3 id="2616cd19-ce7a-8100-b282-f40e3b655e8b" class="">🧱 Dependencies</h3><hr id="2616cd19-ce7a-819a-9acd-d85a4d2b7be3"/><blockquote id="2616cd19-ce7a-8191-989b-e913f68a7b7f" class=""><em>What needs to happen before this can be built?</em></blockquote><ul id="2616cd19-ce7a-812c-89a9-e01a90fe3d32" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Dependency 1</span><div class="indented"></div></li></ul><ul id="2616cd19-ce7a-81db-a601-f508e55d6bd7" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Dependency 2</span><div class="indented"></div></li></ul><ul id="2616cd19-ce7a-8149-be62-e649cacf733a" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">External teams, 3rd party tools, etc.</span><div class="indented"></div></li></ul><h3 id="2616cd19-ce7a-8192-aae2-f2db9622d530" class="">🗓️ Timeline</h3><hr id="2616cd19-ce7a-81f6-8af2-d7732a95d350"/><blockquote id="2616cd19-ce7a-815c-b3b0-c54c4e669871" class=""><em>Key dates and phases</em></blockquote><table id="2616cd19-ce7a-81a4-92c9-e3f98193f925" class="simple-table"><thead class="simple-table-header"><tr id="2616cd19-ce7a-8163-a06e-edc679634632"><th id=";fx{" class="simple-table-header-color simple-table-header" style="width:214.125px">Milestone</th><th id="uNl]" class="simple-table-header-color simple-table-header">Date</th><th id="Ux=|" class="simple-table-header-color simple-table-header">Notes</th></tr></thead><tbody><tr id="2616cd19-ce7a-8193-8e5d-f5cd5d174b75"><td id=";fx{" class="" style="width:214.125px">Kickoff</td><td id="uNl]" class=""></td><td id="Ux=|" class=""></td></tr><tr id="2616cd19-ce7a-813c-9add-f18e52fd6b7b"><td id=";fx{" class="" style="width:214.125px">Design Complete</td><td id="uNl]" class=""></td><td id="Ux=|" class=""></td></tr><tr id="2616cd19-ce7a-81d0-80cb-c397d0845c52"><td id=";fx{" class="" style="width:214.125px">Development Start</td><td id="uNl]" class=""></td><td id="Ux=|" class=""></td></tr><tr id="2616cd19-ce7a-8118-9e85-d57533c919b2"><td id=";fx{" class="" style="width:214.125px">Beta Launch</td><td id="uNl]" class=""></td><td id="Ux=|" class=""></td></tr><tr id="2616cd19-ce7a-81bf-ae55-d7a9c7e8cb55"><td id=";fx{" class="" style="width:214.125px">Public Launch</td><td id="uNl]" class=""></td><td id="Ux=|" class=""></td></tr></tbody></table><h3 id="2616cd19-ce7a-81f8-9b5e-cd669d5de22b" class="">🧠 Open Questions / Risks</h3><hr id="2616cd19-ce7a-81ba-949f-e4d76b2a8a4c"/><ul id="2616cd19-ce7a-81b5-a6af-d69a8068bae8" class="bulleted-list"><li style="list-style-type:disc">Are there any major uncertainties?</li></ul><ul id="2616cd19-ce7a-8179-acb5-eaac1ee57039" class="bulleted-list"><li style="list-style-type:disc">What are the potential blockers or risks?</li></ul><h3 id="2616cd19-ce7a-816a-a3ff-c51879d07780" class="">📚 Supporting Documents</h3><hr id="2616cd19-ce7a-81af-9272-eb8435ca2290"/><ul id="2616cd19-ce7a-813f-859a-e8e2fe88ae05" class="bulleted-list"><li style="list-style-type:disc">Research: [Link]</li></ul><ul id="2616cd19-ce7a-8125-adb6-d31ff5baf86b" class="bulleted-list"><li style="list-style-type:disc">Competitive Analysis: [Link]</li></ul><ul id="2616cd19-ce7a-81e0-bf45-d390e00f3903" class="bulleted-list"><li style="list-style-type:disc">Previous version(s): [Link]</li></ul><div id="2616cd19-ce7a-8100-8ba3-e3fe550c4a92" class="collection-content"><h4 class="collection-title">Supporting Documents</h4><table class="collection-content"><thead><tr><th><span class="icon property-icon"><div data-testid="/icons/font_gray.svg" style="width:14px;height:14px;flex-shrink:0;transform:scale(1.2);mask:url(/icons/font_gray.svg?mode=light) no-repeat center;-webkit-mask:url(/icons/font_gray.svg?mode=light) no-repeat center;background-color:rgba(71, 70, 68, 0.6);fill:rgba(71, 70, 68, 0.6)"></div></span>Document Name</th><th><span class="icon property-icon"><img src="https://www.notion.so/icons/categories_gray.svg" style="width:14px;height:14px;display:block"/></span>Document Type</th><th><span class="icon property-icon"><img src="https://www.notion.so/icons/link_gray.svg" style="width:14px;height:14px;display:block"/></span>Document Link</th></tr></thead><tbody><tr id="2616cd19-ce7a-812f-ba78-caf7ee092e67"><td class="cell-title"><a href="Product%20Requirements%20Doc%20(DPR)%202616cd19ce7a809a8d98fcf704412efc/Supporting%20Documents%202616cd19ce7a81008ba3e3fe550c4a92/Technical%20Architecture%20Specifications%202616cd19ce7a812fba78caf7ee092e67.html"><img class="icon" src="https://www.notion.so/icons/attachment_gray.svg"/>Technical Architecture Specifications</a></td><td class="cell-oi;h"><span class="selected-value select-value-color-gray">Technical Documentation</span></td><td class="cell-[?lS"></td></tr><tr id="2616cd19-ce7a-8163-8336-d27d285cbc9a"><td class="cell-title"><a href="Product%20Requirements%20Doc%20(DPR)%202616cd19ce7a809a8d98fcf704412efc/Supporting%20Documents%202616cd19ce7a81008ba3e3fe550c4a92/Market%20Research%20Analysis%20Report%202616cd19ce7a81638336d27d285cbc9a.html"><img class="icon" src="https://www.notion.so/icons/attachment_gray.svg"/>Market Research Analysis Report</a></td><td class="cell-oi;h"><span class="selected-value select-value-color-orange">Market Analysis</span></td><td class="cell-[?lS"></td></tr><tr id="2616cd19-ce7a-819d-a297-e4acda7d40c2"><td class="cell-title"><a href="Product%20Requirements%20Doc%20(DPR)%202616cd19ce7a809a8d98fcf704412efc/Supporting%20Documents%202616cd19ce7a81008ba3e3fe550c4a92/User%20Journey%20Maps%202616cd19ce7a819da297e4acda7d40c2.html"><img class="icon" src="https://www.notion.so/icons/attachment_gray.svg"/>User Journey Maps</a></td><td class="cell-oi;h"><span class="selected-value select-value-color-purple">Design</span></td><td class="cell-[?lS"></td></tr></tbody></table><br/><br/></div><p id="2616cd19-ce7a-8182-b0c7-c95a214b8b60" class="">
+</p></div></div></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>
