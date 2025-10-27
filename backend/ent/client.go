@@ -12,10 +12,12 @@ import (
 	"backend/ent/migrate"
 
 	"backend/ent/event"
+	"backend/ent/eventparticipant"
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect"
 	"entgo.io/ent/dialect/sql"
+	"entgo.io/ent/dialect/sql/sqlgraph"
 )
 
 // Client is the client that holds all ent builders.
@@ -25,6 +27,8 @@ type Client struct {
 	Schema *migrate.Schema
 	// Event is the client for interacting with the Event builders.
 	Event *EventClient
+	// EventParticipant is the client for interacting with the EventParticipant builders.
+	EventParticipant *EventParticipantClient
 }
 
 // NewClient creates a new client configured with the given options.
@@ -37,6 +41,7 @@ func NewClient(opts ...Option) *Client {
 func (c *Client) init() {
 	c.Schema = migrate.NewSchema(c.driver)
 	c.Event = NewEventClient(c.config)
+	c.EventParticipant = NewEventParticipantClient(c.config)
 }
 
 type (
@@ -127,9 +132,10 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 	cfg := c.config
 	cfg.driver = tx
 	return &Tx{
-		ctx:    ctx,
-		config: cfg,
-		Event:  NewEventClient(cfg),
+		ctx:              ctx,
+		config:           cfg,
+		Event:            NewEventClient(cfg),
+		EventParticipant: NewEventParticipantClient(cfg),
 	}, nil
 }
 
@@ -147,9 +153,10 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 	cfg := c.config
 	cfg.driver = &txDriver{tx: tx, drv: c.driver}
 	return &Tx{
-		ctx:    ctx,
-		config: cfg,
-		Event:  NewEventClient(cfg),
+		ctx:              ctx,
+		config:           cfg,
+		Event:            NewEventClient(cfg),
+		EventParticipant: NewEventParticipantClient(cfg),
 	}, nil
 }
 
@@ -179,12 +186,14 @@ func (c *Client) Close() error {
 // In order to add hooks to a specific client, call: `client.Node.Use(...)`.
 func (c *Client) Use(hooks ...Hook) {
 	c.Event.Use(hooks...)
+	c.EventParticipant.Use(hooks...)
 }
 
 // Intercept adds the query interceptors to all the entity clients.
 // In order to add interceptors to a specific client, call: `client.Node.Intercept(...)`.
 func (c *Client) Intercept(interceptors ...Interceptor) {
 	c.Event.Intercept(interceptors...)
+	c.EventParticipant.Intercept(interceptors...)
 }
 
 // Mutate implements the ent.Mutator interface.
@@ -192,6 +201,8 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 	switch m := m.(type) {
 	case *EventMutation:
 		return c.Event.mutate(ctx, m)
+	case *EventParticipantMutation:
+		return c.EventParticipant.mutate(ctx, m)
 	default:
 		return nil, fmt.Errorf("ent: unknown mutation type %T", m)
 	}
@@ -305,6 +316,22 @@ func (c *EventClient) GetX(ctx context.Context, id int) *Event {
 	return obj
 }
 
+// QueryEventID queries the event_id edge of a Event.
+func (c *EventClient) QueryEventID(_m *Event) *EventParticipantQuery {
+	query := (&EventParticipantClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(event.Table, event.FieldID, id),
+			sqlgraph.To(eventparticipant.Table, eventparticipant.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, event.EventIDTable, event.EventIDColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // Hooks returns the client hooks.
 func (c *EventClient) Hooks() []Hook {
 	return c.hooks.Event
@@ -330,12 +357,161 @@ func (c *EventClient) mutate(ctx context.Context, m *EventMutation) (Value, erro
 	}
 }
 
+// EventParticipantClient is a client for the EventParticipant schema.
+type EventParticipantClient struct {
+	config
+}
+
+// NewEventParticipantClient returns a client for the EventParticipant from the given config.
+func NewEventParticipantClient(c config) *EventParticipantClient {
+	return &EventParticipantClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `eventparticipant.Hooks(f(g(h())))`.
+func (c *EventParticipantClient) Use(hooks ...Hook) {
+	c.hooks.EventParticipant = append(c.hooks.EventParticipant, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `eventparticipant.Intercept(f(g(h())))`.
+func (c *EventParticipantClient) Intercept(interceptors ...Interceptor) {
+	c.inters.EventParticipant = append(c.inters.EventParticipant, interceptors...)
+}
+
+// Create returns a builder for creating a EventParticipant entity.
+func (c *EventParticipantClient) Create() *EventParticipantCreate {
+	mutation := newEventParticipantMutation(c.config, OpCreate)
+	return &EventParticipantCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of EventParticipant entities.
+func (c *EventParticipantClient) CreateBulk(builders ...*EventParticipantCreate) *EventParticipantCreateBulk {
+	return &EventParticipantCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *EventParticipantClient) MapCreateBulk(slice any, setFunc func(*EventParticipantCreate, int)) *EventParticipantCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &EventParticipantCreateBulk{err: fmt.Errorf("calling to EventParticipantClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*EventParticipantCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &EventParticipantCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for EventParticipant.
+func (c *EventParticipantClient) Update() *EventParticipantUpdate {
+	mutation := newEventParticipantMutation(c.config, OpUpdate)
+	return &EventParticipantUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *EventParticipantClient) UpdateOne(_m *EventParticipant) *EventParticipantUpdateOne {
+	mutation := newEventParticipantMutation(c.config, OpUpdateOne, withEventParticipant(_m))
+	return &EventParticipantUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *EventParticipantClient) UpdateOneID(id int) *EventParticipantUpdateOne {
+	mutation := newEventParticipantMutation(c.config, OpUpdateOne, withEventParticipantID(id))
+	return &EventParticipantUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for EventParticipant.
+func (c *EventParticipantClient) Delete() *EventParticipantDelete {
+	mutation := newEventParticipantMutation(c.config, OpDelete)
+	return &EventParticipantDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *EventParticipantClient) DeleteOne(_m *EventParticipant) *EventParticipantDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *EventParticipantClient) DeleteOneID(id int) *EventParticipantDeleteOne {
+	builder := c.Delete().Where(eventparticipant.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &EventParticipantDeleteOne{builder}
+}
+
+// Query returns a query builder for EventParticipant.
+func (c *EventParticipantClient) Query() *EventParticipantQuery {
+	return &EventParticipantQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeEventParticipant},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a EventParticipant entity by its id.
+func (c *EventParticipantClient) Get(ctx context.Context, id int) (*EventParticipant, error) {
+	return c.Query().Where(eventparticipant.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *EventParticipantClient) GetX(ctx context.Context, id int) *EventParticipant {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryEvent queries the event edge of a EventParticipant.
+func (c *EventParticipantClient) QueryEvent(_m *EventParticipant) *EventQuery {
+	query := (&EventClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(eventparticipant.Table, eventparticipant.FieldID, id),
+			sqlgraph.To(event.Table, event.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, eventparticipant.EventTable, eventparticipant.EventColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *EventParticipantClient) Hooks() []Hook {
+	return c.hooks.EventParticipant
+}
+
+// Interceptors returns the client interceptors.
+func (c *EventParticipantClient) Interceptors() []Interceptor {
+	return c.inters.EventParticipant
+}
+
+func (c *EventParticipantClient) mutate(ctx context.Context, m *EventParticipantMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&EventParticipantCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&EventParticipantUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&EventParticipantUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&EventParticipantDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown EventParticipant mutation op: %q", m.Op())
+	}
+}
+
 // hooks and interceptors per client, for fast access.
 type (
 	hooks struct {
-		Event []ent.Hook
+		Event, EventParticipant []ent.Hook
 	}
 	inters struct {
-		Event []ent.Interceptor
+		Event, EventParticipant []ent.Interceptor
 	}
 )

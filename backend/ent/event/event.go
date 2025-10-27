@@ -4,6 +4,7 @@ package event
 
 import (
 	"entgo.io/ent/dialect/sql"
+	"entgo.io/ent/dialect/sql/sqlgraph"
 )
 
 const (
@@ -15,8 +16,17 @@ const (
 	FieldEventId = "event_id"
 	// FieldBrandAddress holds the string denoting the brandaddress field in the database.
 	FieldBrandAddress = "brand_address"
+	// EdgeEventID holds the string denoting the event_id edge name in mutations.
+	EdgeEventID = "event_id"
 	// Table holds the table name of the event in the database.
 	Table = "events"
+	// EventIDTable is the table that holds the event_id relation/edge.
+	EventIDTable = "event_participants"
+	// EventIDInverseTable is the table name for the EventParticipant entity.
+	// It exists in this package in order to avoid circular dependency with the "eventparticipant" package.
+	EventIDInverseTable = "event_participants"
+	// EventIDColumn is the table column denoting the event_id relation/edge.
+	EventIDColumn = "event_event_id"
 )
 
 // Columns holds all SQL columns for event fields.
@@ -37,8 +47,6 @@ func ValidColumn(column string) bool {
 }
 
 var (
-	// DefaultEventId holds the default value on creation for the "eventId" field.
-	DefaultEventId string
 	// DefaultBrandAddress holds the default value on creation for the "brandAddress" field.
 	DefaultBrandAddress string
 )
@@ -59,4 +67,25 @@ func ByEventId(opts ...sql.OrderTermOption) OrderOption {
 // ByBrandAddress orders the results by the brandAddress field.
 func ByBrandAddress(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldBrandAddress, opts...).ToFunc()
+}
+
+// ByEventIDCount orders the results by event_id count.
+func ByEventIDCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newEventIDStep(), opts...)
+	}
+}
+
+// ByEventID orders the results by event_id terms.
+func ByEventID(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newEventIDStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+func newEventIDStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(EventIDInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, EventIDTable, EventIDColumn),
+	)
 }

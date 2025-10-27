@@ -7,7 +7,6 @@ import (
 	"os"
 
 	"github.com/joho/godotenv"
-	"github.com/onflow/cadence"
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/access/grpc"
 	"google.golang.org/grpc/credentials/insecure"
@@ -15,6 +14,7 @@ import (
 	grpcOpts "google.golang.org/grpc"
 
 	"backend/ent"
+	"backend/utils"
 
 	"entgo.io/ent/dialect"
 	entsql "entgo.io/ent/dialect/sql"
@@ -24,8 +24,15 @@ import (
 )
 
 const (
+	// Gunakan port gRPC emulator, BUKAN port HTTP/REST
 	EmulatorHost_gRPC = "127.0.0.1:3569"
-	ContractAddress   = "f8d6e0586b0a20c7"
+	ContractAddress   = "f8d6e0586b0a20c7" // Alamat tempat kontrak di-deploy
+)
+
+var (
+	EventCreated     = fmt.Sprintf("A.%s.EventPlatform.EventCreated", ContractAddress)
+	UserRegistered   = fmt.Sprintf("A.%s.EventPlatform.UserRegistered", ContractAddress)
+	UserUnregistered = fmt.Sprintf("A.%s.EventPlatform.UserUnregistered", ContractAddress)
 )
 
 func main() {
@@ -53,6 +60,25 @@ func main() {
 		log.Fatalf("Gagal terhubung ke emulator gRPC: %v", err)
 	}
 	eventCreatedID := fmt.Sprintf("A.%s.EventPlatform.EventCreated", ContractAddress)
+	var startHeight uint64 = 0
+	var endHeight uint64 = 100
+
+	query := grpc.EventRangeQuery{
+		Type:        eventCreatedID,
+		StartHeight: startHeight,
+		EndHeight:   endHeight,
+	}
+	result, err := grpcClient.GetEventsForHeightRange(ctx, query)
+	if err != nil {
+		log.Fatalf("Gagal mengambil events: %v", err)
+	}
+
+	for _, blockEvents := range result {
+		log.Printf("\n--- Events Ditemukan di Block Height: %d ---", blockEvents.Height)
+		for _, event := range blockEvents.Events {
+			log.Printf("Event ID: %s", event.Value.SearchFieldByName("brandAddress"))
+		}
+	}
 
 	grpcBlock, err := grpcClient.GetLatestBlockHeader(ctx, true)
 
@@ -65,7 +91,7 @@ func main() {
 		ctx,
 		0,
 		flow.EventFilter{
-			EventTypes: []string{eventCreatedID},
+			EventTypes: []string{EventCreated, UserRegistered, UserUnregistered},
 		},
 	)
 	if initErr != nil {
@@ -82,44 +108,22 @@ func main() {
 			if !ok {
 				panic("data subscription closed")
 			}
-			// data contains block-level payload with Events
 			for _, ev := range data.Events {
 				fmt.Printf("Type: %s\n", ev.Type)
-				var Fields = ev.Value.FieldsMappedByName()
-				cadenceAddrVal, ok := Fields["brandAddress"]
-				if !ok {
-					log.Println("Error: field 'brandAddress' tidak ditemukan di event")
-					continue
-				}
-				eventIDVal, ok := Fields["eventID"]
-				if !ok {
-					log.Println("Error: field 'eventID' tidak ditemukan di event")
-					continue
-				}
 
-				cadenceAddr, ok := cadenceAddrVal.(cadence.Address)
-				if !ok {
-					log.Println("Error: field 'brandAddress' bukan tipe cadence.Address")
-					return
+				switch ev.Type {
+				case EventCreated:
+					utils.ProcessEventCreated(ctx, ev, client)
+				case UserRegistered:
+					utils.ProcessEventRegistered(ctx, ev, client)
+				case UserUnregistered:
+					utils.ProcessEventUnregistered(ctx, ev, client)
 				}
-
-				cadenceEventID, ok := eventIDVal.(cadence.UInt64)
-				if !ok {
-					log.Println("Error: field 'eventID' bukan tipe cadence.UInt64")
-					return
-				}
-				var brandAddress string = cadenceAddr.String()
-				var eventID string = cadenceEventID.String()
-				event, err := client.Event.Create().SetEventId(eventID).SetBrandAddress(brandAddress).Save(ctx)
-				if err != nil {
-					log.Fatalf("failed creating event")
-				}
-				log.Println("event telah dibuat: ", event)
 			}
 		case err := <-errCh:
 			if err != nil {
 				// handle streaming error (log, reconnect / exponential back-off)
-				log.Fatalf("errCh")
+				log.Fatalf("errorCh")
 			}
 		}
 	}

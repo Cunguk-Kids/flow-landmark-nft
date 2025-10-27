@@ -13,61 +13,51 @@ import (
 	"entgo.io/ent/schema/field"
 )
 
-// EventCreate is the builder for creating a Event entity.
-type EventCreate struct {
+// EventParticipantCreate is the builder for creating a EventParticipant entity.
+type EventParticipantCreate struct {
 	config
-	mutation *EventMutation
+	mutation *EventParticipantMutation
 	hooks    []Hook
 }
 
-// SetEventId sets the "eventId" field.
-func (_c *EventCreate) SetEventId(v int) *EventCreate {
-	_c.mutation.SetEventId(v)
+// SetUserAddress sets the "userAddress" field.
+func (_c *EventParticipantCreate) SetUserAddress(v string) *EventParticipantCreate {
+	_c.mutation.SetUserAddress(v)
 	return _c
 }
 
-// SetBrandAddress sets the "brandAddress" field.
-func (_c *EventCreate) SetBrandAddress(v string) *EventCreate {
-	_c.mutation.SetBrandAddress(v)
-	return _c
-}
-
-// SetNillableBrandAddress sets the "brandAddress" field if the given value is not nil.
-func (_c *EventCreate) SetNillableBrandAddress(v *string) *EventCreate {
+// SetNillableUserAddress sets the "userAddress" field if the given value is not nil.
+func (_c *EventParticipantCreate) SetNillableUserAddress(v *string) *EventParticipantCreate {
 	if v != nil {
-		_c.SetBrandAddress(*v)
+		_c.SetUserAddress(*v)
 	}
 	return _c
 }
 
-// AddEventIDIDs adds the "event_id" edge to the EventParticipant entity by IDs.
-func (_c *EventCreate) AddEventIDIDs(ids ...int) *EventCreate {
-	_c.mutation.AddEventIDIDs(ids...)
+// SetEventID sets the "event" edge to the Event entity by ID.
+func (_c *EventParticipantCreate) SetEventID(id int) *EventParticipantCreate {
+	_c.mutation.SetEventID(id)
 	return _c
 }
 
-// AddEventID adds the "event_id" edges to the EventParticipant entity.
-func (_c *EventCreate) AddEventID(v ...*EventParticipant) *EventCreate {
-	ids := make([]int, len(v))
-	for i := range v {
-		ids[i] = v[i].ID
-	}
-	return _c.AddEventIDIDs(ids...)
+// SetEvent sets the "event" edge to the Event entity.
+func (_c *EventParticipantCreate) SetEvent(v *Event) *EventParticipantCreate {
+	return _c.SetEventID(v.ID)
 }
 
-// Mutation returns the EventMutation object of the builder.
-func (_c *EventCreate) Mutation() *EventMutation {
+// Mutation returns the EventParticipantMutation object of the builder.
+func (_c *EventParticipantCreate) Mutation() *EventParticipantMutation {
 	return _c.mutation
 }
 
-// Save creates the Event in the database.
-func (_c *EventCreate) Save(ctx context.Context) (*Event, error) {
+// Save creates the EventParticipant in the database.
+func (_c *EventParticipantCreate) Save(ctx context.Context) (*EventParticipant, error) {
 	_c.defaults()
 	return withHooks(ctx, _c.sqlSave, _c.mutation, _c.hooks)
 }
 
 // SaveX calls Save and panics if Save returns an error.
-func (_c *EventCreate) SaveX(ctx context.Context) *Event {
+func (_c *EventParticipantCreate) SaveX(ctx context.Context) *EventParticipant {
 	v, err := _c.Save(ctx)
 	if err != nil {
 		panic(err)
@@ -76,38 +66,38 @@ func (_c *EventCreate) SaveX(ctx context.Context) *Event {
 }
 
 // Exec executes the query.
-func (_c *EventCreate) Exec(ctx context.Context) error {
+func (_c *EventParticipantCreate) Exec(ctx context.Context) error {
 	_, err := _c.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (_c *EventCreate) ExecX(ctx context.Context) {
+func (_c *EventParticipantCreate) ExecX(ctx context.Context) {
 	if err := _c.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (_c *EventCreate) defaults() {
-	if _, ok := _c.mutation.BrandAddress(); !ok {
-		v := event.DefaultBrandAddress
-		_c.mutation.SetBrandAddress(v)
+func (_c *EventParticipantCreate) defaults() {
+	if _, ok := _c.mutation.UserAddress(); !ok {
+		v := eventparticipant.DefaultUserAddress
+		_c.mutation.SetUserAddress(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (_c *EventCreate) check() error {
-	if _, ok := _c.mutation.EventId(); !ok {
-		return &ValidationError{Name: "eventId", err: errors.New(`ent: missing required field "Event.eventId"`)}
+func (_c *EventParticipantCreate) check() error {
+	if _, ok := _c.mutation.UserAddress(); !ok {
+		return &ValidationError{Name: "userAddress", err: errors.New(`ent: missing required field "EventParticipant.userAddress"`)}
 	}
-	if _, ok := _c.mutation.BrandAddress(); !ok {
-		return &ValidationError{Name: "brandAddress", err: errors.New(`ent: missing required field "Event.brandAddress"`)}
+	if len(_c.mutation.EventIDs()) == 0 {
+		return &ValidationError{Name: "event", err: errors.New(`ent: missing required edge "EventParticipant.event"`)}
 	}
 	return nil
 }
 
-func (_c *EventCreate) sqlSave(ctx context.Context) (*Event, error) {
+func (_c *EventParticipantCreate) sqlSave(ctx context.Context) (*EventParticipant, error) {
 	if err := _c.check(); err != nil {
 		return nil, err
 	}
@@ -125,59 +115,56 @@ func (_c *EventCreate) sqlSave(ctx context.Context) (*Event, error) {
 	return _node, nil
 }
 
-func (_c *EventCreate) createSpec() (*Event, *sqlgraph.CreateSpec) {
+func (_c *EventParticipantCreate) createSpec() (*EventParticipant, *sqlgraph.CreateSpec) {
 	var (
-		_node = &Event{config: _c.config}
-		_spec = sqlgraph.NewCreateSpec(event.Table, sqlgraph.NewFieldSpec(event.FieldID, field.TypeInt))
+		_node = &EventParticipant{config: _c.config}
+		_spec = sqlgraph.NewCreateSpec(eventparticipant.Table, sqlgraph.NewFieldSpec(eventparticipant.FieldID, field.TypeInt))
 	)
-	if value, ok := _c.mutation.EventId(); ok {
-		_spec.SetField(event.FieldEventId, field.TypeInt, value)
-		_node.EventId = value
+	if value, ok := _c.mutation.UserAddress(); ok {
+		_spec.SetField(eventparticipant.FieldUserAddress, field.TypeString, value)
+		_node.UserAddress = value
 	}
-	if value, ok := _c.mutation.BrandAddress(); ok {
-		_spec.SetField(event.FieldBrandAddress, field.TypeString, value)
-		_node.BrandAddress = value
-	}
-	if nodes := _c.mutation.EventIDIDs(); len(nodes) > 0 {
+	if nodes := _c.mutation.EventIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   event.EventIDTable,
-			Columns: []string{event.EventIDColumn},
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   eventparticipant.EventTable,
+			Columns: []string{eventparticipant.EventColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(eventparticipant.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(event.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
+		_node.event_event_id = &nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec
 }
 
-// EventCreateBulk is the builder for creating many Event entities in bulk.
-type EventCreateBulk struct {
+// EventParticipantCreateBulk is the builder for creating many EventParticipant entities in bulk.
+type EventParticipantCreateBulk struct {
 	config
 	err      error
-	builders []*EventCreate
+	builders []*EventParticipantCreate
 }
 
-// Save creates the Event entities in the database.
-func (_c *EventCreateBulk) Save(ctx context.Context) ([]*Event, error) {
+// Save creates the EventParticipant entities in the database.
+func (_c *EventParticipantCreateBulk) Save(ctx context.Context) ([]*EventParticipant, error) {
 	if _c.err != nil {
 		return nil, _c.err
 	}
 	specs := make([]*sqlgraph.CreateSpec, len(_c.builders))
-	nodes := make([]*Event, len(_c.builders))
+	nodes := make([]*EventParticipant, len(_c.builders))
 	mutators := make([]Mutator, len(_c.builders))
 	for i := range _c.builders {
 		func(i int, root context.Context) {
 			builder := _c.builders[i]
 			builder.defaults()
 			var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
-				mutation, ok := m.(*EventMutation)
+				mutation, ok := m.(*EventParticipantMutation)
 				if !ok {
 					return nil, fmt.Errorf("unexpected mutation type %T", m)
 				}
@@ -224,7 +211,7 @@ func (_c *EventCreateBulk) Save(ctx context.Context) ([]*Event, error) {
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (_c *EventCreateBulk) SaveX(ctx context.Context) []*Event {
+func (_c *EventParticipantCreateBulk) SaveX(ctx context.Context) []*EventParticipant {
 	v, err := _c.Save(ctx)
 	if err != nil {
 		panic(err)
@@ -233,13 +220,13 @@ func (_c *EventCreateBulk) SaveX(ctx context.Context) []*Event {
 }
 
 // Exec executes the query.
-func (_c *EventCreateBulk) Exec(ctx context.Context) error {
+func (_c *EventParticipantCreateBulk) Exec(ctx context.Context) error {
 	_, err := _c.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (_c *EventCreateBulk) ExecX(ctx context.Context) {
+func (_c *EventParticipantCreateBulk) ExecX(ctx context.Context) {
 	if err := _c.Exec(ctx); err != nil {
 		panic(err)
 	}

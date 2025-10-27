@@ -8,3 +8,6 @@ import (
 
 // Event is the predicate function for event builders.
 type Event func(*sql.Selector)
+
+// EventParticipant is the predicate function for eventparticipant builders.
+type EventParticipant func(*sql.Selector)

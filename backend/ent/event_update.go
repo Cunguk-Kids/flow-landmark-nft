@@ -4,6 +4,7 @@ package ent
 
 import (
 	"backend/ent/event"
+	"backend/ent/eventparticipant"
 	"backend/ent/predicate"
 	"context"
 	"errors"
@@ -28,16 +29,23 @@ func (_u *EventUpdate) Where(ps ...predicate.Event) *EventUpdate {
 }
 
 // SetEventId sets the "eventId" field.
-func (_u *EventUpdate) SetEventId(v string) *EventUpdate {
+func (_u *EventUpdate) SetEventId(v int) *EventUpdate {
+	_u.mutation.ResetEventId()
 	_u.mutation.SetEventId(v)
 	return _u
 }
 
 // SetNillableEventId sets the "eventId" field if the given value is not nil.
-func (_u *EventUpdate) SetNillableEventId(v *string) *EventUpdate {
+func (_u *EventUpdate) SetNillableEventId(v *int) *EventUpdate {
 	if v != nil {
 		_u.SetEventId(*v)
 	}
+	return _u
+}
+
+// AddEventId adds value to the "eventId" field.
+func (_u *EventUpdate) AddEventId(v int) *EventUpdate {
+	_u.mutation.AddEventId(v)
 	return _u
 }
 
@@ -55,9 +63,45 @@ func (_u *EventUpdate) SetNillableBrandAddress(v *string) *EventUpdate {
 	return _u
 }
 
+// AddEventIDIDs adds the "event_id" edge to the EventParticipant entity by IDs.
+func (_u *EventUpdate) AddEventIDIDs(ids ...int) *EventUpdate {
+	_u.mutation.AddEventIDIDs(ids...)
+	return _u
+}
+
+// AddEventID adds the "event_id" edges to the EventParticipant entity.
+func (_u *EventUpdate) AddEventID(v ...*EventParticipant) *EventUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddEventIDIDs(ids...)
+}
+
 // Mutation returns the EventMutation object of the builder.
 func (_u *EventUpdate) Mutation() *EventMutation {
 	return _u.mutation
+}
+
+// ClearEventID clears all "event_id" edges to the EventParticipant entity.
+func (_u *EventUpdate) ClearEventID() *EventUpdate {
+	_u.mutation.ClearEventID()
+	return _u
+}
+
+// RemoveEventIDIDs removes the "event_id" edge to EventParticipant entities by IDs.
+func (_u *EventUpdate) RemoveEventIDIDs(ids ...int) *EventUpdate {
+	_u.mutation.RemoveEventIDIDs(ids...)
+	return _u
+}
+
+// RemoveEventID removes "event_id" edges to EventParticipant entities.
+func (_u *EventUpdate) RemoveEventID(v ...*EventParticipant) *EventUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveEventIDIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -97,10 +141,58 @@ func (_u *EventUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 		}
 	}
 	if value, ok := _u.mutation.EventId(); ok {
-		_spec.SetField(event.FieldEventId, field.TypeString, value)
+		_spec.SetField(event.FieldEventId, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.AddedEventId(); ok {
+		_spec.AddField(event.FieldEventId, field.TypeInt, value)
 	}
 	if value, ok := _u.mutation.BrandAddress(); ok {
 		_spec.SetField(event.FieldBrandAddress, field.TypeString, value)
+	}
+	if _u.mutation.EventIDCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   event.EventIDTable,
+			Columns: []string{event.EventIDColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(eventparticipant.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedEventIDIDs(); len(nodes) > 0 && !_u.mutation.EventIDCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   event.EventIDTable,
+			Columns: []string{event.EventIDColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(eventparticipant.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.EventIDIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   event.EventIDTable,
+			Columns: []string{event.EventIDColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(eventparticipant.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
@@ -123,16 +215,23 @@ type EventUpdateOne struct {
 }
 
 // SetEventId sets the "eventId" field.
-func (_u *EventUpdateOne) SetEventId(v string) *EventUpdateOne {
+func (_u *EventUpdateOne) SetEventId(v int) *EventUpdateOne {
+	_u.mutation.ResetEventId()
 	_u.mutation.SetEventId(v)
 	return _u
 }
 
 // SetNillableEventId sets the "eventId" field if the given value is not nil.
-func (_u *EventUpdateOne) SetNillableEventId(v *string) *EventUpdateOne {
+func (_u *EventUpdateOne) SetNillableEventId(v *int) *EventUpdateOne {
 	if v != nil {
 		_u.SetEventId(*v)
 	}
+	return _u
+}
+
+// AddEventId adds value to the "eventId" field.
+func (_u *EventUpdateOne) AddEventId(v int) *EventUpdateOne {
+	_u.mutation.AddEventId(v)
 	return _u
 }
 
@@ -150,9 +249,45 @@ func (_u *EventUpdateOne) SetNillableBrandAddress(v *string) *EventUpdateOne {
 	return _u
 }
 
+// AddEventIDIDs adds the "event_id" edge to the EventParticipant entity by IDs.
+func (_u *EventUpdateOne) AddEventIDIDs(ids ...int) *EventUpdateOne {
+	_u.mutation.AddEventIDIDs(ids...)
+	return _u
+}
+
+// AddEventID adds the "event_id" edges to the EventParticipant entity.
+func (_u *EventUpdateOne) AddEventID(v ...*EventParticipant) *EventUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddEventIDIDs(ids...)
+}
+
 // Mutation returns the EventMutation object of the builder.
 func (_u *EventUpdateOne) Mutation() *EventMutation {
 	return _u.mutation
+}
+
+// ClearEventID clears all "event_id" edges to the EventParticipant entity.
+func (_u *EventUpdateOne) ClearEventID() *EventUpdateOne {
+	_u.mutation.ClearEventID()
+	return _u
+}
+
+// RemoveEventIDIDs removes the "event_id" edge to EventParticipant entities by IDs.
+func (_u *EventUpdateOne) RemoveEventIDIDs(ids ...int) *EventUpdateOne {
+	_u.mutation.RemoveEventIDIDs(ids...)
+	return _u
+}
+
+// RemoveEventID removes "event_id" edges to EventParticipant entities.
+func (_u *EventUpdateOne) RemoveEventID(v ...*EventParticipant) *EventUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveEventIDIDs(ids...)
 }
 
 // Where appends a list predicates to the EventUpdate builder.
@@ -222,10 +357,58 @@ func (_u *EventUpdateOne) sqlSave(ctx context.Context) (_node *Event, err error)
 		}
 	}
 	if value, ok := _u.mutation.EventId(); ok {
-		_spec.SetField(event.FieldEventId, field.TypeString, value)
+		_spec.SetField(event.FieldEventId, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.AddedEventId(); ok {
+		_spec.AddField(event.FieldEventId, field.TypeInt, value)
 	}
 	if value, ok := _u.mutation.BrandAddress(); ok {
 		_spec.SetField(event.FieldBrandAddress, field.TypeString, value)
+	}
+	if _u.mutation.EventIDCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   event.EventIDTable,
+			Columns: []string{event.EventIDColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(eventparticipant.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedEventIDIDs(); len(nodes) > 0 && !_u.mutation.EventIDCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   event.EventIDTable,
+			Columns: []string{event.EventIDColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(eventparticipant.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.EventIDIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   event.EventIDTable,
+			Columns: []string{event.EventIDColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(eventparticipant.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	_node = &Event{config: _u.config}
 	_spec.Assign = _node.assignValues
