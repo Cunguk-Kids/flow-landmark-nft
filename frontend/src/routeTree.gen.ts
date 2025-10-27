@@ -10,33 +10,53 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as EventsFormEventIdRouteImport } from './routes/events/form.$eventId'
+import { Route as EventsDetailsEventIdRouteImport } from './routes/events/details.$eventId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const EventsFormEventIdRoute = EventsFormEventIdRouteImport.update({
+  id: '/events/form/$eventId',
+  path: '/events/form/$eventId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EventsDetailsEventIdRoute = EventsDetailsEventIdRouteImport.update({
+  id: '/events/details/$eventId',
+  path: '/events/details/$eventId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/events/details/$eventId': typeof EventsDetailsEventIdRoute
+  '/events/form/$eventId': typeof EventsFormEventIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/events/details/$eventId': typeof EventsDetailsEventIdRoute
+  '/events/form/$eventId': typeof EventsFormEventIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/events/details/$eventId': typeof EventsDetailsEventIdRoute
+  '/events/form/$eventId': typeof EventsFormEventIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths: '/' | '/events/details/$eventId' | '/events/form/$eventId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to: '/' | '/events/details/$eventId' | '/events/form/$eventId'
+  id: '__root__' | '/' | '/events/details/$eventId' | '/events/form/$eventId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  EventsDetailsEventIdRoute: typeof EventsDetailsEventIdRoute
+  EventsFormEventIdRoute: typeof EventsFormEventIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +68,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/events/form/$eventId': {
+      id: '/events/form/$eventId'
+      path: '/events/form/$eventId'
+      fullPath: '/events/form/$eventId'
+      preLoaderRoute: typeof EventsFormEventIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/events/details/$eventId': {
+      id: '/events/details/$eventId'
+      path: '/events/details/$eventId'
+      fullPath: '/events/details/$eventId'
+      preLoaderRoute: typeof EventsDetailsEventIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  EventsDetailsEventIdRoute: EventsDetailsEventIdRoute,
+  EventsFormEventIdRoute: EventsFormEventIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
