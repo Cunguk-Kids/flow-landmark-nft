@@ -1,33 +1,68 @@
 import { useFlowCurrentUser } from "@onflow/react-sdk";
+import { Typhography } from "./ui/typhography";
+import { useAccount } from "@/hooks/useAccount";
+import { Button } from "./ui/button";
+import { LucideCircleUserRound, LucideLogIn, LucideLogOut, LucideMenu } from "lucide-react";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 
 export default function Auth() {
-  const { user, authenticate, unauthenticate } = useFlowCurrentUser();
+  const { authenticate, unauthenticate } = useFlowCurrentUser();
 
-  if (user?.loggedIn) {
-    return (
-      <div className="flex items-center gap-3">
-        <div className="hidden sm:block text-right">
-          <div className="text-xs text-gray-500 dark:text-gray-400">Connected</div>
-          <code className="text-sm font-mono text-gray-700 dark:text-gray-300">
-            {user.addr?.slice(0, 6)}...{user.addr?.slice(-4)}
-          </code>
-        </div>
-        <button
-          onClick={() => unauthenticate()}
-          className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg font-medium transition-colors shadow-sm"
-        >
-          Disconnect
-        </button>
-      </div>
-    );
-  }
+  const { data } = useAccount();
 
   return (
-    <button
-      onClick={() => authenticate()}
-      className="px-6 py-2 bg-gradient-to-r from-sky-500 to-purple-500 hover:from-sky-600 hover:to-purple-600 text-white rounded-lg font-semibold transition-all shadow-lg hover:shadow-xl transform hover:scale-105"
-    >
-      Connect Wallet
-    </button>
+    <Sheet>
+      <SheetTrigger asChild>
+        <Button variant="ghost" size="icon-lg">
+          {data ? (
+            <img src={data?.avatar} className="block size-10" />
+          ) : (
+            <LucideMenu className="size-5 text-foreground" />
+          )}
+        </Button>
+      </SheetTrigger>
+      <SheetContent className="dark">
+        <SheetHeader>
+          <div className="relative isolate rounded-md overflow-hidden p-0">
+            <img src="/profile-bg.png" className="block h-auto w-full" />
+            <div className="flex gap-2 items-center -mt-10 backdrop-blur-lg absolute bottom-0 left-0 right-0 p-2 shadow-2xl">
+              <div className="backdrop-blur-md border rounded-full overflow-hidden size-12 sm:size-15 flex items-center justify-center">
+                {data ? (
+                  <img src={data?.avatar} className="block size-full" />
+                ) : (
+                  <LucideCircleUserRound className="size-full text-foreground" />
+                )}
+              </div>
+              <div className="flex flex-col">
+                <SheetTitle>
+                  <Typhography>{data?.address ?? "0x0"}</Typhography>
+                </SheetTitle>
+                <SheetDescription>
+                  <Typhography>Lorem ipsum dolor sit amet</Typhography>
+                </SheetDescription>
+              </div>
+            </div>
+          </div>
+          {data ? (
+            <Button onClick={unauthenticate} variant="destructive">
+              <LucideLogOut />
+              <Typhography>Disconect Wallet</Typhography>
+            </Button>
+          ) : (
+            <Button onClick={authenticate} variant="default">
+              <LucideLogIn />
+              <Typhography>Connect Wallet</Typhography>
+            </Button>
+          )}
+        </SheetHeader>
+      </SheetContent>
+    </Sheet>
   );
 }
