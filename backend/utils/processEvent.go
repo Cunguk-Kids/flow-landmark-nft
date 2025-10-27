@@ -4,6 +4,7 @@ import (
 	"backend/ent"
 	"backend/ent/event"
 	"backend/ent/eventparticipant"
+	"backend/script"
 	"context" // Dibutuhkan jika Anda akan melakukan operasi DB
 	"fmt"
 	"log"
@@ -11,6 +12,7 @@ import (
 
 	"github.com/onflow/cadence"
 	"github.com/onflow/flow-go-sdk"
+	"github.com/onflow/flow-go-sdk/access/grpc"
 )
 
 /**
@@ -44,7 +46,7 @@ func getCadenceField[T cadence.Value](fields map[string]cadence.Value, key strin
 
 // processEventCreated menerima event 'EventCreated' dan memprosesnya
 // 'ctx' ditambahkan jika Anda perlu meneruskannya ke operasi database
-func ProcessEventCreated(ctx context.Context, ev flow.Event, client *ent.Client) { // <-- Tambahkan parameter
+func ProcessEventCreated(ctx context.Context, flowClient *grpc.BaseClient, ev flow.Event, client *ent.Client) { // <-- Tambahkan parameter
 	var Fields = ev.Value.FieldsMappedByName()
 	cadenceAddr, err := getCadenceField[cadence.Address](Fields, "brandAddress")
 	if err != nil {
@@ -62,12 +64,82 @@ func ProcessEventCreated(ctx context.Context, ev flow.Event, client *ent.Client)
 	var brandAddress string = cadenceAddr.String()
 	var eventID string = cadenceEventID.String()
 	num, err := strconv.Atoi(eventID) // Convert string to integer
-
 	if err != nil {
-		fmt.Println("Error converting string to integer:", err)
+		log.Fatalf("error failed to convert to integer")
+	}
+
+	script := []byte(script.GetEventDetailScriptTemplate)
+	scriptArgs := []cadence.Value{
+		cadence.NewAddress(cadenceAddr),
+		cadenceEventID,
+	}
+
+	scriptResult, err := flowClient.ExecuteScriptAtLatestBlock(ctx, script, scriptArgs)
+	if err != nil {
+		log.Printf("[ProcessEventCreated] Gagal execute get_event_detail script for event %d: %v", num, err)
 		return
 	}
-	event, err := client.Event.Create().SetEventId(num).SetBrandAddress(brandAddress).Save(ctx)
+
+	optionalResult, ok := scriptResult.(cadence.Optional)
+	if !ok || optionalResult.Value == nil {
+		log.Printf("[ProcessEventCreated] Script get_event_detail mengembalikan nil untuk event %d", num)
+		return
+	}
+
+	eventDetailsStruct, ok := optionalResult.Value.(cadence.Struct)
+	if !ok {
+		log.Printf("[ProcessEventCreated] Gagal parsing hasil script menjadi cadence.Struct untuk event %d", num)
+		return
+	}
+
+	eventDetailsFields := eventDetailsStruct.FieldsMappedByName()
+	eventNameCadence, err := getCadenceField[cadence.String](eventDetailsFields, "eventName")
+	quotaCadence, _ := getCadenceField[cadence.UInt64](eventDetailsFields, "quota")
+	counterCadence, _ := getCadenceField[cadence.UInt64](eventDetailsFields, "counter")
+	descriptionCadence, _ := getCadenceField[cadence.String](eventDetailsFields, "description")
+	imageCadence, _ := getCadenceField[cadence.String](eventDetailsFields, "image")
+	latCadence, _ := getCadenceField[cadence.Fix64](eventDetailsFields, "lat")
+	longCadence, _ := getCadenceField[cadence.Fix64](eventDetailsFields, "long")
+	radiusCadence, _ := getCadenceField[cadence.UFix64](eventDetailsFields, "radius")
+	statusCadence, _ := getCadenceField[cadence.UInt8](eventDetailsFields, "status")
+	startDateCadence, _ := getCadenceField[cadence.UFix64](eventDetailsFields, "startDate")
+	endDateCadence, _ := getCadenceField[cadence.UFix64](eventDetailsFields, "endDate")
+	totalRareNFTCadence, _ := getCadenceField[cadence.UInt64](eventDetailsFields, "totalRareNFT")
+
+	if err != nil {
+		fmt.Println("Error get cadence field:", err)
+		return
+	}
+
+	eventName := eventNameCadence.String()
+	quota, _ := strconv.Atoi(quotaCadence.String())
+	counter, _ := strconv.Atoi(counterCadence.String())
+	description := descriptionCadence.String()
+	image := imageCadence.String()
+	lat, _ := strconv.ParseFloat(latCadence.String(), 64)
+	long, _ := strconv.ParseFloat(longCadence.String(), 64)
+	radius, _ := strconv.ParseFloat(radiusCadence.String(), 64)
+	status, _ := strconv.Atoi(statusCadence.String())
+	startDate, _ := strconv.ParseFloat(startDateCadence.String(), 64)
+	endDate, _ := strconv.ParseFloat(endDateCadence.String(), 64)
+	totalRareNFT, _ := strconv.Atoi(totalRareNFTCadence.String())
+
+	event, err := client.Event.Create().
+		SetEventId(num).
+		SetBrandAddress(brandAddress).
+		SetEventName(eventName).
+		SetQuota(quota).
+		SetCounter(counter).
+		SetDescription(description).
+		SetImage(image).
+		SetLat(lat).
+		SetLong(long).
+		SetRadius(radius).
+		SetStatus(status).
+		SetStartDate(startDate).
+		SetEndDate(endDate).
+		SetTotalRareNFT(totalRareNFT).
+		Save(ctx)
 	if err != nil {
 		log.Fatalf("failed creating event")
 	}
@@ -149,4 +221,8 @@ func ProcessEventUnregistered(ctx context.Context, ev flow.Event, client *ent.Cl
 	} else {
 		log.Printf("[DB] Berhasil menghapus %d user participant (Event: %d, User: %s)", deletedCount, eventIDInt, userAddress)
 	}
+}
+
+func ProcessEventStatus(ctx context.Context, ev flow.Event, client *ent.Client) {
+
 }

@@ -17,6 +17,18 @@ func (Event) Fields() []ent.Field {
 		field.Int("eventId").Unique(),
 		field.String("brandAddress").
 			Default("Unknown"),
+		field.String("eventName"),
+		field.Int("quota"),
+		field.Int("counter"),
+		field.String("description"),
+		field.String("image"),
+		field.Float("lat"),
+		field.Float("long"),
+		field.Float("radius"),
+		field.Int("status"),
+		field.Float("startDate"),
+		field.Float("endDate"),
+		field.Int("totalRareNFT"),
 	}
 }
 

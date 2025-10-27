@@ -63,6 +63,237 @@ func (_u *EventUpdate) SetNillableBrandAddress(v *string) *EventUpdate {
 	return _u
 }
 
+// SetEventName sets the "eventName" field.
+func (_u *EventUpdate) SetEventName(v string) *EventUpdate {
+	_u.mutation.SetEventName(v)
+	return _u
+}
+
+// SetNillableEventName sets the "eventName" field if the given value is not nil.
+func (_u *EventUpdate) SetNillableEventName(v *string) *EventUpdate {
+	if v != nil {
+		_u.SetEventName(*v)
+	}
+	return _u
+}
+
+// SetQuota sets the "quota" field.
+func (_u *EventUpdate) SetQuota(v int) *EventUpdate {
+	_u.mutation.ResetQuota()
+	_u.mutation.SetQuota(v)
+	return _u
+}
+
+// SetNillableQuota sets the "quota" field if the given value is not nil.
+func (_u *EventUpdate) SetNillableQuota(v *int) *EventUpdate {
+	if v != nil {
+		_u.SetQuota(*v)
+	}
+	return _u
+}
+
+// AddQuota adds value to the "quota" field.
+func (_u *EventUpdate) AddQuota(v int) *EventUpdate {
+	_u.mutation.AddQuota(v)
+	return _u
+}
+
+// SetCounter sets the "counter" field.
+func (_u *EventUpdate) SetCounter(v int) *EventUpdate {
+	_u.mutation.ResetCounter()
+	_u.mutation.SetCounter(v)
+	return _u
+}
+
+// SetNillableCounter sets the "counter" field if the given value is not nil.
+func (_u *EventUpdate) SetNillableCounter(v *int) *EventUpdate {
+	if v != nil {
+		_u.SetCounter(*v)
+	}
+	return _u
+}
+
+// AddCounter adds value to the "counter" field.
+func (_u *EventUpdate) AddCounter(v int) *EventUpdate {
+	_u.mutation.AddCounter(v)
+	return _u
+}
+
+// SetDescription sets the "description" field.
+func (_u *EventUpdate) SetDescription(v string) *EventUpdate {
+	_u.mutation.SetDescription(v)
+	return _u
+}
+
+// SetNillableDescription sets the "description" field if the given value is not nil.
+func (_u *EventUpdate) SetNillableDescription(v *string) *EventUpdate {
+	if v != nil {
+		_u.SetDescription(*v)
+	}
+	return _u
+}
+
+// SetImage sets the "image" field.
+func (_u *EventUpdate) SetImage(v string) *EventUpdate {
+	_u.mutation.SetImage(v)
+	return _u
+}
+
+// SetNillableImage sets the "image" field if the given value is not nil.
+func (_u *EventUpdate) SetNillableImage(v *string) *EventUpdate {
+	if v != nil {
+		_u.SetImage(*v)
+	}
+	return _u
+}
+
+// SetLat sets the "lat" field.
+func (_u *EventUpdate) SetLat(v float64) *EventUpdate {
+	_u.mutation.ResetLat()
+	_u.mutation.SetLat(v)
+	return _u
+}
+
+// SetNillableLat sets the "lat" field if the given value is not nil.
+func (_u *EventUpdate) SetNillableLat(v *float64) *EventUpdate {
+	if v != nil {
+		_u.SetLat(*v)
+	}
+	return _u
+}
+
+// AddLat adds value to the "lat" field.
+func (_u *EventUpdate) AddLat(v float64) *EventUpdate {
+	_u.mutation.AddLat(v)
+	return _u
+}
+
+// SetLong sets the "long" field.
+func (_u *EventUpdate) SetLong(v float64) *EventUpdate {
+	_u.mutation.ResetLong()
+	_u.mutation.SetLong(v)
+	return _u
+}
+
+// SetNillableLong sets the "long" field if the given value is not nil.
+func (_u *EventUpdate) SetNillableLong(v *float64) *EventUpdate {
+	if v != nil {
+		_u.SetLong(*v)
+	}
+	return _u
+}
+
+// AddLong adds value to the "long" field.
+func (_u *EventUpdate) AddLong(v float64) *EventUpdate {
+	_u.mutation.AddLong(v)
+	return _u
+}
+
+// SetRadius sets the "radius" field.
+func (_u *EventUpdate) SetRadius(v float64) *EventUpdate {
+	_u.mutation.ResetRadius()
+	_u.mutation.SetRadius(v)
+	return _u
+}
+
+// SetNillableRadius sets the "radius" field if the given value is not nil.
+func (_u *EventUpdate) SetNillableRadius(v *float64) *EventUpdate {
+	if v != nil {
+		_u.SetRadius(*v)
+	}
+	return _u
+}
+
+// AddRadius adds value to the "radius" field.
+func (_u *EventUpdate) AddRadius(v float64) *EventUpdate {
+	_u.mutation.AddRadius(v)
+	return _u
+}
+
+// SetStatus sets the "status" field.
+func (_u *EventUpdate) SetStatus(v int) *EventUpdate {
+	_u.mutation.ResetStatus()
+	_u.mutation.SetStatus(v)
+	return _u
+}
+
+// SetNillableStatus sets the "status" field if the given value is not nil.
+func (_u *EventUpdate) SetNillableStatus(v *int) *EventUpdate {
+	if v != nil {
+		_u.SetStatus(*v)
+	}
+	return _u
+}
+
+// AddStatus adds value to the "status" field.
+func (_u *EventUpdate) AddStatus(v int) *EventUpdate {
+	_u.mutation.AddStatus(v)
+	return _u
+}
+
+// SetStartDate sets the "startDate" field.
+func (_u *EventUpdate) SetStartDate(v float64) *EventUpdate {
+	_u.mutation.ResetStartDate()
+	_u.mutation.SetStartDate(v)
+	return _u
+}
+
+// SetNillableStartDate sets the "startDate" field if the given value is not nil.
+func (_u *EventUpdate) SetNillableStartDate(v *float64) *EventUpdate {
+	if v != nil {
+		_u.SetStartDate(*v)
+	}
+	return _u
+}
+
+// AddStartDate adds value to the "startDate" field.
+func (_u *EventUpdate) AddStartDate(v float64) *EventUpdate {
+	_u.mutation.AddStartDate(v)
+	return _u
+}
+
+// SetEndDate sets the "endDate" field.
+func (_u *EventUpdate) SetEndDate(v float64) *EventUpdate {
+	_u.mutation.ResetEndDate()
+	_u.mutation.SetEndDate(v)
+	return _u
+}
+
+// SetNillableEndDate sets the "endDate" field if the given value is not nil.
+func (_u *EventUpdate) SetNillableEndDate(v *float64) *EventUpdate {
+	if v != nil {
+		_u.SetEndDate(*v)
+	}
+	return _u
+}
+
+// AddEndDate adds value to the "endDate" field.
+func (_u *EventUpdate) AddEndDate(v float64) *EventUpdate {
+	_u.mutation.AddEndDate(v)
+	return _u
+}
+
+// SetTotalRareNFT sets the "totalRareNFT" field.
+func (_u *EventUpdate) SetTotalRareNFT(v int) *EventUpdate {
+	_u.mutation.ResetTotalRareNFT()
+	_u.mutation.SetTotalRareNFT(v)
+	return _u
+}
+
+// SetNillableTotalRareNFT sets the "totalRareNFT" field if the given value is not nil.
+func (_u *EventUpdate) SetNillableTotalRareNFT(v *int) *EventUpdate {
+	if v != nil {
+		_u.SetTotalRareNFT(*v)
+	}
+	return _u
+}
+
+// AddTotalRareNFT adds value to the "totalRareNFT" field.
+func (_u *EventUpdate) AddTotalRareNFT(v int) *EventUpdate {
+	_u.mutation.AddTotalRareNFT(v)
+	return _u
+}
+
 // AddEventIDIDs adds the "event_id" edge to the EventParticipant entity by IDs.
 func (_u *EventUpdate) AddEventIDIDs(ids ...int) *EventUpdate {
 	_u.mutation.AddEventIDIDs(ids...)
@@ -148,6 +379,69 @@ func (_u *EventUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	}
 	if value, ok := _u.mutation.BrandAddress(); ok {
 		_spec.SetField(event.FieldBrandAddress, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.EventName(); ok {
+		_spec.SetField(event.FieldEventName, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.Quota(); ok {
+		_spec.SetField(event.FieldQuota, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.AddedQuota(); ok {
+		_spec.AddField(event.FieldQuota, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.Counter(); ok {
+		_spec.SetField(event.FieldCounter, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.AddedCounter(); ok {
+		_spec.AddField(event.FieldCounter, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.Description(); ok {
+		_spec.SetField(event.FieldDescription, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.Image(); ok {
+		_spec.SetField(event.FieldImage, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.Lat(); ok {
+		_spec.SetField(event.FieldLat, field.TypeFloat64, value)
+	}
+	if value, ok := _u.mutation.AddedLat(); ok {
+		_spec.AddField(event.FieldLat, field.TypeFloat64, value)
+	}
+	if value, ok := _u.mutation.Long(); ok {
+		_spec.SetField(event.FieldLong, field.TypeFloat64, value)
+	}
+	if value, ok := _u.mutation.AddedLong(); ok {
+		_spec.AddField(event.FieldLong, field.TypeFloat64, value)
+	}
+	if value, ok := _u.mutation.Radius(); ok {
+		_spec.SetField(event.FieldRadius, field.TypeFloat64, value)
+	}
+	if value, ok := _u.mutation.AddedRadius(); ok {
+		_spec.AddField(event.FieldRadius, field.TypeFloat64, value)
+	}
+	if value, ok := _u.mutation.Status(); ok {
+		_spec.SetField(event.FieldStatus, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.AddedStatus(); ok {
+		_spec.AddField(event.FieldStatus, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.StartDate(); ok {
+		_spec.SetField(event.FieldStartDate, field.TypeFloat64, value)
+	}
+	if value, ok := _u.mutation.AddedStartDate(); ok {
+		_spec.AddField(event.FieldStartDate, field.TypeFloat64, value)
+	}
+	if value, ok := _u.mutation.EndDate(); ok {
+		_spec.SetField(event.FieldEndDate, field.TypeFloat64, value)
+	}
+	if value, ok := _u.mutation.AddedEndDate(); ok {
+		_spec.AddField(event.FieldEndDate, field.TypeFloat64, value)
+	}
+	if value, ok := _u.mutation.TotalRareNFT(); ok {
+		_spec.SetField(event.FieldTotalRareNFT, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.AddedTotalRareNFT(); ok {
+		_spec.AddField(event.FieldTotalRareNFT, field.TypeInt, value)
 	}
 	if _u.mutation.EventIDCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -246,6 +540,237 @@ func (_u *EventUpdateOne) SetNillableBrandAddress(v *string) *EventUpdateOne {
 	if v != nil {
 		_u.SetBrandAddress(*v)
 	}
+	return _u
+}
+
+// SetEventName sets the "eventName" field.
+func (_u *EventUpdateOne) SetEventName(v string) *EventUpdateOne {
+	_u.mutation.SetEventName(v)
+	return _u
+}
+
+// SetNillableEventName sets the "eventName" field if the given value is not nil.
+func (_u *EventUpdateOne) SetNillableEventName(v *string) *EventUpdateOne {
+	if v != nil {
+		_u.SetEventName(*v)
+	}
+	return _u
+}
+
+// SetQuota sets the "quota" field.
+func (_u *EventUpdateOne) SetQuota(v int) *EventUpdateOne {
+	_u.mutation.ResetQuota()
+	_u.mutation.SetQuota(v)
+	return _u
+}
+
+// SetNillableQuota sets the "quota" field if the given value is not nil.
+func (_u *EventUpdateOne) SetNillableQuota(v *int) *EventUpdateOne {
+	if v != nil {
+		_u.SetQuota(*v)
+	}
+	return _u
+}
+
+// AddQuota adds value to the "quota" field.
+func (_u *EventUpdateOne) AddQuota(v int) *EventUpdateOne {
+	_u.mutation.AddQuota(v)
+	return _u
+}
+
+// SetCounter sets the "counter" field.
+func (_u *EventUpdateOne) SetCounter(v int) *EventUpdateOne {
+	_u.mutation.ResetCounter()
+	_u.mutation.SetCounter(v)
+	return _u
+}
+
+// SetNillableCounter sets the "counter" field if the given value is not nil.
+func (_u *EventUpdateOne) SetNillableCounter(v *int) *EventUpdateOne {
+	if v != nil {
+		_u.SetCounter(*v)
+	}
+	return _u
+}
+
+// AddCounter adds value to the "counter" field.
+func (_u *EventUpdateOne) AddCounter(v int) *EventUpdateOne {
+	_u.mutation.AddCounter(v)
+	return _u
+}
+
+// SetDescription sets the "description" field.
+func (_u *EventUpdateOne) SetDescription(v string) *EventUpdateOne {
+	_u.mutation.SetDescription(v)
+	return _u
+}
+
+// SetNillableDescription sets the "description" field if the given value is not nil.
+func (_u *EventUpdateOne) SetNillableDescription(v *string) *EventUpdateOne {
+	if v != nil {
+		_u.SetDescription(*v)
+	}
+	return _u
+}
+
+// SetImage sets the "image" field.
+func (_u *EventUpdateOne) SetImage(v string) *EventUpdateOne {
+	_u.mutation.SetImage(v)
+	return _u
+}
+
+// SetNillableImage sets the "image" field if the given value is not nil.
+func (_u *EventUpdateOne) SetNillableImage(v *string) *EventUpdateOne {
+	if v != nil {
+		_u.SetImage(*v)
+	}
+	return _u
+}
+
+// SetLat sets the "lat" field.
+func (_u *EventUpdateOne) SetLat(v float64) *EventUpdateOne {
+	_u.mutation.ResetLat()
+	_u.mutation.SetLat(v)
+	return _u
+}
+
+// SetNillableLat sets the "lat" field if the given value is not nil.
+func (_u *EventUpdateOne) SetNillableLat(v *float64) *EventUpdateOne {
+	if v != nil {
+		_u.SetLat(*v)
+	}
+	return _u
+}
+
+// AddLat adds value to the "lat" field.
+func (_u *EventUpdateOne) AddLat(v float64) *EventUpdateOne {
+	_u.mutation.AddLat(v)
+	return _u
+}
+
+// SetLong sets the "long" field.
+func (_u *EventUpdateOne) SetLong(v float64) *EventUpdateOne {
+	_u.mutation.ResetLong()
+	_u.mutation.SetLong(v)
+	return _u
+}
+
+// SetNillableLong sets the "long" field if the given value is not nil.
+func (_u *EventUpdateOne) SetNillableLong(v *float64) *EventUpdateOne {
+	if v != nil {
+		_u.SetLong(*v)
+	}
+	return _u
+}
+
+// AddLong adds value to the "long" field.
+func (_u *EventUpdateOne) AddLong(v float64) *EventUpdateOne {
+	_u.mutation.AddLong(v)
+	return _u
+}
+
+// SetRadius sets the "radius" field.
+func (_u *EventUpdateOne) SetRadius(v float64) *EventUpdateOne {
+	_u.mutation.ResetRadius()
+	_u.mutation.SetRadius(v)
+	return _u
+}
+
+// SetNillableRadius sets the "radius" field if the given value is not nil.
+func (_u *EventUpdateOne) SetNillableRadius(v *float64) *EventUpdateOne {
+	if v != nil {
+		_u.SetRadius(*v)
+	}
+	return _u
+}
+
+// AddRadius adds value to the "radius" field.
+func (_u *EventUpdateOne) AddRadius(v float64) *EventUpdateOne {
+	_u.mutation.AddRadius(v)
+	return _u
+}
+
+// SetStatus sets the "status" field.
+func (_u *EventUpdateOne) SetStatus(v int) *EventUpdateOne {
+	_u.mutation.ResetStatus()
+	_u.mutation.SetStatus(v)
+	return _u
+}
+
+// SetNillableStatus sets the "status" field if the given value is not nil.
+func (_u *EventUpdateOne) SetNillableStatus(v *int) *EventUpdateOne {
+	if v != nil {
+		_u.SetStatus(*v)
+	}
+	return _u
+}
+
+// AddStatus adds value to the "status" field.
+func (_u *EventUpdateOne) AddStatus(v int) *EventUpdateOne {
+	_u.mutation.AddStatus(v)
+	return _u
+}
+
+// SetStartDate sets the "startDate" field.
+func (_u *EventUpdateOne) SetStartDate(v float64) *EventUpdateOne {
+	_u.mutation.ResetStartDate()
+	_u.mutation.SetStartDate(v)
+	return _u
+}
+
+// SetNillableStartDate sets the "startDate" field if the given value is not nil.
+func (_u *EventUpdateOne) SetNillableStartDate(v *float64) *EventUpdateOne {
+	if v != nil {
+		_u.SetStartDate(*v)
+	}
+	return _u
+}
+
+// AddStartDate adds value to the "startDate" field.
+func (_u *EventUpdateOne) AddStartDate(v float64) *EventUpdateOne {
+	_u.mutation.AddStartDate(v)
+	return _u
+}
+
+// SetEndDate sets the "endDate" field.
+func (_u *EventUpdateOne) SetEndDate(v float64) *EventUpdateOne {
+	_u.mutation.ResetEndDate()
+	_u.mutation.SetEndDate(v)
+	return _u
+}
+
+// SetNillableEndDate sets the "endDate" field if the given value is not nil.
+func (_u *EventUpdateOne) SetNillableEndDate(v *float64) *EventUpdateOne {
+	if v != nil {
+		_u.SetEndDate(*v)
+	}
+	return _u
+}
+
+// AddEndDate adds value to the "endDate" field.
+func (_u *EventUpdateOne) AddEndDate(v float64) *EventUpdateOne {
+	_u.mutation.AddEndDate(v)
+	return _u
+}
+
+// SetTotalRareNFT sets the "totalRareNFT" field.
+func (_u *EventUpdateOne) SetTotalRareNFT(v int) *EventUpdateOne {
+	_u.mutation.ResetTotalRareNFT()
+	_u.mutation.SetTotalRareNFT(v)
+	return _u
+}
+
+// SetNillableTotalRareNFT sets the "totalRareNFT" field if the given value is not nil.
+func (_u *EventUpdateOne) SetNillableTotalRareNFT(v *int) *EventUpdateOne {
+	if v != nil {
+		_u.SetTotalRareNFT(*v)
+	}
+	return _u
+}
+
+// AddTotalRareNFT adds value to the "totalRareNFT" field.
+func (_u *EventUpdateOne) AddTotalRareNFT(v int) *EventUpdateOne {
+	_u.mutation.AddTotalRareNFT(v)
 	return _u
 }
 
@@ -364,6 +889,69 @@ func (_u *EventUpdateOne) sqlSave(ctx context.Context) (_node *Event, err error)
 	}
 	if value, ok := _u.mutation.BrandAddress(); ok {
 		_spec.SetField(event.FieldBrandAddress, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.EventName(); ok {
+		_spec.SetField(event.FieldEventName, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.Quota(); ok {
+		_spec.SetField(event.FieldQuota, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.AddedQuota(); ok {
+		_spec.AddField(event.FieldQuota, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.Counter(); ok {
+		_spec.SetField(event.FieldCounter, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.AddedCounter(); ok {
+		_spec.AddField(event.FieldCounter, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.Description(); ok {
+		_spec.SetField(event.FieldDescription, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.Image(); ok {
+		_spec.SetField(event.FieldImage, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.Lat(); ok {
+		_spec.SetField(event.FieldLat, field.TypeFloat64, value)
+	}
+	if value, ok := _u.mutation.AddedLat(); ok {
+		_spec.AddField(event.FieldLat, field.TypeFloat64, value)
+	}
+	if value, ok := _u.mutation.Long(); ok {
+		_spec.SetField(event.FieldLong, field.TypeFloat64, value)
+	}
+	if value, ok := _u.mutation.AddedLong(); ok {
+		_spec.AddField(event.FieldLong, field.TypeFloat64, value)
+	}
+	if value, ok := _u.mutation.Radius(); ok {
+		_spec.SetField(event.FieldRadius, field.TypeFloat64, value)
+	}
+	if value, ok := _u.mutation.AddedRadius(); ok {
+		_spec.AddField(event.FieldRadius, field.TypeFloat64, value)
+	}
+	if value, ok := _u.mutation.Status(); ok {
+		_spec.SetField(event.FieldStatus, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.AddedStatus(); ok {
+		_spec.AddField(event.FieldStatus, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.StartDate(); ok {
+		_spec.SetField(event.FieldStartDate, field.TypeFloat64, value)
+	}
+	if value, ok := _u.mutation.AddedStartDate(); ok {
+		_spec.AddField(event.FieldStartDate, field.TypeFloat64, value)
+	}
+	if value, ok := _u.mutation.EndDate(); ok {
+		_spec.SetField(event.FieldEndDate, field.TypeFloat64, value)
+	}
+	if value, ok := _u.mutation.AddedEndDate(); ok {
+		_spec.AddField(event.FieldEndDate, field.TypeFloat64, value)
+	}
+	if value, ok := _u.mutation.TotalRareNFT(); ok {
+		_spec.SetField(event.FieldTotalRareNFT, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.AddedTotalRareNFT(); ok {
+		_spec.AddField(event.FieldTotalRareNFT, field.TypeInt, value)
 	}
 	if _u.mutation.EventIDCleared() {
 		edge := &sqlgraph.EdgeSpec{

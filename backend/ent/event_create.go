@@ -40,6 +40,78 @@ func (_c *EventCreate) SetNillableBrandAddress(v *string) *EventCreate {
 	return _c
 }
 
+// SetEventName sets the "eventName" field.
+func (_c *EventCreate) SetEventName(v string) *EventCreate {
+	_c.mutation.SetEventName(v)
+	return _c
+}
+
+// SetQuota sets the "quota" field.
+func (_c *EventCreate) SetQuota(v int) *EventCreate {
+	_c.mutation.SetQuota(v)
+	return _c
+}
+
+// SetCounter sets the "counter" field.
+func (_c *EventCreate) SetCounter(v int) *EventCreate {
+	_c.mutation.SetCounter(v)
+	return _c
+}
+
+// SetDescription sets the "description" field.
+func (_c *EventCreate) SetDescription(v string) *EventCreate {
+	_c.mutation.SetDescription(v)
+	return _c
+}
+
+// SetImage sets the "image" field.
+func (_c *EventCreate) SetImage(v string) *EventCreate {
+	_c.mutation.SetImage(v)
+	return _c
+}
+
+// SetLat sets the "lat" field.
+func (_c *EventCreate) SetLat(v float64) *EventCreate {
+	_c.mutation.SetLat(v)
+	return _c
+}
+
+// SetLong sets the "long" field.
+func (_c *EventCreate) SetLong(v float64) *EventCreate {
+	_c.mutation.SetLong(v)
+	return _c
+}
+
+// SetRadius sets the "radius" field.
+func (_c *EventCreate) SetRadius(v float64) *EventCreate {
+	_c.mutation.SetRadius(v)
+	return _c
+}
+
+// SetStatus sets the "status" field.
+func (_c *EventCreate) SetStatus(v int) *EventCreate {
+	_c.mutation.SetStatus(v)
+	return _c
+}
+
+// SetStartDate sets the "startDate" field.
+func (_c *EventCreate) SetStartDate(v float64) *EventCreate {
+	_c.mutation.SetStartDate(v)
+	return _c
+}
+
+// SetEndDate sets the "endDate" field.
+func (_c *EventCreate) SetEndDate(v float64) *EventCreate {
+	_c.mutation.SetEndDate(v)
+	return _c
+}
+
+// SetTotalRareNFT sets the "totalRareNFT" field.
+func (_c *EventCreate) SetTotalRareNFT(v int) *EventCreate {
+	_c.mutation.SetTotalRareNFT(v)
+	return _c
+}
+
 // AddEventIDIDs adds the "event_id" edge to the EventParticipant entity by IDs.
 func (_c *EventCreate) AddEventIDIDs(ids ...int) *EventCreate {
 	_c.mutation.AddEventIDIDs(ids...)
@@ -104,6 +176,42 @@ func (_c *EventCreate) check() error {
 	if _, ok := _c.mutation.BrandAddress(); !ok {
 		return &ValidationError{Name: "brandAddress", err: errors.New(`ent: missing required field "Event.brandAddress"`)}
 	}
+	if _, ok := _c.mutation.EventName(); !ok {
+		return &ValidationError{Name: "eventName", err: errors.New(`ent: missing required field "Event.eventName"`)}
+	}
+	if _, ok := _c.mutation.Quota(); !ok {
+		return &ValidationError{Name: "quota", err: errors.New(`ent: missing required field "Event.quota"`)}
+	}
+	if _, ok := _c.mutation.Counter(); !ok {
+		return &ValidationError{Name: "counter", err: errors.New(`ent: missing required field "Event.counter"`)}
+	}
+	if _, ok := _c.mutation.Description(); !ok {
+		return &ValidationError{Name: "description", err: errors.New(`ent: missing required field "Event.description"`)}
+	}
+	if _, ok := _c.mutation.Image(); !ok {
+		return &ValidationError{Name: "image", err: errors.New(`ent: missing required field "Event.image"`)}
+	}
+	if _, ok := _c.mutation.Lat(); !ok {
+		return &ValidationError{Name: "lat", err: errors.New(`ent: missing required field "Event.lat"`)}
+	}
+	if _, ok := _c.mutation.Long(); !ok {
+		return &ValidationError{Name: "long", err: errors.New(`ent: missing required field "Event.long"`)}
+	}
+	if _, ok := _c.mutation.Radius(); !ok {
+		return &ValidationError{Name: "radius", err: errors.New(`ent: missing required field "Event.radius"`)}
+	}
+	if _, ok := _c.mutation.Status(); !ok {
+		return &ValidationError{Name: "status", err: errors.New(`ent: missing required field "Event.status"`)}
+	}
+	if _, ok := _c.mutation.StartDate(); !ok {
+		return &ValidationError{Name: "startDate", err: errors.New(`ent: missing required field "Event.startDate"`)}
+	}
+	if _, ok := _c.mutation.EndDate(); !ok {
+		return &ValidationError{Name: "endDate", err: errors.New(`ent: missing required field "Event.endDate"`)}
+	}
+	if _, ok := _c.mutation.TotalRareNFT(); !ok {
+		return &ValidationError{Name: "totalRareNFT", err: errors.New(`ent: missing required field "Event.totalRareNFT"`)}
+	}
 	return nil
 }
 
@@ -137,6 +245,54 @@ func (_c *EventCreate) createSpec() (*Event, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.BrandAddress(); ok {
 		_spec.SetField(event.FieldBrandAddress, field.TypeString, value)
 		_node.BrandAddress = value
+	}
+	if value, ok := _c.mutation.EventName(); ok {
+		_spec.SetField(event.FieldEventName, field.TypeString, value)
+		_node.EventName = value
+	}
+	if value, ok := _c.mutation.Quota(); ok {
+		_spec.SetField(event.FieldQuota, field.TypeInt, value)
+		_node.Quota = value
+	}
+	if value, ok := _c.mutation.Counter(); ok {
+		_spec.SetField(event.FieldCounter, field.TypeInt, value)
+		_node.Counter = value
+	}
+	if value, ok := _c.mutation.Description(); ok {
+		_spec.SetField(event.FieldDescription, field.TypeString, value)
+		_node.Description = value
+	}
+	if value, ok := _c.mutation.Image(); ok {
+		_spec.SetField(event.FieldImage, field.TypeString, value)
+		_node.Image = value
+	}
+	if value, ok := _c.mutation.Lat(); ok {
+		_spec.SetField(event.FieldLat, field.TypeFloat64, value)
+		_node.Lat = value
+	}
+	if value, ok := _c.mutation.Long(); ok {
+		_spec.SetField(event.FieldLong, field.TypeFloat64, value)
+		_node.Long = value
+	}
+	if value, ok := _c.mutation.Radius(); ok {
+		_spec.SetField(event.FieldRadius, field.TypeFloat64, value)
+		_node.Radius = value
+	}
+	if value, ok := _c.mutation.Status(); ok {
+		_spec.SetField(event.FieldStatus, field.TypeInt, value)
+		_node.Status = value
+	}
+	if value, ok := _c.mutation.StartDate(); ok {
+		_spec.SetField(event.FieldStartDate, field.TypeFloat64, value)
+		_node.StartDate = value
+	}
+	if value, ok := _c.mutation.EndDate(); ok {
+		_spec.SetField(event.FieldEndDate, field.TypeFloat64, value)
+		_node.EndDate = value
+	}
+	if value, ok := _c.mutation.TotalRareNFT(); ok {
+		_spec.SetField(event.FieldTotalRareNFT, field.TypeInt, value)
+		_node.TotalRareNFT = value
 	}
 	if nodes := _c.mutation.EventIDIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{

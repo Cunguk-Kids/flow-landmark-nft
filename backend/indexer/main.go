@@ -33,6 +33,7 @@ var (
 	EventCreated     = fmt.Sprintf("A.%s.EventPlatform.EventCreated", ContractAddress)
 	UserRegistered   = fmt.Sprintf("A.%s.EventPlatform.UserRegistered", ContractAddress)
 	UserUnregistered = fmt.Sprintf("A.%s.EventPlatform.UserUnregistered", ContractAddress)
+	EventStatus = fmt.Sprintf("A.%s.EventPlatform.EventStatus", ContractAddress)
 )
 
 func main() {
@@ -59,26 +60,6 @@ func main() {
 	if err != nil {
 		log.Fatalf("Gagal terhubung ke emulator gRPC: %v", err)
 	}
-	eventCreatedID := fmt.Sprintf("A.%s.EventPlatform.EventCreated", ContractAddress)
-	var startHeight uint64 = 0
-	var endHeight uint64 = 100
-
-	query := grpc.EventRangeQuery{
-		Type:        eventCreatedID,
-		StartHeight: startHeight,
-		EndHeight:   endHeight,
-	}
-	result, err := grpcClient.GetEventsForHeightRange(ctx, query)
-	if err != nil {
-		log.Fatalf("Gagal mengambil events: %v", err)
-	}
-
-	for _, blockEvents := range result {
-		log.Printf("\n--- Events Ditemukan di Block Height: %d ---", blockEvents.Height)
-		for _, event := range blockEvents.Events {
-			log.Printf("Event ID: %s", event.Value.SearchFieldByName("brandAddress"))
-		}
-	}
 
 	grpcBlock, err := grpcClient.GetLatestBlockHeader(ctx, true)
 
@@ -91,7 +72,7 @@ func main() {
 		ctx,
 		0,
 		flow.EventFilter{
-			EventTypes: []string{EventCreated, UserRegistered, UserUnregistered},
+			EventTypes: []string{EventCreated, UserRegistered, UserUnregistered, EventStatus},
 		},
 	)
 	if initErr != nil {
@@ -113,7 +94,7 @@ func main() {
 
 				switch ev.Type {
 				case EventCreated:
-					utils.ProcessEventCreated(ctx, ev, client)
+					utils.ProcessEventCreated(ctx, grpcClient, ev, client)
 				case UserRegistered:
 					utils.ProcessEventRegistered(ctx, ev, client)
 				case UserUnregistered:

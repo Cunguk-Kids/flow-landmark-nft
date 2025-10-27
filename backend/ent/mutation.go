@@ -37,6 +37,27 @@ type EventMutation struct {
 	eventId         *int
 	addeventId      *int
 	brandAddress    *string
+	eventName       *string
+	quota           *int
+	addquota        *int
+	counter         *int
+	addcounter      *int
+	description     *string
+	image           *string
+	lat             *float64
+	addlat          *float64
+	long            *float64
+	addlong         *float64
+	radius          *float64
+	addradius       *float64
+	status          *int
+	addstatus       *int
+	startDate       *float64
+	addstartDate    *float64
+	endDate         *float64
+	addendDate      *float64
+	totalRareNFT    *int
+	addtotalRareNFT *int
 	clearedFields   map[string]struct{}
 	event_id        map[int]struct{}
 	removedevent_id map[int]struct{}
@@ -236,6 +257,618 @@ func (m *EventMutation) ResetBrandAddress() {
 	m.brandAddress = nil
 }
 
+// SetEventName sets the "eventName" field.
+func (m *EventMutation) SetEventName(s string) {
+	m.eventName = &s
+}
+
+// EventName returns the value of the "eventName" field in the mutation.
+func (m *EventMutation) EventName() (r string, exists bool) {
+	v := m.eventName
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldEventName returns the old "eventName" field's value of the Event entity.
+// If the Event object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *EventMutation) OldEventName(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldEventName is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldEventName requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldEventName: %w", err)
+	}
+	return oldValue.EventName, nil
+}
+
+// ResetEventName resets all changes to the "eventName" field.
+func (m *EventMutation) ResetEventName() {
+	m.eventName = nil
+}
+
+// SetQuota sets the "quota" field.
+func (m *EventMutation) SetQuota(i int) {
+	m.quota = &i
+	m.addquota = nil
+}
+
+// Quota returns the value of the "quota" field in the mutation.
+func (m *EventMutation) Quota() (r int, exists bool) {
+	v := m.quota
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldQuota returns the old "quota" field's value of the Event entity.
+// If the Event object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *EventMutation) OldQuota(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldQuota is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldQuota requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldQuota: %w", err)
+	}
+	return oldValue.Quota, nil
+}
+
+// AddQuota adds i to the "quota" field.
+func (m *EventMutation) AddQuota(i int) {
+	if m.addquota != nil {
+		*m.addquota += i
+	} else {
+		m.addquota = &i
+	}
+}
+
+// AddedQuota returns the value that was added to the "quota" field in this mutation.
+func (m *EventMutation) AddedQuota() (r int, exists bool) {
+	v := m.addquota
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetQuota resets all changes to the "quota" field.
+func (m *EventMutation) ResetQuota() {
+	m.quota = nil
+	m.addquota = nil
+}
+
+// SetCounter sets the "counter" field.
+func (m *EventMutation) SetCounter(i int) {
+	m.counter = &i
+	m.addcounter = nil
+}
+
+// Counter returns the value of the "counter" field in the mutation.
+func (m *EventMutation) Counter() (r int, exists bool) {
+	v := m.counter
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCounter returns the old "counter" field's value of the Event entity.
+// If the Event object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *EventMutation) OldCounter(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCounter is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCounter requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCounter: %w", err)
+	}
+	return oldValue.Counter, nil
+}
+
+// AddCounter adds i to the "counter" field.
+func (m *EventMutation) AddCounter(i int) {
+	if m.addcounter != nil {
+		*m.addcounter += i
+	} else {
+		m.addcounter = &i
+	}
+}
+
+// AddedCounter returns the value that was added to the "counter" field in this mutation.
+func (m *EventMutation) AddedCounter() (r int, exists bool) {
+	v := m.addcounter
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetCounter resets all changes to the "counter" field.
+func (m *EventMutation) ResetCounter() {
+	m.counter = nil
+	m.addcounter = nil
+}
+
+// SetDescription sets the "description" field.
+func (m *EventMutation) SetDescription(s string) {
+	m.description = &s
+}
+
+// Description returns the value of the "description" field in the mutation.
+func (m *EventMutation) Description() (r string, exists bool) {
+	v := m.description
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDescription returns the old "description" field's value of the Event entity.
+// If the Event object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *EventMutation) OldDescription(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDescription is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDescription requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDescription: %w", err)
+	}
+	return oldValue.Description, nil
+}
+
+// ResetDescription resets all changes to the "description" field.
+func (m *EventMutation) ResetDescription() {
+	m.description = nil
+}
+
+// SetImage sets the "image" field.
+func (m *EventMutation) SetImage(s string) {
+	m.image = &s
+}
+
+// Image returns the value of the "image" field in the mutation.
+func (m *EventMutation) Image() (r string, exists bool) {
+	v := m.image
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldImage returns the old "image" field's value of the Event entity.
+// If the Event object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *EventMutation) OldImage(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldImage is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldImage requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldImage: %w", err)
+	}
+	return oldValue.Image, nil
+}
+
+// ResetImage resets all changes to the "image" field.
+func (m *EventMutation) ResetImage() {
+	m.image = nil
+}
+
+// SetLat sets the "lat" field.
+func (m *EventMutation) SetLat(f float64) {
+	m.lat = &f
+	m.addlat = nil
+}
+
+// Lat returns the value of the "lat" field in the mutation.
+func (m *EventMutation) Lat() (r float64, exists bool) {
+	v := m.lat
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldLat returns the old "lat" field's value of the Event entity.
+// If the Event object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *EventMutation) OldLat(ctx context.Context) (v float64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldLat is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldLat requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldLat: %w", err)
+	}
+	return oldValue.Lat, nil
+}
+
+// AddLat adds f to the "lat" field.
+func (m *EventMutation) AddLat(f float64) {
+	if m.addlat != nil {
+		*m.addlat += f
+	} else {
+		m.addlat = &f
+	}
+}
+
+// AddedLat returns the value that was added to the "lat" field in this mutation.
+func (m *EventMutation) AddedLat() (r float64, exists bool) {
+	v := m.addlat
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetLat resets all changes to the "lat" field.
+func (m *EventMutation) ResetLat() {
+	m.lat = nil
+	m.addlat = nil
+}
+
+// SetLong sets the "long" field.
+func (m *EventMutation) SetLong(f float64) {
+	m.long = &f
+	m.addlong = nil
+}
+
+// Long returns the value of the "long" field in the mutation.
+func (m *EventMutation) Long() (r float64, exists bool) {
+	v := m.long
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldLong returns the old "long" field's value of the Event entity.
+// If the Event object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *EventMutation) OldLong(ctx context.Context) (v float64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldLong is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldLong requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldLong: %w", err)
+	}
+	return oldValue.Long, nil
+}
+
+// AddLong adds f to the "long" field.
+func (m *EventMutation) AddLong(f float64) {
+	if m.addlong != nil {
+		*m.addlong += f
+	} else {
+		m.addlong = &f
+	}
+}
+
+// AddedLong returns the value that was added to the "long" field in this mutation.
+func (m *EventMutation) AddedLong() (r float64, exists bool) {
+	v := m.addlong
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetLong resets all changes to the "long" field.
+func (m *EventMutation) ResetLong() {
+	m.long = nil
+	m.addlong = nil
+}
+
+// SetRadius sets the "radius" field.
+func (m *EventMutation) SetRadius(f float64) {
+	m.radius = &f
+	m.addradius = nil
+}
+
+// Radius returns the value of the "radius" field in the mutation.
+func (m *EventMutation) Radius() (r float64, exists bool) {
+	v := m.radius
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldRadius returns the old "radius" field's value of the Event entity.
+// If the Event object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *EventMutation) OldRadius(ctx context.Context) (v float64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldRadius is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldRadius requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldRadius: %w", err)
+	}
+	return oldValue.Radius, nil
+}
+
+// AddRadius adds f to the "radius" field.
+func (m *EventMutation) AddRadius(f float64) {
+	if m.addradius != nil {
+		*m.addradius += f
+	} else {
+		m.addradius = &f
+	}
+}
+
+// AddedRadius returns the value that was added to the "radius" field in this mutation.
+func (m *EventMutation) AddedRadius() (r float64, exists bool) {
+	v := m.addradius
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetRadius resets all changes to the "radius" field.
+func (m *EventMutation) ResetRadius() {
+	m.radius = nil
+	m.addradius = nil
+}
+
+// SetStatus sets the "status" field.
+func (m *EventMutation) SetStatus(i int) {
+	m.status = &i
+	m.addstatus = nil
+}
+
+// Status returns the value of the "status" field in the mutation.
+func (m *EventMutation) Status() (r int, exists bool) {
+	v := m.status
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldStatus returns the old "status" field's value of the Event entity.
+// If the Event object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *EventMutation) OldStatus(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldStatus is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldStatus requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldStatus: %w", err)
+	}
+	return oldValue.Status, nil
+}
+
+// AddStatus adds i to the "status" field.
+func (m *EventMutation) AddStatus(i int) {
+	if m.addstatus != nil {
+		*m.addstatus += i
+	} else {
+		m.addstatus = &i
+	}
+}
+
+// AddedStatus returns the value that was added to the "status" field in this mutation.
+func (m *EventMutation) AddedStatus() (r int, exists bool) {
+	v := m.addstatus
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetStatus resets all changes to the "status" field.
+func (m *EventMutation) ResetStatus() {
+	m.status = nil
+	m.addstatus = nil
+}
+
+// SetStartDate sets the "startDate" field.
+func (m *EventMutation) SetStartDate(f float64) {
+	m.startDate = &f
+	m.addstartDate = nil
+}
+
+// StartDate returns the value of the "startDate" field in the mutation.
+func (m *EventMutation) StartDate() (r float64, exists bool) {
+	v := m.startDate
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldStartDate returns the old "startDate" field's value of the Event entity.
+// If the Event object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *EventMutation) OldStartDate(ctx context.Context) (v float64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldStartDate is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldStartDate requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldStartDate: %w", err)
+	}
+	return oldValue.StartDate, nil
+}
+
+// AddStartDate adds f to the "startDate" field.
+func (m *EventMutation) AddStartDate(f float64) {
+	if m.addstartDate != nil {
+		*m.addstartDate += f
+	} else {
+		m.addstartDate = &f
+	}
+}
+
+// AddedStartDate returns the value that was added to the "startDate" field in this mutation.
+func (m *EventMutation) AddedStartDate() (r float64, exists bool) {
+	v := m.addstartDate
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetStartDate resets all changes to the "startDate" field.
+func (m *EventMutation) ResetStartDate() {
+	m.startDate = nil
+	m.addstartDate = nil
+}
+
+// SetEndDate sets the "endDate" field.
+func (m *EventMutation) SetEndDate(f float64) {
+	m.endDate = &f
+	m.addendDate = nil
+}
+
+// EndDate returns the value of the "endDate" field in the mutation.
+func (m *EventMutation) EndDate() (r float64, exists bool) {
+	v := m.endDate
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldEndDate returns the old "endDate" field's value of the Event entity.
+// If the Event object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *EventMutation) OldEndDate(ctx context.Context) (v float64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldEndDate is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldEndDate requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldEndDate: %w", err)
+	}
+	return oldValue.EndDate, nil
+}
+
+// AddEndDate adds f to the "endDate" field.
+func (m *EventMutation) AddEndDate(f float64) {
+	if m.addendDate != nil {
+		*m.addendDate += f
+	} else {
+		m.addendDate = &f
+	}
+}
+
+// AddedEndDate returns the value that was added to the "endDate" field in this mutation.
+func (m *EventMutation) AddedEndDate() (r float64, exists bool) {
+	v := m.addendDate
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetEndDate resets all changes to the "endDate" field.
+func (m *EventMutation) ResetEndDate() {
+	m.endDate = nil
+	m.addendDate = nil
+}
+
+// SetTotalRareNFT sets the "totalRareNFT" field.
+func (m *EventMutation) SetTotalRareNFT(i int) {
+	m.totalRareNFT = &i
+	m.addtotalRareNFT = nil
+}
+
+// TotalRareNFT returns the value of the "totalRareNFT" field in the mutation.
+func (m *EventMutation) TotalRareNFT() (r int, exists bool) {
+	v := m.totalRareNFT
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTotalRareNFT returns the old "totalRareNFT" field's value of the Event entity.
+// If the Event object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *EventMutation) OldTotalRareNFT(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTotalRareNFT is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTotalRareNFT requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTotalRareNFT: %w", err)
+	}
+	return oldValue.TotalRareNFT, nil
+}
+
+// AddTotalRareNFT adds i to the "totalRareNFT" field.
+func (m *EventMutation) AddTotalRareNFT(i int) {
+	if m.addtotalRareNFT != nil {
+		*m.addtotalRareNFT += i
+	} else {
+		m.addtotalRareNFT = &i
+	}
+}
+
+// AddedTotalRareNFT returns the value that was added to the "totalRareNFT" field in this mutation.
+func (m *EventMutation) AddedTotalRareNFT() (r int, exists bool) {
+	v := m.addtotalRareNFT
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetTotalRareNFT resets all changes to the "totalRareNFT" field.
+func (m *EventMutation) ResetTotalRareNFT() {
+	m.totalRareNFT = nil
+	m.addtotalRareNFT = nil
+}
+
 // AddEventIDIDs adds the "event_id" edge to the EventParticipant entity by ids.
 func (m *EventMutation) AddEventIDIDs(ids ...int) {
 	if m.event_id == nil {
@@ -324,12 +957,48 @@ func (m *EventMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *EventMutation) Fields() []string {
-	fields := make([]string, 0, 2)
+	fields := make([]string, 0, 14)
 	if m.eventId != nil {
 		fields = append(fields, event.FieldEventId)
 	}
 	if m.brandAddress != nil {
 		fields = append(fields, event.FieldBrandAddress)
+	}
+	if m.eventName != nil {
+		fields = append(fields, event.FieldEventName)
+	}
+	if m.quota != nil {
+		fields = append(fields, event.FieldQuota)
+	}
+	if m.counter != nil {
+		fields = append(fields, event.FieldCounter)
+	}
+	if m.description != nil {
+		fields = append(fields, event.FieldDescription)
+	}
+	if m.image != nil {
+		fields = append(fields, event.FieldImage)
+	}
+	if m.lat != nil {
+		fields = append(fields, event.FieldLat)
+	}
+	if m.long != nil {
+		fields = append(fields, event.FieldLong)
+	}
+	if m.radius != nil {
+		fields = append(fields, event.FieldRadius)
+	}
+	if m.status != nil {
+		fields = append(fields, event.FieldStatus)
+	}
+	if m.startDate != nil {
+		fields = append(fields, event.FieldStartDate)
+	}
+	if m.endDate != nil {
+		fields = append(fields, event.FieldEndDate)
+	}
+	if m.totalRareNFT != nil {
+		fields = append(fields, event.FieldTotalRareNFT)
 	}
 	return fields
 }
@@ -343,6 +1012,30 @@ func (m *EventMutation) Field(name string) (ent.Value, bool) {
 		return m.EventId()
 	case event.FieldBrandAddress:
 		return m.BrandAddress()
+	case event.FieldEventName:
+		return m.EventName()
+	case event.FieldQuota:
+		return m.Quota()
+	case event.FieldCounter:
+		return m.Counter()
+	case event.FieldDescription:
+		return m.Description()
+	case event.FieldImage:
+		return m.Image()
+	case event.FieldLat:
+		return m.Lat()
+	case event.FieldLong:
+		return m.Long()
+	case event.FieldRadius:
+		return m.Radius()
+	case event.FieldStatus:
+		return m.Status()
+	case event.FieldStartDate:
+		return m.StartDate()
+	case event.FieldEndDate:
+		return m.EndDate()
+	case event.FieldTotalRareNFT:
+		return m.TotalRareNFT()
 	}
 	return nil, false
 }
@@ -356,6 +1049,30 @@ func (m *EventMutation) OldField(ctx context.Context, name string) (ent.Value, e
 		return m.OldEventId(ctx)
 	case event.FieldBrandAddress:
 		return m.OldBrandAddress(ctx)
+	case event.FieldEventName:
+		return m.OldEventName(ctx)
+	case event.FieldQuota:
+		return m.OldQuota(ctx)
+	case event.FieldCounter:
+		return m.OldCounter(ctx)
+	case event.FieldDescription:
+		return m.OldDescription(ctx)
+	case event.FieldImage:
+		return m.OldImage(ctx)
+	case event.FieldLat:
+		return m.OldLat(ctx)
+	case event.FieldLong:
+		return m.OldLong(ctx)
+	case event.FieldRadius:
+		return m.OldRadius(ctx)
+	case event.FieldStatus:
+		return m.OldStatus(ctx)
+	case event.FieldStartDate:
+		return m.OldStartDate(ctx)
+	case event.FieldEndDate:
+		return m.OldEndDate(ctx)
+	case event.FieldTotalRareNFT:
+		return m.OldTotalRareNFT(ctx)
 	}
 	return nil, fmt.Errorf("unknown Event field %s", name)
 }
@@ -379,6 +1096,90 @@ func (m *EventMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetBrandAddress(v)
 		return nil
+	case event.FieldEventName:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetEventName(v)
+		return nil
+	case event.FieldQuota:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetQuota(v)
+		return nil
+	case event.FieldCounter:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCounter(v)
+		return nil
+	case event.FieldDescription:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDescription(v)
+		return nil
+	case event.FieldImage:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetImage(v)
+		return nil
+	case event.FieldLat:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetLat(v)
+		return nil
+	case event.FieldLong:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetLong(v)
+		return nil
+	case event.FieldRadius:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetRadius(v)
+		return nil
+	case event.FieldStatus:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetStatus(v)
+		return nil
+	case event.FieldStartDate:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetStartDate(v)
+		return nil
+	case event.FieldEndDate:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetEndDate(v)
+		return nil
+	case event.FieldTotalRareNFT:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTotalRareNFT(v)
+		return nil
 	}
 	return fmt.Errorf("unknown Event field %s", name)
 }
@@ -390,6 +1191,33 @@ func (m *EventMutation) AddedFields() []string {
 	if m.addeventId != nil {
 		fields = append(fields, event.FieldEventId)
 	}
+	if m.addquota != nil {
+		fields = append(fields, event.FieldQuota)
+	}
+	if m.addcounter != nil {
+		fields = append(fields, event.FieldCounter)
+	}
+	if m.addlat != nil {
+		fields = append(fields, event.FieldLat)
+	}
+	if m.addlong != nil {
+		fields = append(fields, event.FieldLong)
+	}
+	if m.addradius != nil {
+		fields = append(fields, event.FieldRadius)
+	}
+	if m.addstatus != nil {
+		fields = append(fields, event.FieldStatus)
+	}
+	if m.addstartDate != nil {
+		fields = append(fields, event.FieldStartDate)
+	}
+	if m.addendDate != nil {
+		fields = append(fields, event.FieldEndDate)
+	}
+	if m.addtotalRareNFT != nil {
+		fields = append(fields, event.FieldTotalRareNFT)
+	}
 	return fields
 }
 
@@ -400,6 +1228,24 @@ func (m *EventMutation) AddedField(name string) (ent.Value, bool) {
 	switch name {
 	case event.FieldEventId:
 		return m.AddedEventId()
+	case event.FieldQuota:
+		return m.AddedQuota()
+	case event.FieldCounter:
+		return m.AddedCounter()
+	case event.FieldLat:
+		return m.AddedLat()
+	case event.FieldLong:
+		return m.AddedLong()
+	case event.FieldRadius:
+		return m.AddedRadius()
+	case event.FieldStatus:
+		return m.AddedStatus()
+	case event.FieldStartDate:
+		return m.AddedStartDate()
+	case event.FieldEndDate:
+		return m.AddedEndDate()
+	case event.FieldTotalRareNFT:
+		return m.AddedTotalRareNFT()
 	}
 	return nil, false
 }
@@ -415,6 +1261,69 @@ func (m *EventMutation) AddField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.AddEventId(v)
+		return nil
+	case event.FieldQuota:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddQuota(v)
+		return nil
+	case event.FieldCounter:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddCounter(v)
+		return nil
+	case event.FieldLat:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddLat(v)
+		return nil
+	case event.FieldLong:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddLong(v)
+		return nil
+	case event.FieldRadius:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddRadius(v)
+		return nil
+	case event.FieldStatus:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddStatus(v)
+		return nil
+	case event.FieldStartDate:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddStartDate(v)
+		return nil
+	case event.FieldEndDate:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddEndDate(v)
+		return nil
+	case event.FieldTotalRareNFT:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddTotalRareNFT(v)
 		return nil
 	}
 	return fmt.Errorf("unknown Event numeric field %s", name)
@@ -448,6 +1357,42 @@ func (m *EventMutation) ResetField(name string) error {
 		return nil
 	case event.FieldBrandAddress:
 		m.ResetBrandAddress()
+		return nil
+	case event.FieldEventName:
+		m.ResetEventName()
+		return nil
+	case event.FieldQuota:
+		m.ResetQuota()
+		return nil
+	case event.FieldCounter:
+		m.ResetCounter()
+		return nil
+	case event.FieldDescription:
+		m.ResetDescription()
+		return nil
+	case event.FieldImage:
+		m.ResetImage()
+		return nil
+	case event.FieldLat:
+		m.ResetLat()
+		return nil
+	case event.FieldLong:
+		m.ResetLong()
+		return nil
+	case event.FieldRadius:
+		m.ResetRadius()
+		return nil
+	case event.FieldStatus:
+		m.ResetStatus()
+		return nil
+	case event.FieldStartDate:
+		m.ResetStartDate()
+		return nil
+	case event.FieldEndDate:
+		m.ResetEndDate()
+		return nil
+	case event.FieldTotalRareNFT:
+		m.ResetTotalRareNFT()
 		return nil
 	}
 	return fmt.Errorf("unknown Event field %s", name)
