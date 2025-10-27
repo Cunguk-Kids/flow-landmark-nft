@@ -1,14 +1,10 @@
-import Header from "@/components/Header";
-import SandboxMap from "@/features/sandbox/SandboxMap";
+import EventMap from "./components/EventMap";
 
 const MainPage = () => {
   return (
     <div className="min-h-screen">
-      {/* Header */}
-      <Header />
-
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <SandboxMap />
+        <EventMap />
       </main>
 
       {/* Footer */}
