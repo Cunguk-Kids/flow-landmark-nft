@@ -7,22 +7,21 @@ import (
 )
 
 // User holds the schema definition for the User entity.
-type Event struct {
+type EventParticipant struct {
 	ent.Schema
 }
 
 // Fields of the User.
-func (Event) Fields() []ent.Field {
+func (EventParticipant) Fields() []ent.Field {
 	return []ent.Field{
-		field.Int("eventId").Unique(),
-		field.String("brandAddress").
-			Default("Unknown"),
+		field.String("userAddress").
+			Default(""),
 	}
 }
 
 // Edges of the User.
-func (Event) Edges() []ent.Edge {
+func (EventParticipant) Edges() []ent.Edge {
 	return []ent.Edge{
-		edge.To("event_id", EventParticipant.Type),
+		edge.From("event", Event.Type).Ref("event_id").Unique().Required(),
 	}
 }

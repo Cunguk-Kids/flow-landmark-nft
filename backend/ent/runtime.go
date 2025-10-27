@@ -4,6 +4,7 @@ package ent
 
 import (
 	"backend/ent/event"
+	"backend/ent/eventparticipant"
 	"backend/ent/schema"
 )
 
@@ -13,12 +14,14 @@ import (
 func init() {
 	eventFields := schema.Event{}.Fields()
 	_ = eventFields
-	// eventDescEventId is the schema descriptor for eventId field.
-	eventDescEventId := eventFields[0].Descriptor()
-	// event.DefaultEventId holds the default value on creation for the eventId field.
-	event.DefaultEventId = eventDescEventId.Default.(string)
 	// eventDescBrandAddress is the schema descriptor for brandAddress field.
 	eventDescBrandAddress := eventFields[1].Descriptor()
 	// event.DefaultBrandAddress holds the default value on creation for the brandAddress field.
 	event.DefaultBrandAddress = eventDescBrandAddress.Default.(string)
+	eventparticipantFields := schema.EventParticipant{}.Fields()
+	_ = eventparticipantFields
+	// eventparticipantDescUserAddress is the schema descriptor for userAddress field.
+	eventparticipantDescUserAddress := eventparticipantFields[0].Descriptor()
+	// eventparticipant.DefaultUserAddress holds the default value on creation for the userAddress field.
+	eventparticipant.DefaultUserAddress = eventparticipantDescUserAddress.Default.(string)
 }

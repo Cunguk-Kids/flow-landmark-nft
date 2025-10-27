@@ -11,7 +11,7 @@ var (
 	// EventsColumns holds the columns for the "events" table.
 	EventsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
-		{Name: "event_id", Type: field.TypeString, Default: "0"},
+		{Name: "event_id", Type: field.TypeInt, Unique: true},
 		{Name: "brand_address", Type: field.TypeString, Default: "Unknown"},
 	}
 	// EventsTable holds the schema information for the "events" table.
@@ -20,11 +20,33 @@ var (
 		Columns:    EventsColumns,
 		PrimaryKey: []*schema.Column{EventsColumns[0]},
 	}
+	// EventParticipantsColumns holds the columns for the "event_participants" table.
+	EventParticipantsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "user_address", Type: field.TypeString, Default: ""},
+		{Name: "event_event_id", Type: field.TypeInt},
+	}
+	// EventParticipantsTable holds the schema information for the "event_participants" table.
+	EventParticipantsTable = &schema.Table{
+		Name:       "event_participants",
+		Columns:    EventParticipantsColumns,
+		PrimaryKey: []*schema.Column{EventParticipantsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "event_participants_events_event_id",
+				Columns:    []*schema.Column{EventParticipantsColumns[2]},
+				RefColumns: []*schema.Column{EventsColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
 		EventsTable,
+		EventParticipantsTable,
 	}
 )
 
 func init() {
+	EventParticipantsTable.ForeignKeys[0].RefTable = EventsTable
 }

@@ -20,6 +20,18 @@ func (f EventFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.EventMutation", m)
 }
 
+// The EventParticipantFunc type is an adapter to allow the use of ordinary
+// function as EventParticipant mutator.
+type EventParticipantFunc func(context.Context, *ent.EventParticipantMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f EventParticipantFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.EventParticipantMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.EventParticipantMutation", m)
+}
+
 // Condition is a hook condition function.
 type Condition func(context.Context, ent.Mutation) bool
 

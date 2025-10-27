@@ -4,6 +4,7 @@ package ent
 
 import (
 	"backend/ent/event"
+	"backend/ent/eventparticipant"
 	"context"
 	"errors"
 	"fmt"
@@ -73,7 +74,8 @@ var (
 func checkColumn(t, c string) error {
 	initCheck.Do(func() {
 		columnCheck = sql.NewColumnCheck(map[string]func(string) bool{
-			event.Table: event.ValidColumn,
+			event.Table:            event.ValidColumn,
+			eventparticipant.Table: eventparticipant.ValidColumn,
 		})
 	})
 	return columnCheck(t, c)

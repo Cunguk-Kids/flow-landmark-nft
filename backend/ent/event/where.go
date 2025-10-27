@@ -6,6 +6,7 @@ import (
 	"backend/ent/predicate"
 
 	"entgo.io/ent/dialect/sql"
+	"entgo.io/ent/dialect/sql/sqlgraph"
 )
 
 // ID filters vertices based on their ID field.
@@ -54,7 +55,7 @@ func IDLTE(id int) predicate.Event {
 }
 
 // EventId applies equality check predicate on the "eventId" field. It's identical to EventIdEQ.
-func EventId(v string) predicate.Event {
+func EventId(v int) predicate.Event {
 	return predicate.Event(sql.FieldEQ(FieldEventId, v))
 }
 
@@ -64,68 +65,43 @@ func BrandAddress(v string) predicate.Event {
 }
 
 // EventIdEQ applies the EQ predicate on the "eventId" field.
-func EventIdEQ(v string) predicate.Event {
+func EventIdEQ(v int) predicate.Event {
 	return predicate.Event(sql.FieldEQ(FieldEventId, v))
 }
 
 // EventIdNEQ applies the NEQ predicate on the "eventId" field.
-func EventIdNEQ(v string) predicate.Event {
+func EventIdNEQ(v int) predicate.Event {
 	return predicate.Event(sql.FieldNEQ(FieldEventId, v))
 }
 
 // EventIdIn applies the In predicate on the "eventId" field.
-func EventIdIn(vs ...string) predicate.Event {
+func EventIdIn(vs ...int) predicate.Event {
 	return predicate.Event(sql.FieldIn(FieldEventId, vs...))
 }
 
 // EventIdNotIn applies the NotIn predicate on the "eventId" field.
-func EventIdNotIn(vs ...string) predicate.Event {
+func EventIdNotIn(vs ...int) predicate.Event {
 	return predicate.Event(sql.FieldNotIn(FieldEventId, vs...))
 }
 
 // EventIdGT applies the GT predicate on the "eventId" field.
-func EventIdGT(v string) predicate.Event {
+func EventIdGT(v int) predicate.Event {
 	return predicate.Event(sql.FieldGT(FieldEventId, v))
 }
 
 // EventIdGTE applies the GTE predicate on the "eventId" field.
-func EventIdGTE(v string) predicate.Event {
+func EventIdGTE(v int) predicate.Event {
 	return predicate.Event(sql.FieldGTE(FieldEventId, v))
 }
 
 // EventIdLT applies the LT predicate on the "eventId" field.
-func EventIdLT(v string) predicate.Event {
+func EventIdLT(v int) predicate.Event {
 	return predicate.Event(sql.FieldLT(FieldEventId, v))
 }
 
 // EventIdLTE applies the LTE predicate on the "eventId" field.
-func EventIdLTE(v string) predicate.Event {
+func EventIdLTE(v int) predicate.Event {
 	return predicate.Event(sql.FieldLTE(FieldEventId, v))
-}
-
-// EventIdContains applies the Contains predicate on the "eventId" field.
-func EventIdContains(v string) predicate.Event {
-	return predicate.Event(sql.FieldContains(FieldEventId, v))
-}
-
-// EventIdHasPrefix applies the HasPrefix predicate on the "eventId" field.
-func EventIdHasPrefix(v string) predicate.Event {
-	return predicate.Event(sql.FieldHasPrefix(FieldEventId, v))
-}
-
-// EventIdHasSuffix applies the HasSuffix predicate on the "eventId" field.
-func EventIdHasSuffix(v string) predicate.Event {
-	return predicate.Event(sql.FieldHasSuffix(FieldEventId, v))
-}
-
-// EventIdEqualFold applies the EqualFold predicate on the "eventId" field.
-func EventIdEqualFold(v string) predicate.Event {
-	return predicate.Event(sql.FieldEqualFold(FieldEventId, v))
-}
-
-// EventIdContainsFold applies the ContainsFold predicate on the "eventId" field.
-func EventIdContainsFold(v string) predicate.Event {
-	return predicate.Event(sql.FieldContainsFold(FieldEventId, v))
 }
 
 // BrandAddressEQ applies the EQ predicate on the "brandAddress" field.
@@ -191,6 +167,29 @@ func BrandAddressEqualFold(v string) predicate.Event {
 // BrandAddressContainsFold applies the ContainsFold predicate on the "brandAddress" field.
 func BrandAddressContainsFold(v string) predicate.Event {
 	return predicate.Event(sql.FieldContainsFold(FieldBrandAddress, v))
+}
+
+// HasEventID applies the HasEdge predicate on the "event_id" edge.
+func HasEventID() predicate.Event {
+	return predicate.Event(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, EventIDTable, EventIDColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasEventIDWith applies the HasEdge predicate on the "event_id" edge with a given conditions (other predicates).
+func HasEventIDWith(preds ...predicate.EventParticipant) predicate.Event {
+	return predicate.Event(func(s *sql.Selector) {
+		step := newEventIDStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
 }
 
 // And groups predicates with the AND operator between them.
