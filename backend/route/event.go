@@ -181,19 +181,80 @@ func HandleGetAllEvents(c echo.Context) error {
 	entClient := utils.Open(os.Getenv("DATABASE_URL"))
 	defer entClient.Close()
 
-	allEvents, err := entClient.Event.
-		Query().
-		WithEventID(). // Optional: Eager load participants for all events
-		All(ctx)       // Fetch all records
+	// --- 1. Ambil Query Parameters ---
 
-	// 2. Handle potential database errors
+	// Filter by brandAddress (opsional)
+	brandAddressFilter := c.QueryParam("brandAddress") // String kosong jika tidak ada
+
+	// Pagination parameters (dengan default)
+	pageParam := c.QueryParam("page")
+	limitParam := c.QueryParam("limit")
+
+	page, err := strconv.Atoi(pageParam)
+	if err != nil || page < 1 {
+		page = 1 // Default ke halaman 1 jika tidak ada atau tidak valid
+	}
+
+	limit, err := strconv.Atoi(limitParam)
+	if err != nil || limit <= 0 {
+		limit = 10 // Default 10 item per halaman
+	}
+
+	// Hitung offset
+	offset := (page - 1) * limit
+
+	log.Printf("Filter - Brand: '%s', Page: %d, Limit: %d, Offset: %d", brandAddressFilter, page, limit, offset)
+
+	if entClient == nil {
+		// ... (handle client nil) ...
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Server error"})
+	}
+
+	query := entClient.Event.Query()
+
+	if brandAddressFilter != "" {
+		query = query.Where(event.BrandAddressEQ(brandAddressFilter))
+		log.Printf("Menerapkan filter BrandAddress: %s", brandAddressFilter)
+	}
+
+	// Hitung total item SEBELUM menerapkan limit/offset (untuk metadata pagination)
+	totalCount, err := query.Count(ctx)
 	if err != nil {
-		log.Printf("Error querying all events: %v", err)
+		log.Printf("Error menghitung total event: %v", err)
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Database query error (count)"})
+	}
+
+	// Terapkan pagination
+	query = query.Limit(limit).Offset(offset)
+
+	// Terapkan ordering (opsional, misal order by ID descending)
+	query = query.Order(ent.Desc(event.FieldEventId))
+
+	// Jalankan query untuk mendapatkan data halaman ini
+	eventsOnPage, err := query.All(ctx)
+
+	// --- 3. Handle Error Query Utama ---
+	if err != nil {
+		log.Printf("Error querying events: %v", err)
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Database query error"})
 	}
 
-	// 3. Return the list of events as JSON
-	// An empty slice is valid JSON ([]) if no events are found
-	log.Printf("Ditemukan %d event(s)", len(allEvents))
-	return c.JSON(http.StatusOK, allEvents)
+	// --- 4. Siapkan Respons (dengan Metadata Pagination) ---
+	totalPages := 0
+	if totalCount > 0 {
+		totalPages = (totalCount + limit - 1) / limit // Pembulatan ke atas
+	}
+
+	response := map[string]interface{}{
+		"data": eventsOnPage, // Data event untuk halaman ini
+		"pagination": map[string]interface{}{
+			"totalItems":  totalCount,
+			"currentPage": page,
+			"pageSize":    limit,
+			"totalPages":  totalPages,
+		},
+	}
+
+	log.Printf("Ditemukan %d event(s) untuk halaman ini (Total: %d)", len(eventsOnPage), totalCount)
+	return c.JSON(http.StatusOK, response)
 }
