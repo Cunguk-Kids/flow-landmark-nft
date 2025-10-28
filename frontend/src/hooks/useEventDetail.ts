@@ -1,11 +1,23 @@
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import type { EventDetailResponse } from "@/types/api";
+import { USE_MOCK_DATA, getMockEventDetail, simulateDelay } from "@/lib/mockData";
 
 /**
- * Fetch single event detail by ID
+ * Fetch single event detail by ID (or mock data if enabled)
  */
 const fetchEventDetail = async (id: number): Promise<EventDetailResponse> => {
+  // USE MOCK DATA - Comment out this block when API is fixed
+  if (USE_MOCK_DATA) {
+    await simulateDelay(300); // Simulate network delay
+    const event = getMockEventDetail(id);
+    if (!event) {
+      throw new Error(`Event with ID ${id} not found`);
+    }
+    return event;
+  }
+
+  // REAL API - Uncomment when API is working
   return api.get<EventDetailResponse>(`/event/${id}`);
 };
 

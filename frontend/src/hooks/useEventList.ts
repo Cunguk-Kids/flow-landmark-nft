@@ -1,13 +1,21 @@
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import type { EventsListResponse, EventsQueryParams } from "@/types/api";
+import { USE_MOCK_DATA, getMockEventsList, simulateDelay } from "@/lib/mockData";
 
 /**
- * Fetch events list from API
+ * Fetch events list from API (or mock data if enabled)
  */
 const fetchEvents = async (
   params: EventsQueryParams = {}
 ): Promise<EventsListResponse> => {
+  // USE MOCK DATA - Comment out this block when API is fixed
+  if (USE_MOCK_DATA) {
+    await simulateDelay(300); // Simulate network delay
+    return getMockEventsList(params);
+  }
+
+  // REAL API - Uncomment when API is working
   const queryParams = new URLSearchParams();
 
   if (params.page) queryParams.set("page", params.page.toString());
