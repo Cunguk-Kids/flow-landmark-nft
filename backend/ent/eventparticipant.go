@@ -19,6 +19,8 @@ type EventParticipant struct {
 	ID int `json:"id,omitempty"`
 	// UserAddress holds the value of the "userAddress" field.
 	UserAddress string `json:"userAddress,omitempty"`
+	// IsCheckedIn holds the value of the "isCheckedIn" field.
+	IsCheckedIn bool `json:"isCheckedIn,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the EventParticipantQuery when eager-loading is set.
 	Edges          EventParticipantEdges `json:"edges"`
@@ -51,6 +53,8 @@ func (*EventParticipant) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
+		case eventparticipant.FieldIsCheckedIn:
+			values[i] = new(sql.NullBool)
 		case eventparticipant.FieldID:
 			values[i] = new(sql.NullInt64)
 		case eventparticipant.FieldUserAddress:
@@ -83,6 +87,12 @@ func (_m *EventParticipant) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field userAddress", values[i])
 			} else if value.Valid {
 				_m.UserAddress = value.String
+			}
+		case eventparticipant.FieldIsCheckedIn:
+			if value, ok := values[i].(*sql.NullBool); !ok {
+				return fmt.Errorf("unexpected type %T for field isCheckedIn", values[i])
+			} else if value.Valid {
+				_m.IsCheckedIn = value.Bool
 			}
 		case eventparticipant.ForeignKeys[0]:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
@@ -134,6 +144,9 @@ func (_m *EventParticipant) String() string {
 	builder.WriteString(fmt.Sprintf("id=%v, ", _m.ID))
 	builder.WriteString("userAddress=")
 	builder.WriteString(_m.UserAddress)
+	builder.WriteString(", ")
+	builder.WriteString("isCheckedIn=")
+	builder.WriteString(fmt.Sprintf("%v", _m.IsCheckedIn))
 	builder.WriteByte(')')
 	return builder.String()
 }

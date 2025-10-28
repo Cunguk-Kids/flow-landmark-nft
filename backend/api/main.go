@@ -28,6 +28,7 @@ func main() {
 	e.POST("/event/create", route.HandleCreateEvent)
 	e.GET("/event/:id", route.HandleGetEventByID)
 	e.GET("/event/", route.HandleGetAllEvents)
+	e.POST("/event/check-in", route.HandleCheckin)
 	// Anda bisa menambahkan endpoint lain dengan mudah
 	// e.GET("/events/:id", handleGetEvent)
 

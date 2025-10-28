@@ -1489,6 +1489,7 @@ type EventParticipantMutation struct {
 	typ           string
 	id            *int
 	userAddress   *string
+	isCheckedIn   *bool
 	clearedFields map[string]struct{}
 	event         *int
 	clearedevent  bool
@@ -1631,6 +1632,42 @@ func (m *EventParticipantMutation) ResetUserAddress() {
 	m.userAddress = nil
 }
 
+// SetIsCheckedIn sets the "isCheckedIn" field.
+func (m *EventParticipantMutation) SetIsCheckedIn(b bool) {
+	m.isCheckedIn = &b
+}
+
+// IsCheckedIn returns the value of the "isCheckedIn" field in the mutation.
+func (m *EventParticipantMutation) IsCheckedIn() (r bool, exists bool) {
+	v := m.isCheckedIn
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldIsCheckedIn returns the old "isCheckedIn" field's value of the EventParticipant entity.
+// If the EventParticipant object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *EventParticipantMutation) OldIsCheckedIn(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldIsCheckedIn is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldIsCheckedIn requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldIsCheckedIn: %w", err)
+	}
+	return oldValue.IsCheckedIn, nil
+}
+
+// ResetIsCheckedIn resets all changes to the "isCheckedIn" field.
+func (m *EventParticipantMutation) ResetIsCheckedIn() {
+	m.isCheckedIn = nil
+}
+
 // SetEventID sets the "event" edge to the Event entity by id.
 func (m *EventParticipantMutation) SetEventID(id int) {
 	m.event = &id
@@ -1704,9 +1741,12 @@ func (m *EventParticipantMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *EventParticipantMutation) Fields() []string {
-	fields := make([]string, 0, 1)
+	fields := make([]string, 0, 2)
 	if m.userAddress != nil {
 		fields = append(fields, eventparticipant.FieldUserAddress)
+	}
+	if m.isCheckedIn != nil {
+		fields = append(fields, eventparticipant.FieldIsCheckedIn)
 	}
 	return fields
 }
@@ -1718,6 +1758,8 @@ func (m *EventParticipantMutation) Field(name string) (ent.Value, bool) {
 	switch name {
 	case eventparticipant.FieldUserAddress:
 		return m.UserAddress()
+	case eventparticipant.FieldIsCheckedIn:
+		return m.IsCheckedIn()
 	}
 	return nil, false
 }
@@ -1729,6 +1771,8 @@ func (m *EventParticipantMutation) OldField(ctx context.Context, name string) (e
 	switch name {
 	case eventparticipant.FieldUserAddress:
 		return m.OldUserAddress(ctx)
+	case eventparticipant.FieldIsCheckedIn:
+		return m.OldIsCheckedIn(ctx)
 	}
 	return nil, fmt.Errorf("unknown EventParticipant field %s", name)
 }
@@ -1744,6 +1788,13 @@ func (m *EventParticipantMutation) SetField(name string, value ent.Value) error 
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetUserAddress(v)
+		return nil
+	case eventparticipant.FieldIsCheckedIn:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetIsCheckedIn(v)
 		return nil
 	}
 	return fmt.Errorf("unknown EventParticipant field %s", name)
@@ -1796,6 +1847,9 @@ func (m *EventParticipantMutation) ResetField(name string) error {
 	switch name {
 	case eventparticipant.FieldUserAddress:
 		m.ResetUserAddress()
+		return nil
+	case eventparticipant.FieldIsCheckedIn:
+		m.ResetIsCheckedIn()
 		return nil
 	}
 	return fmt.Errorf("unknown EventParticipant field %s", name)

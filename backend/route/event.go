@@ -3,6 +3,7 @@ package route
 import (
 	"backend/ent"
 	"backend/ent/event"
+	"backend/ent/eventparticipant"
 	"backend/transactions" // <-- Kode bersama Anda
 	"backend/utils"
 	"context"
@@ -257,4 +258,80 @@ func HandleGetAllEvents(c echo.Context) error {
 
 	log.Printf("Ditemukan %d event(s) untuk halaman ini (Total: %d)", len(eventsOnPage), totalCount)
 	return c.JSON(http.StatusOK, response)
+}
+
+type CheckinRequest struct {
+	EventID      string `json:"eventId" form:"eventId" validate:"required"`
+	UserAddress  string `json:"userAddress" form:"userAddress" validate:"required"`
+	BrandAddress string `json:"brandAddress" form:"brandAddress" validate:"required"`
+}
+
+func HandleCheckin(c echo.Context) error {
+	log.Println("Menerima request /checkin...")
+	ctx := context.Background() // Gunakan context request jika perlu timeout
+	entClient := utils.Open(os.Getenv("DATABASE_URL"))
+	defer entClient.Close()
+	// 1. Bind Request
+	var req CheckinRequest
+	if err := c.Bind(&req); err != nil {
+		log.Printf("Error binding checkin request: %v", err)
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid request body"})
+	}
+
+	// Konversi eventID ke tipe yang benar (misal: int64)
+	eventIDInt, err := strconv.Atoi(req.EventID)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid Event ID format"})
+	}
+	userAddress := req.UserAddress   // Pastikan formatnya benar ("0x...")
+	brandAddress := req.BrandAddress // Pastikan formatnya benar ("0x...")
+
+	// 2. Validasi Cepat (Contoh: cek user terdaftar & event aktif)
+	// (Tambahkan validasi lain sesuai kebutuhan)
+	participant, err := entClient.EventParticipant.
+		Query().
+		Where(
+			eventparticipant.UserAddressEQ(userAddress),
+			eventparticipant.HasEventWith(event.EventIdEQ(eventIDInt)),
+		).
+		Only(ctx) // Pastikan user terdaftar di event ini
+
+	if err != nil {
+		if ent.IsNotFound(err) {
+			log.Printf("Check-in Gagal: User %s tidak terdaftar di event %d", userAddress, eventIDInt)
+			return c.JSON(http.StatusForbidden, map[string]string{"error": "User not registered for this event"})
+		}
+		log.Printf("Error DB saat validasi check-in: %v", err)
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Database error during validation"})
+	}
+
+	// Cek apakah sudah check-in (opsional, jika ingin mencegah double check-in)
+	if participant.IsCheckedIn {
+		log.Printf("Check-in Info: User %s sudah check-in sebelumnya di event %d", userAddress, eventIDInt)
+		// Kembalikan OK saja agar scanner tidak error
+		return c.JSON(http.StatusOK, map[string]string{"status": "success", "message": "User already checked in"})
+	}
+
+	// TODO: Anda mungkin ingin cek status event (aktif) di sini juga,
+	//       baik dari DB (jika indexer mengupdatenya) atau via script Flow.
+	//       Untuk kecepatan, cek DB lebih baik.
+
+	// 3. UPDATE DB INSTAN
+	_, err = entClient.EventParticipant.
+		UpdateOne(participant). // Update record yang sudah ditemukan
+		SetIsCheckedIn(true).
+		Save(ctx)
+
+	if err != nil {
+		log.Printf("Error DB saat update isCheckedIn: %v", err)
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Database error during check-in"})
+	}
+
+	log.Printf("DB Check-in Berhasil: User %s di event %d", userAddress, eventIDInt)
+
+	// 4. JALANKAN GOROUTINE ASINKRON
+	// (Dapatkan brandAddress dari DB atau request jika perlu)
+	go transactions.SendCheckinTransactionAsync(brandAddress, eventIDInt, userAddress)
+
+	return c.JSON(http.StatusOK, map[string]string{"status": "success", "message": "Check-in successful"})
 }

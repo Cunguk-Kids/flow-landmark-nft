@@ -14,8 +14,8 @@ type EventParticipant struct {
 // Fields of the User.
 func (EventParticipant) Fields() []ent.Field {
 	return []ent.Field{
-		field.String("userAddress").
-			Default(""),
+		field.String("userAddress").Default(""),
+		field.Bool("isCheckedIn").Default(false),
 	}
 }
 
