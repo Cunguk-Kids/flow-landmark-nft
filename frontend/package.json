@@ -12,8 +12,8 @@
   "dependencies": {
     "@onflow/fcl": "^1.20.2",
     "@onflow/react-sdk": "^0.10.3",
-    "@radix-ui/react-dialog": "^1.1.15",
     "@radix-ui/react-alert-dialog": "^1.1.15",
+    "@radix-ui/react-dialog": "^1.1.15",
     "@radix-ui/react-label": "^2.1.7",
     "@radix-ui/react-navigation-menu": "^1.2.14",
     "@radix-ui/react-popover": "^1.1.15",
@@ -28,6 +28,7 @@
     "clsx": "^2.1.1",
     "lucide-react": "^0.546.0",
     "maplibre-gl": "^5.9.0",
+    "motion": "^12.23.24",
     "next-themes": "^0.4.6",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
