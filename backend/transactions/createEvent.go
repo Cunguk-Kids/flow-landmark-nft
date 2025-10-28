@@ -6,17 +6,17 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"time" // <-- Dibutuhkan untuk StartDate/EndDate
+	"time"
 
 	"github.com/joho/godotenv"
-	"github.com/onflow/cadence" // <-- Dibutuhkan untuk argumen
+	"github.com/onflow/cadence"
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/access"
 	"github.com/onflow/flow-go-sdk/access/http"
 	"github.com/onflow/flow-go-sdk/crypto"
 )
 
-// Ini adalah template skrip transaksi 'admin_create_event'
+// (Template skrip adminCreateEventScriptTemplate tetap sama)
 const adminCreateEventScriptTemplate = `
 import EventPlatform from 0x%s // Alamat Kontrak
 
@@ -71,10 +71,12 @@ transaction(
 
 const (
 	deployerAddress = "f8d6e0586b0a20c7"
+	// Ingat konstanta EmulatorHost Anda (Anda mungkin punya ini di tempat lain)
+	EmulatorHost = "127.0.0.1:3569" // Atau port HTTP Anda jika tetap pakai http client
 )
 
 // CreateEvent membuat event baru atas nama Brand
-// Fungsi ini ditandatangani oleh Akun Admin Platform
+// Mengembalikan error jika terjadi masalah
 func CreateEvent(
 	brandAddressString string,
 	eventName string,
@@ -87,100 +89,133 @@ func CreateEvent(
 	startDate time.Time, // Tipe Go
 	endDate time.Time, // Tipe Go
 	totalRareNFT uint64,
-) {
+) error { // <-- PERUBAHAN: Mengembalikan error
 
-	// Muat .env (sama seperti di SetupAdmin)
+	// Muat .env
 	err := godotenv.Load()
 	if err != nil {
-		log.Fatal("Error loading .env file")
+		// Log saja, mungkin env var diset di sistem
+		log.Println("Peringatan: Error loading .env file:", err)
+		// return fmt.Errorf("error loading .env file: %w", err) // Atau return error jika .env wajib
 	}
 
 	ctx := context.Background()
 	var flowClient access.Client
 
-	// Menggunakan pola koneksi yang Anda ingat
-	flowClient, err = http.NewClient(http.EmulatorHost)
+	// Koneksi Flow
+	// PERHATIAN: http.EmulatorHost mungkin konstanta dari package http, sesuaikan jika perlu
+	flowClient, err = http.NewClient(http.EmulatorHost) // Menggunakan koneksi HTTP Anda
 	if err != nil {
-		fmt.Println("Connection Error:", err.Error())
-		panic(err)
+		log.Printf("Connection Error: %v\n", err)
+		// Jangan panic, return error
+		return fmt.Errorf("gagal membuat flow client: %w", err)
 	}
 
 	// 1. SIAPKAN SIGNER (ADMIN PLATFORM)
-	// (Sama seperti di SetupAdmin, memuat dari .env)
 	privateKey := os.Getenv("PRIVATE_KEY")
-	platformAddress := flow.HexToAddress(deployerAddress) //ubah sesuai dengan account flow emulator
+	if privateKey == "" {
+		return fmt.Errorf("PRIVATE_KEY tidak ditemukan di environment variables")
+	}
+	platformAddress := flow.HexToAddress(deployerAddress)
 	platformKey, err := crypto.DecodePrivateKeyHex(crypto.ECDSA_P256, privateKey)
 	if err != nil {
-		log.Fatalf("Gagal decode private key: %v", err)
+		log.Printf("Gagal decode private key: %v\n", err)
+		return fmt.Errorf("gagal decode private key: %w", err)
 	}
 
 	platformAccount, err := flowClient.GetAccount(ctx, platformAddress)
 	if err != nil {
-		log.Fatalf("Gagal mendapatkan akun platform: %v", err)
+		log.Printf("Gagal mendapatkan akun platform: %v\n", err)
+		return fmt.Errorf("gagal mendapatkan akun platform %s: %w", platformAddress.String(), err)
 	}
 
 	key := platformAccount.Keys[0]
 	signer, err := crypto.NewInMemorySigner(platformKey, key.HashAlgo)
 	if err != nil {
-		log.Fatalf("Gagal memuat signer: %v", err)
+		log.Printf("Gagal memuat signer: %v\n", err)
+		return fmt.Errorf("gagal memuat signer: %w", err)
 	}
 
 	// 2. BUAT SKRIP TRANSAKSI
 	script := []byte(fmt.Sprintf(adminCreateEventScriptTemplate, deployerAddress))
 
 	// 3. SIAPKAN SEMUA ARGUMEN (11 Argumen)
-	// Konversi tipe Go ke tipe Cadence
+	// (Gunakan helper function jika Anda punya untuk menghindari Fatalf)
+	makeStrArg := func(s string) (cadence.String, error) {
+		val, err := cadence.NewString(s)
+		if err != nil {
+			return "", fmt.Errorf("gagal membuat argumen string '%s': %w", s, err)
+		}
+		return val, nil
+	}
+	makeFix64Arg := func(f float64) (cadence.Fix64, error) {
+		s := fmt.Sprintf("%.8f", f)
+		val, err := cadence.NewFix64(s)
+		if err != nil {
+			return cadence.Fix64(0), fmt.Errorf("gagal membuat argumen Fix64 '%s': %w", s, err)
+		}
+		return val, nil
+	}
+	makeUFix64Arg := func(f float64) (cadence.UFix64, error) {
+		s := fmt.Sprintf("%.8f", f)
+		val, err := cadence.NewUFix64(s)
+		if err != nil {
+			return cadence.UFix64(0), fmt.Errorf("gagal membuat argumen UFix64 '%s': %w", s, err)
+		}
+		return val, nil
+	}
+	makeUFix64TimestampArg := func(t time.Time) (cadence.UFix64, error) {
+		s := fmt.Sprintf("%d.0", t.Unix())
+		val, err := cadence.NewUFix64(s)
+		if err != nil {
+			return cadence.UFix64(0), fmt.Errorf("gagal membuat argumen timestamp '%s': %w", s, err)
+		}
+		return val, nil
+	}
 
+	// --- Buat Argumen ---
 	brandAddressArg := cadence.NewAddress(flow.HexToAddress(brandAddressString))
 
-	eventNameArg, err := cadence.NewString(eventName)
+	eventNameArg, err := makeStrArg(eventName)
 	if err != nil {
-		log.Fatalf("Gagal membuat argumen eventName: %v", err)
+		return err
 	}
 
 	quotaArg := cadence.NewUInt64(quota)
 
-	descriptionArg, err := cadence.NewString(description)
+	descriptionArg, err := makeStrArg(description)
 	if err != nil {
-		log.Fatalf("Gagal membuat argumen description: %v", err)
+		return err
 	}
 
-	imageArg, err := cadence.NewString(image)
+	imageArg, err := makeStrArg(image)
 	if err != nil {
-		log.Fatalf("Gagal membuat argumen image: %v", err)
+		return err
 	}
 
-	// Konversi float64 ke Fix64 (string)
-	latString := fmt.Sprintf("%.8f", lat)
-	latArg, err := cadence.NewFix64(latString)
+	latArg, err := makeFix64Arg(lat)
 	if err != nil {
-		log.Fatalf("Gagal membuat argumen lat: %v", err)
+		return err
 	}
 
-	longString := fmt.Sprintf("%.8f", long)
-	longArg, err := cadence.NewFix64(longString)
+	longArg, err := makeFix64Arg(long)
 	if err != nil {
-		log.Fatalf("Gagal membuat argumen long: %v", err)
+		return err
 	}
 
-	// Konversi float64 ke UFix64 (string)
-	radiusString := fmt.Sprintf("%.8f", radius)
-	radiusArg, err := cadence.NewUFix64(radiusString)
+	radiusArg, err := makeUFix64Arg(radius)
 	if err != nil {
-		log.Fatalf("Gagal membuat argumen radius: %v", err)
+		return err
 	}
 
-	// Konversi time.Time ke UFix64 (Unix timestamp string)
-	startDateString := fmt.Sprintf("%d.0", startDate.Unix())
-	startDateArg, err := cadence.NewUFix64(startDateString)
+	startDateArg, err := makeUFix64TimestampArg(startDate)
 	if err != nil {
-		log.Fatalf("Gagal membuat argumen startDate: %v", err)
+		return err
 	}
 
-	endDateString := fmt.Sprintf("%d.0", endDate.Unix())
-	endDateArg, err := cadence.NewUFix64(endDateString)
+	endDateArg, err := makeUFix64TimestampArg(endDate)
 	if err != nil {
-		log.Fatalf("Gagal membuat argumen endDate: %v", err)
+		return err
 	}
 
 	totalRareNFTArg := cadence.NewUInt64(totalRareNFT)
@@ -188,18 +223,20 @@ func CreateEvent(
 	// 4. BUAT TRANSAKSI
 	latestBlock, err := flowClient.GetLatestBlock(ctx, true)
 	if err != nil {
-		log.Fatalf("Gagal mendapatkan block terbaru: %v", err)
+		log.Printf("Gagal mendapatkan block terbaru: %v\n", err)
+		return fmt.Errorf("gagal mendapatkan block terbaru: %w", err)
 	}
 
 	tx := flow.NewTransaction().
 		SetScript(script).
 		SetComputeLimit(1000).
 		SetReferenceBlockID(latestBlock.ID).
-		SetPayer(platformAddress).                                      // Payer adalah Admin
-		SetProposalKey(platformAddress, key.Index, key.SequenceNumber). // Proposal Key adalah Admin
-		AddAuthorizer(platformAddress)                                  // Authorizer adalah Admin
+		SetPayer(platformAddress).
+		SetProposalKey(platformAddress, key.Index, key.SequenceNumber).
+		AddAuthorizer(platformAddress)
 
-	// 5. TAMBAHKAN ARGUMEN (SESUAI URUTAN DI CADENCE)
+	// 5. TAMBAHKAN ARGUMEN
+	// (Error check diabaikan karena AddArgument jarang gagal jika value benar)
 	_ = tx.AddArgument(brandAddressArg)
 	_ = tx.AddArgument(eventNameArg)
 	_ = tx.AddArgument(quotaArg)
@@ -212,25 +249,31 @@ func CreateEvent(
 	_ = tx.AddArgument(endDateArg)
 	_ = tx.AddArgument(totalRareNFTArg)
 
-	// 6. TANDA TANGANI TRANSAKSI (oleh ADMIN)
+	// 6. TANDA TANGANI TRANSAKSI
 	err = tx.SignEnvelope(platformAddress, key.Index, signer)
 	if err != nil {
-		log.Fatalf("Gagal menandatangani transaksi: %v", err)
+		log.Printf("Gagal menandatangani transaksi: %v\n", err)
+		return fmt.Errorf("gagal menandatangani transaksi: %w", err)
 	}
 
 	// 7. KIRIM TRANSAKSI
 	log.Println("Mengirim transaksi 'admin_create_event'...")
 	err = flowClient.SendTransaction(ctx, *tx)
 	if err != nil {
-		log.Fatalf("Gagal mengirim transaksi: %v", err)
+		log.Printf("Gagal mengirim transaksi: %v\n", err)
+		return fmt.Errorf("gagal mengirim transaksi: %w", err)
 	}
 
 	// 8. TUNGGU HASILNYA (SEAL)
-	result := utils.WaitForSeal(ctx, flowClient, tx.ID())
-
-	if result.Error != nil {
-		log.Fatalf("Transaksi error di chain: %s", result.Error)
+	// Panggil WaitForSeal yang sudah diubah agar return error
+	result, err := utils.WaitForSeal(ctx, flowClient, tx.ID())
+	if err != nil {
+		// Error bisa dari WaitForSeal itu sendiri atau error Cadence di chain
+		log.Printf("Transaksi %s gagal: %v\n", tx.ID(), err)
+		return fmt.Errorf("transaksi %s gagal: %w", tx.ID(), err) // Kembalikan error
 	}
 
+	// Jika tidak ada error dari WaitForSeal, berarti sukses
 	log.Printf("Transaksi Create Event Berhasil! 🔥 Status: %s", result.Status)
+	return nil // <-- PERUBAHAN: Kembalikan nil error jika sukses
 }

@@ -13,14 +13,9 @@ import (
 
 	grpcOpts "google.golang.org/grpc"
 
-	"backend/ent"
 	"backend/utils"
 
-	"entgo.io/ent/dialect"
-	entsql "entgo.io/ent/dialect/sql"
 	_ "github.com/jackc/pgx/v5/stdlib"
-
-	"database/sql"
 )
 
 const (
@@ -40,6 +35,7 @@ var (
 	EventCreated     = fmt.Sprintf("A.%s.EventPlatform.EventCreated", ContractAddress)
 	UserRegistered   = fmt.Sprintf("A.%s.EventPlatform.UserRegistered", ContractAddress)
 	UserUnregistered = fmt.Sprintf("A.%s.EventPlatform.UserUnregistered", ContractAddress)
+	EventStatus      = fmt.Sprintf("A.%s.EventPlatform.EventStatus", ContractAddress)
 )
 
 func main() {
@@ -50,7 +46,7 @@ func main() {
 		log.Printf("Warning: .env file not found, using environment variables from system: %v", err)
 	}
 
-	client := Open(os.Getenv("DATABASE_URL"))
+	client := utils.Open(os.Getenv("DATABASE_URL"))
 	if err := client.Schema.Create(ctx); err != nil {
 		log.Fatal(err)
 	}
@@ -71,26 +67,6 @@ func main() {
 	if err != nil {
 		log.Fatalf("Gagal terhubung ke emulator gRPC: %v", err)
 	}
-	eventCreatedID := fmt.Sprintf("A.%s.EventPlatform.EventCreated", ContractAddress)
-	var startHeight uint64 = 0
-	var endHeight uint64 = 100
-
-	query := grpc.EventRangeQuery{
-		Type:        eventCreatedID,
-		StartHeight: startHeight,
-		EndHeight:   endHeight,
-	}
-	result, err := grpcClient.GetEventsForHeightRange(ctx, query)
-	if err != nil {
-		log.Fatalf("Gagal mengambil events: %v", err)
-	}
-
-	for _, blockEvents := range result {
-		log.Printf("\n--- Events Ditemukan di Block Height: %d ---", blockEvents.Height)
-		for _, event := range blockEvents.Events {
-			log.Printf("Event ID: %s", event.Value.SearchFieldByName("brandAddress"))
-		}
-	}
 
 	grpcBlock, err := grpcClient.GetLatestBlockHeader(ctx, true)
 
@@ -103,7 +79,7 @@ func main() {
 		ctx,
 		0,
 		flow.EventFilter{
-			EventTypes: []string{EventCreated, UserRegistered, UserUnregistered},
+			EventTypes: []string{EventCreated, UserRegistered, UserUnregistered, EventStatus},
 		},
 	)
 	if initErr != nil {
@@ -125,11 +101,13 @@ func main() {
 
 				switch ev.Type {
 				case EventCreated:
-					utils.ProcessEventCreated(ctx, ev, client)
+					utils.ProcessEventCreated(ctx, grpcClient, ev, client)
 				case UserRegistered:
 					utils.ProcessEventRegistered(ctx, ev, client)
 				case UserUnregistered:
 					utils.ProcessEventUnregistered(ctx, ev, client)
+				case EventStatus:
+					utils.ProcessEventStatus(ctx, ev, client)
 				}
 			}
 		case err := <-errCh:
@@ -139,15 +117,4 @@ func main() {
 			}
 		}
 	}
-}
-
-func Open(databaseUrl string) *ent.Client {
-	db, err := sql.Open("pgx", databaseUrl)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	// Create an ent.Driver from `db`.
-	drv := entsql.OpenDB(dialect.Postgres, db)
-	return ent.NewClient(ent.Driver(drv))
 }

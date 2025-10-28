@@ -20,6 +20,30 @@ type Event struct {
 	EventId int `json:"eventId,omitempty"`
 	// BrandAddress holds the value of the "brandAddress" field.
 	BrandAddress string `json:"brandAddress,omitempty"`
+	// EventName holds the value of the "eventName" field.
+	EventName string `json:"eventName,omitempty"`
+	// Quota holds the value of the "quota" field.
+	Quota int `json:"quota,omitempty"`
+	// Counter holds the value of the "counter" field.
+	Counter int `json:"counter,omitempty"`
+	// Description holds the value of the "description" field.
+	Description string `json:"description,omitempty"`
+	// Image holds the value of the "image" field.
+	Image string `json:"image,omitempty"`
+	// Lat holds the value of the "lat" field.
+	Lat float64 `json:"lat,omitempty"`
+	// Long holds the value of the "long" field.
+	Long float64 `json:"long,omitempty"`
+	// Radius holds the value of the "radius" field.
+	Radius float64 `json:"radius,omitempty"`
+	// Status holds the value of the "status" field.
+	Status int `json:"status,omitempty"`
+	// StartDate holds the value of the "startDate" field.
+	StartDate float64 `json:"startDate,omitempty"`
+	// EndDate holds the value of the "endDate" field.
+	EndDate float64 `json:"endDate,omitempty"`
+	// TotalRareNFT holds the value of the "totalRareNFT" field.
+	TotalRareNFT int `json:"totalRareNFT,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the EventQuery when eager-loading is set.
 	Edges        EventEdges `json:"edges"`
@@ -49,9 +73,11 @@ func (*Event) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case event.FieldID, event.FieldEventId:
+		case event.FieldLat, event.FieldLong, event.FieldRadius, event.FieldStartDate, event.FieldEndDate:
+			values[i] = new(sql.NullFloat64)
+		case event.FieldID, event.FieldEventId, event.FieldQuota, event.FieldCounter, event.FieldStatus, event.FieldTotalRareNFT:
 			values[i] = new(sql.NullInt64)
-		case event.FieldBrandAddress:
+		case event.FieldBrandAddress, event.FieldEventName, event.FieldDescription, event.FieldImage:
 			values[i] = new(sql.NullString)
 		default:
 			values[i] = new(sql.UnknownType)
@@ -85,6 +111,78 @@ func (_m *Event) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field brandAddress", values[i])
 			} else if value.Valid {
 				_m.BrandAddress = value.String
+			}
+		case event.FieldEventName:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field eventName", values[i])
+			} else if value.Valid {
+				_m.EventName = value.String
+			}
+		case event.FieldQuota:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field quota", values[i])
+			} else if value.Valid {
+				_m.Quota = int(value.Int64)
+			}
+		case event.FieldCounter:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field counter", values[i])
+			} else if value.Valid {
+				_m.Counter = int(value.Int64)
+			}
+		case event.FieldDescription:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field description", values[i])
+			} else if value.Valid {
+				_m.Description = value.String
+			}
+		case event.FieldImage:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field image", values[i])
+			} else if value.Valid {
+				_m.Image = value.String
+			}
+		case event.FieldLat:
+			if value, ok := values[i].(*sql.NullFloat64); !ok {
+				return fmt.Errorf("unexpected type %T for field lat", values[i])
+			} else if value.Valid {
+				_m.Lat = value.Float64
+			}
+		case event.FieldLong:
+			if value, ok := values[i].(*sql.NullFloat64); !ok {
+				return fmt.Errorf("unexpected type %T for field long", values[i])
+			} else if value.Valid {
+				_m.Long = value.Float64
+			}
+		case event.FieldRadius:
+			if value, ok := values[i].(*sql.NullFloat64); !ok {
+				return fmt.Errorf("unexpected type %T for field radius", values[i])
+			} else if value.Valid {
+				_m.Radius = value.Float64
+			}
+		case event.FieldStatus:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field status", values[i])
+			} else if value.Valid {
+				_m.Status = int(value.Int64)
+			}
+		case event.FieldStartDate:
+			if value, ok := values[i].(*sql.NullFloat64); !ok {
+				return fmt.Errorf("unexpected type %T for field startDate", values[i])
+			} else if value.Valid {
+				_m.StartDate = value.Float64
+			}
+		case event.FieldEndDate:
+			if value, ok := values[i].(*sql.NullFloat64); !ok {
+				return fmt.Errorf("unexpected type %T for field endDate", values[i])
+			} else if value.Valid {
+				_m.EndDate = value.Float64
+			}
+		case event.FieldTotalRareNFT:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field totalRareNFT", values[i])
+			} else if value.Valid {
+				_m.TotalRareNFT = int(value.Int64)
 			}
 		default:
 			_m.selectValues.Set(columns[i], values[i])
@@ -132,6 +230,42 @@ func (_m *Event) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("brandAddress=")
 	builder.WriteString(_m.BrandAddress)
+	builder.WriteString(", ")
+	builder.WriteString("eventName=")
+	builder.WriteString(_m.EventName)
+	builder.WriteString(", ")
+	builder.WriteString("quota=")
+	builder.WriteString(fmt.Sprintf("%v", _m.Quota))
+	builder.WriteString(", ")
+	builder.WriteString("counter=")
+	builder.WriteString(fmt.Sprintf("%v", _m.Counter))
+	builder.WriteString(", ")
+	builder.WriteString("description=")
+	builder.WriteString(_m.Description)
+	builder.WriteString(", ")
+	builder.WriteString("image=")
+	builder.WriteString(_m.Image)
+	builder.WriteString(", ")
+	builder.WriteString("lat=")
+	builder.WriteString(fmt.Sprintf("%v", _m.Lat))
+	builder.WriteString(", ")
+	builder.WriteString("long=")
+	builder.WriteString(fmt.Sprintf("%v", _m.Long))
+	builder.WriteString(", ")
+	builder.WriteString("radius=")
+	builder.WriteString(fmt.Sprintf("%v", _m.Radius))
+	builder.WriteString(", ")
+	builder.WriteString("status=")
+	builder.WriteString(fmt.Sprintf("%v", _m.Status))
+	builder.WriteString(", ")
+	builder.WriteString("startDate=")
+	builder.WriteString(fmt.Sprintf("%v", _m.StartDate))
+	builder.WriteString(", ")
+	builder.WriteString("endDate=")
+	builder.WriteString(fmt.Sprintf("%v", _m.EndDate))
+	builder.WriteString(", ")
+	builder.WriteString("totalRareNFT=")
+	builder.WriteString(fmt.Sprintf("%v", _m.TotalRareNFT))
 	builder.WriteByte(')')
 	return builder.String()
 }

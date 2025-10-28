@@ -13,6 +13,18 @@ var (
 		{Name: "id", Type: field.TypeInt, Increment: true},
 		{Name: "event_id", Type: field.TypeInt, Unique: true},
 		{Name: "brand_address", Type: field.TypeString, Default: "Unknown"},
+		{Name: "event_name", Type: field.TypeString},
+		{Name: "quota", Type: field.TypeInt},
+		{Name: "counter", Type: field.TypeInt},
+		{Name: "description", Type: field.TypeString},
+		{Name: "image", Type: field.TypeString},
+		{Name: "lat", Type: field.TypeFloat64},
+		{Name: "long", Type: field.TypeFloat64},
+		{Name: "radius", Type: field.TypeFloat64},
+		{Name: "status", Type: field.TypeInt},
+		{Name: "start_date", Type: field.TypeFloat64},
+		{Name: "end_date", Type: field.TypeFloat64},
+		{Name: "total_rare_nft", Type: field.TypeInt},
 	}
 	// EventsTable holds the schema information for the "events" table.
 	EventsTable = &schema.Table{

@@ -64,6 +64,66 @@ func BrandAddress(v string) predicate.Event {
 	return predicate.Event(sql.FieldEQ(FieldBrandAddress, v))
 }
 
+// EventName applies equality check predicate on the "eventName" field. It's identical to EventNameEQ.
+func EventName(v string) predicate.Event {
+	return predicate.Event(sql.FieldEQ(FieldEventName, v))
+}
+
+// Quota applies equality check predicate on the "quota" field. It's identical to QuotaEQ.
+func Quota(v int) predicate.Event {
+	return predicate.Event(sql.FieldEQ(FieldQuota, v))
+}
+
+// Counter applies equality check predicate on the "counter" field. It's identical to CounterEQ.
+func Counter(v int) predicate.Event {
+	return predicate.Event(sql.FieldEQ(FieldCounter, v))
+}
+
+// Description applies equality check predicate on the "description" field. It's identical to DescriptionEQ.
+func Description(v string) predicate.Event {
+	return predicate.Event(sql.FieldEQ(FieldDescription, v))
+}
+
+// Image applies equality check predicate on the "image" field. It's identical to ImageEQ.
+func Image(v string) predicate.Event {
+	return predicate.Event(sql.FieldEQ(FieldImage, v))
+}
+
+// Lat applies equality check predicate on the "lat" field. It's identical to LatEQ.
+func Lat(v float64) predicate.Event {
+	return predicate.Event(sql.FieldEQ(FieldLat, v))
+}
+
+// Long applies equality check predicate on the "long" field. It's identical to LongEQ.
+func Long(v float64) predicate.Event {
+	return predicate.Event(sql.FieldEQ(FieldLong, v))
+}
+
+// Radius applies equality check predicate on the "radius" field. It's identical to RadiusEQ.
+func Radius(v float64) predicate.Event {
+	return predicate.Event(sql.FieldEQ(FieldRadius, v))
+}
+
+// Status applies equality check predicate on the "status" field. It's identical to StatusEQ.
+func Status(v int) predicate.Event {
+	return predicate.Event(sql.FieldEQ(FieldStatus, v))
+}
+
+// StartDate applies equality check predicate on the "startDate" field. It's identical to StartDateEQ.
+func StartDate(v float64) predicate.Event {
+	return predicate.Event(sql.FieldEQ(FieldStartDate, v))
+}
+
+// EndDate applies equality check predicate on the "endDate" field. It's identical to EndDateEQ.
+func EndDate(v float64) predicate.Event {
+	return predicate.Event(sql.FieldEQ(FieldEndDate, v))
+}
+
+// TotalRareNFT applies equality check predicate on the "totalRareNFT" field. It's identical to TotalRareNFTEQ.
+func TotalRareNFT(v int) predicate.Event {
+	return predicate.Event(sql.FieldEQ(FieldTotalRareNFT, v))
+}
+
 // EventIdEQ applies the EQ predicate on the "eventId" field.
 func EventIdEQ(v int) predicate.Event {
 	return predicate.Event(sql.FieldEQ(FieldEventId, v))
@@ -167,6 +227,561 @@ func BrandAddressEqualFold(v string) predicate.Event {
 // BrandAddressContainsFold applies the ContainsFold predicate on the "brandAddress" field.
 func BrandAddressContainsFold(v string) predicate.Event {
 	return predicate.Event(sql.FieldContainsFold(FieldBrandAddress, v))
+}
+
+// EventNameEQ applies the EQ predicate on the "eventName" field.
+func EventNameEQ(v string) predicate.Event {
+	return predicate.Event(sql.FieldEQ(FieldEventName, v))
+}
+
+// EventNameNEQ applies the NEQ predicate on the "eventName" field.
+func EventNameNEQ(v string) predicate.Event {
+	return predicate.Event(sql.FieldNEQ(FieldEventName, v))
+}
+
+// EventNameIn applies the In predicate on the "eventName" field.
+func EventNameIn(vs ...string) predicate.Event {
+	return predicate.Event(sql.FieldIn(FieldEventName, vs...))
+}
+
+// EventNameNotIn applies the NotIn predicate on the "eventName" field.
+func EventNameNotIn(vs ...string) predicate.Event {
+	return predicate.Event(sql.FieldNotIn(FieldEventName, vs...))
+}
+
+// EventNameGT applies the GT predicate on the "eventName" field.
+func EventNameGT(v string) predicate.Event {
+	return predicate.Event(sql.FieldGT(FieldEventName, v))
+}
+
+// EventNameGTE applies the GTE predicate on the "eventName" field.
+func EventNameGTE(v string) predicate.Event {
+	return predicate.Event(sql.FieldGTE(FieldEventName, v))
+}
+
+// EventNameLT applies the LT predicate on the "eventName" field.
+func EventNameLT(v string) predicate.Event {
+	return predicate.Event(sql.FieldLT(FieldEventName, v))
+}
+
+// EventNameLTE applies the LTE predicate on the "eventName" field.
+func EventNameLTE(v string) predicate.Event {
+	return predicate.Event(sql.FieldLTE(FieldEventName, v))
+}
+
+// EventNameContains applies the Contains predicate on the "eventName" field.
+func EventNameContains(v string) predicate.Event {
+	return predicate.Event(sql.FieldContains(FieldEventName, v))
+}
+
+// EventNameHasPrefix applies the HasPrefix predicate on the "eventName" field.
+func EventNameHasPrefix(v string) predicate.Event {
+	return predicate.Event(sql.FieldHasPrefix(FieldEventName, v))
+}
+
+// EventNameHasSuffix applies the HasSuffix predicate on the "eventName" field.
+func EventNameHasSuffix(v string) predicate.Event {
+	return predicate.Event(sql.FieldHasSuffix(FieldEventName, v))
+}
+
+// EventNameEqualFold applies the EqualFold predicate on the "eventName" field.
+func EventNameEqualFold(v string) predicate.Event {
+	return predicate.Event(sql.FieldEqualFold(FieldEventName, v))
+}
+
+// EventNameContainsFold applies the ContainsFold predicate on the "eventName" field.
+func EventNameContainsFold(v string) predicate.Event {
+	return predicate.Event(sql.FieldContainsFold(FieldEventName, v))
+}
+
+// QuotaEQ applies the EQ predicate on the "quota" field.
+func QuotaEQ(v int) predicate.Event {
+	return predicate.Event(sql.FieldEQ(FieldQuota, v))
+}
+
+// QuotaNEQ applies the NEQ predicate on the "quota" field.
+func QuotaNEQ(v int) predicate.Event {
+	return predicate.Event(sql.FieldNEQ(FieldQuota, v))
+}
+
+// QuotaIn applies the In predicate on the "quota" field.
+func QuotaIn(vs ...int) predicate.Event {
+	return predicate.Event(sql.FieldIn(FieldQuota, vs...))
+}
+
+// QuotaNotIn applies the NotIn predicate on the "quota" field.
+func QuotaNotIn(vs ...int) predicate.Event {
+	return predicate.Event(sql.FieldNotIn(FieldQuota, vs...))
+}
+
+// QuotaGT applies the GT predicate on the "quota" field.
+func QuotaGT(v int) predicate.Event {
+	return predicate.Event(sql.FieldGT(FieldQuota, v))
+}
+
+// QuotaGTE applies the GTE predicate on the "quota" field.
+func QuotaGTE(v int) predicate.Event {
+	return predicate.Event(sql.FieldGTE(FieldQuota, v))
+}
+
+// QuotaLT applies the LT predicate on the "quota" field.
+func QuotaLT(v int) predicate.Event {
+	return predicate.Event(sql.FieldLT(FieldQuota, v))
+}
+
+// QuotaLTE applies the LTE predicate on the "quota" field.
+func QuotaLTE(v int) predicate.Event {
+	return predicate.Event(sql.FieldLTE(FieldQuota, v))
+}
+
+// CounterEQ applies the EQ predicate on the "counter" field.
+func CounterEQ(v int) predicate.Event {
+	return predicate.Event(sql.FieldEQ(FieldCounter, v))
+}
+
+// CounterNEQ applies the NEQ predicate on the "counter" field.
+func CounterNEQ(v int) predicate.Event {
+	return predicate.Event(sql.FieldNEQ(FieldCounter, v))
+}
+
+// CounterIn applies the In predicate on the "counter" field.
+func CounterIn(vs ...int) predicate.Event {
+	return predicate.Event(sql.FieldIn(FieldCounter, vs...))
+}
+
+// CounterNotIn applies the NotIn predicate on the "counter" field.
+func CounterNotIn(vs ...int) predicate.Event {
+	return predicate.Event(sql.FieldNotIn(FieldCounter, vs...))
+}
+
+// CounterGT applies the GT predicate on the "counter" field.
+func CounterGT(v int) predicate.Event {
+	return predicate.Event(sql.FieldGT(FieldCounter, v))
+}
+
+// CounterGTE applies the GTE predicate on the "counter" field.
+func CounterGTE(v int) predicate.Event {
+	return predicate.Event(sql.FieldGTE(FieldCounter, v))
+}
+
+// CounterLT applies the LT predicate on the "counter" field.
+func CounterLT(v int) predicate.Event {
+	return predicate.Event(sql.FieldLT(FieldCounter, v))
+}
+
+// CounterLTE applies the LTE predicate on the "counter" field.
+func CounterLTE(v int) predicate.Event {
+	return predicate.Event(sql.FieldLTE(FieldCounter, v))
+}
+
+// DescriptionEQ applies the EQ predicate on the "description" field.
+func DescriptionEQ(v string) predicate.Event {
+	return predicate.Event(sql.FieldEQ(FieldDescription, v))
+}
+
+// DescriptionNEQ applies the NEQ predicate on the "description" field.
+func DescriptionNEQ(v string) predicate.Event {
+	return predicate.Event(sql.FieldNEQ(FieldDescription, v))
+}
+
+// DescriptionIn applies the In predicate on the "description" field.
+func DescriptionIn(vs ...string) predicate.Event {
+	return predicate.Event(sql.FieldIn(FieldDescription, vs...))
+}
+
+// DescriptionNotIn applies the NotIn predicate on the "description" field.
+func DescriptionNotIn(vs ...string) predicate.Event {
+	return predicate.Event(sql.FieldNotIn(FieldDescription, vs...))
+}
+
+// DescriptionGT applies the GT predicate on the "description" field.
+func DescriptionGT(v string) predicate.Event {
+	return predicate.Event(sql.FieldGT(FieldDescription, v))
+}
+
+// DescriptionGTE applies the GTE predicate on the "description" field.
+func DescriptionGTE(v string) predicate.Event {
+	return predicate.Event(sql.FieldGTE(FieldDescription, v))
+}
+
+// DescriptionLT applies the LT predicate on the "description" field.
+func DescriptionLT(v string) predicate.Event {
+	return predicate.Event(sql.FieldLT(FieldDescription, v))
+}
+
+// DescriptionLTE applies the LTE predicate on the "description" field.
+func DescriptionLTE(v string) predicate.Event {
+	return predicate.Event(sql.FieldLTE(FieldDescription, v))
+}
+
+// DescriptionContains applies the Contains predicate on the "description" field.
+func DescriptionContains(v string) predicate.Event {
+	return predicate.Event(sql.FieldContains(FieldDescription, v))
+}
+
+// DescriptionHasPrefix applies the HasPrefix predicate on the "description" field.
+func DescriptionHasPrefix(v string) predicate.Event {
+	return predicate.Event(sql.FieldHasPrefix(FieldDescription, v))
+}
+
+// DescriptionHasSuffix applies the HasSuffix predicate on the "description" field.
+func DescriptionHasSuffix(v string) predicate.Event {
+	return predicate.Event(sql.FieldHasSuffix(FieldDescription, v))
+}
+
+// DescriptionEqualFold applies the EqualFold predicate on the "description" field.
+func DescriptionEqualFold(v string) predicate.Event {
+	return predicate.Event(sql.FieldEqualFold(FieldDescription, v))
+}
+
+// DescriptionContainsFold applies the ContainsFold predicate on the "description" field.
+func DescriptionContainsFold(v string) predicate.Event {
+	return predicate.Event(sql.FieldContainsFold(FieldDescription, v))
+}
+
+// ImageEQ applies the EQ predicate on the "image" field.
+func ImageEQ(v string) predicate.Event {
+	return predicate.Event(sql.FieldEQ(FieldImage, v))
+}
+
+// ImageNEQ applies the NEQ predicate on the "image" field.
+func ImageNEQ(v string) predicate.Event {
+	return predicate.Event(sql.FieldNEQ(FieldImage, v))
+}
+
+// ImageIn applies the In predicate on the "image" field.
+func ImageIn(vs ...string) predicate.Event {
+	return predicate.Event(sql.FieldIn(FieldImage, vs...))
+}
+
+// ImageNotIn applies the NotIn predicate on the "image" field.
+func ImageNotIn(vs ...string) predicate.Event {
+	return predicate.Event(sql.FieldNotIn(FieldImage, vs...))
+}
+
+// ImageGT applies the GT predicate on the "image" field.
+func ImageGT(v string) predicate.Event {
+	return predicate.Event(sql.FieldGT(FieldImage, v))
+}
+
+// ImageGTE applies the GTE predicate on the "image" field.
+func ImageGTE(v string) predicate.Event {
+	return predicate.Event(sql.FieldGTE(FieldImage, v))
+}
+
+// ImageLT applies the LT predicate on the "image" field.
+func ImageLT(v string) predicate.Event {
+	return predicate.Event(sql.FieldLT(FieldImage, v))
+}
+
+// ImageLTE applies the LTE predicate on the "image" field.
+func ImageLTE(v string) predicate.Event {
+	return predicate.Event(sql.FieldLTE(FieldImage, v))
+}
+
+// ImageContains applies the Contains predicate on the "image" field.
+func ImageContains(v string) predicate.Event {
+	return predicate.Event(sql.FieldContains(FieldImage, v))
+}
+
+// ImageHasPrefix applies the HasPrefix predicate on the "image" field.
+func ImageHasPrefix(v string) predicate.Event {
+	return predicate.Event(sql.FieldHasPrefix(FieldImage, v))
+}
+
+// ImageHasSuffix applies the HasSuffix predicate on the "image" field.
+func ImageHasSuffix(v string) predicate.Event {
+	return predicate.Event(sql.FieldHasSuffix(FieldImage, v))
+}
+
+// ImageEqualFold applies the EqualFold predicate on the "image" field.
+func ImageEqualFold(v string) predicate.Event {
+	return predicate.Event(sql.FieldEqualFold(FieldImage, v))
+}
+
+// ImageContainsFold applies the ContainsFold predicate on the "image" field.
+func ImageContainsFold(v string) predicate.Event {
+	return predicate.Event(sql.FieldContainsFold(FieldImage, v))
+}
+
+// LatEQ applies the EQ predicate on the "lat" field.
+func LatEQ(v float64) predicate.Event {
+	return predicate.Event(sql.FieldEQ(FieldLat, v))
+}
+
+// LatNEQ applies the NEQ predicate on the "lat" field.
+func LatNEQ(v float64) predicate.Event {
+	return predicate.Event(sql.FieldNEQ(FieldLat, v))
+}
+
+// LatIn applies the In predicate on the "lat" field.
+func LatIn(vs ...float64) predicate.Event {
+	return predicate.Event(sql.FieldIn(FieldLat, vs...))
+}
+
+// LatNotIn applies the NotIn predicate on the "lat" field.
+func LatNotIn(vs ...float64) predicate.Event {
+	return predicate.Event(sql.FieldNotIn(FieldLat, vs...))
+}
+
+// LatGT applies the GT predicate on the "lat" field.
+func LatGT(v float64) predicate.Event {
+	return predicate.Event(sql.FieldGT(FieldLat, v))
+}
+
+// LatGTE applies the GTE predicate on the "lat" field.
+func LatGTE(v float64) predicate.Event {
+	return predicate.Event(sql.FieldGTE(FieldLat, v))
+}
+
+// LatLT applies the LT predicate on the "lat" field.
+func LatLT(v float64) predicate.Event {
+	return predicate.Event(sql.FieldLT(FieldLat, v))
+}
+
+// LatLTE applies the LTE predicate on the "lat" field.
+func LatLTE(v float64) predicate.Event {
+	return predicate.Event(sql.FieldLTE(FieldLat, v))
+}
+
+// LongEQ applies the EQ predicate on the "long" field.
+func LongEQ(v float64) predicate.Event {
+	return predicate.Event(sql.FieldEQ(FieldLong, v))
+}
+
+// LongNEQ applies the NEQ predicate on the "long" field.
+func LongNEQ(v float64) predicate.Event {
+	return predicate.Event(sql.FieldNEQ(FieldLong, v))
+}
+
+// LongIn applies the In predicate on the "long" field.
+func LongIn(vs ...float64) predicate.Event {
+	return predicate.Event(sql.FieldIn(FieldLong, vs...))
+}
+
+// LongNotIn applies the NotIn predicate on the "long" field.
+func LongNotIn(vs ...float64) predicate.Event {
+	return predicate.Event(sql.FieldNotIn(FieldLong, vs...))
+}
+
+// LongGT applies the GT predicate on the "long" field.
+func LongGT(v float64) predicate.Event {
+	return predicate.Event(sql.FieldGT(FieldLong, v))
+}
+
+// LongGTE applies the GTE predicate on the "long" field.
+func LongGTE(v float64) predicate.Event {
+	return predicate.Event(sql.FieldGTE(FieldLong, v))
+}
+
+// LongLT applies the LT predicate on the "long" field.
+func LongLT(v float64) predicate.Event {
+	return predicate.Event(sql.FieldLT(FieldLong, v))
+}
+
+// LongLTE applies the LTE predicate on the "long" field.
+func LongLTE(v float64) predicate.Event {
+	return predicate.Event(sql.FieldLTE(FieldLong, v))
+}
+
+// RadiusEQ applies the EQ predicate on the "radius" field.
+func RadiusEQ(v float64) predicate.Event {
+	return predicate.Event(sql.FieldEQ(FieldRadius, v))
+}
+
+// RadiusNEQ applies the NEQ predicate on the "radius" field.
+func RadiusNEQ(v float64) predicate.Event {
+	return predicate.Event(sql.FieldNEQ(FieldRadius, v))
+}
+
+// RadiusIn applies the In predicate on the "radius" field.
+func RadiusIn(vs ...float64) predicate.Event {
+	return predicate.Event(sql.FieldIn(FieldRadius, vs...))
+}
+
+// RadiusNotIn applies the NotIn predicate on the "radius" field.
+func RadiusNotIn(vs ...float64) predicate.Event {
+	return predicate.Event(sql.FieldNotIn(FieldRadius, vs...))
+}
+
+// RadiusGT applies the GT predicate on the "radius" field.
+func RadiusGT(v float64) predicate.Event {
+	return predicate.Event(sql.FieldGT(FieldRadius, v))
+}
+
+// RadiusGTE applies the GTE predicate on the "radius" field.
+func RadiusGTE(v float64) predicate.Event {
+	return predicate.Event(sql.FieldGTE(FieldRadius, v))
+}
+
+// RadiusLT applies the LT predicate on the "radius" field.
+func RadiusLT(v float64) predicate.Event {
+	return predicate.Event(sql.FieldLT(FieldRadius, v))
+}
+
+// RadiusLTE applies the LTE predicate on the "radius" field.
+func RadiusLTE(v float64) predicate.Event {
+	return predicate.Event(sql.FieldLTE(FieldRadius, v))
+}
+
+// StatusEQ applies the EQ predicate on the "status" field.
+func StatusEQ(v int) predicate.Event {
+	return predicate.Event(sql.FieldEQ(FieldStatus, v))
+}
+
+// StatusNEQ applies the NEQ predicate on the "status" field.
+func StatusNEQ(v int) predicate.Event {
+	return predicate.Event(sql.FieldNEQ(FieldStatus, v))
+}
+
+// StatusIn applies the In predicate on the "status" field.
+func StatusIn(vs ...int) predicate.Event {
+	return predicate.Event(sql.FieldIn(FieldStatus, vs...))
+}
+
+// StatusNotIn applies the NotIn predicate on the "status" field.
+func StatusNotIn(vs ...int) predicate.Event {
+	return predicate.Event(sql.FieldNotIn(FieldStatus, vs...))
+}
+
+// StatusGT applies the GT predicate on the "status" field.
+func StatusGT(v int) predicate.Event {
+	return predicate.Event(sql.FieldGT(FieldStatus, v))
+}
+
+// StatusGTE applies the GTE predicate on the "status" field.
+func StatusGTE(v int) predicate.Event {
+	return predicate.Event(sql.FieldGTE(FieldStatus, v))
+}
+
+// StatusLT applies the LT predicate on the "status" field.
+func StatusLT(v int) predicate.Event {
+	return predicate.Event(sql.FieldLT(FieldStatus, v))
+}
+
+// StatusLTE applies the LTE predicate on the "status" field.
+func StatusLTE(v int) predicate.Event {
+	return predicate.Event(sql.FieldLTE(FieldStatus, v))
+}
+
+// StartDateEQ applies the EQ predicate on the "startDate" field.
+func StartDateEQ(v float64) predicate.Event {
+	return predicate.Event(sql.FieldEQ(FieldStartDate, v))
+}
+
+// StartDateNEQ applies the NEQ predicate on the "startDate" field.
+func StartDateNEQ(v float64) predicate.Event {
+	return predicate.Event(sql.FieldNEQ(FieldStartDate, v))
+}
+
+// StartDateIn applies the In predicate on the "startDate" field.
+func StartDateIn(vs ...float64) predicate.Event {
+	return predicate.Event(sql.FieldIn(FieldStartDate, vs...))
+}
+
+// StartDateNotIn applies the NotIn predicate on the "startDate" field.
+func StartDateNotIn(vs ...float64) predicate.Event {
+	return predicate.Event(sql.FieldNotIn(FieldStartDate, vs...))
+}
+
+// StartDateGT applies the GT predicate on the "startDate" field.
+func StartDateGT(v float64) predicate.Event {
+	return predicate.Event(sql.FieldGT(FieldStartDate, v))
+}
+
+// StartDateGTE applies the GTE predicate on the "startDate" field.
+func StartDateGTE(v float64) predicate.Event {
+	return predicate.Event(sql.FieldGTE(FieldStartDate, v))
+}
+
+// StartDateLT applies the LT predicate on the "startDate" field.
+func StartDateLT(v float64) predicate.Event {
+	return predicate.Event(sql.FieldLT(FieldStartDate, v))
+}
+
+// StartDateLTE applies the LTE predicate on the "startDate" field.
+func StartDateLTE(v float64) predicate.Event {
+	return predicate.Event(sql.FieldLTE(FieldStartDate, v))
+}
+
+// EndDateEQ applies the EQ predicate on the "endDate" field.
+func EndDateEQ(v float64) predicate.Event {
+	return predicate.Event(sql.FieldEQ(FieldEndDate, v))
+}
+
+// EndDateNEQ applies the NEQ predicate on the "endDate" field.
+func EndDateNEQ(v float64) predicate.Event {
+	return predicate.Event(sql.FieldNEQ(FieldEndDate, v))
+}
+
+// EndDateIn applies the In predicate on the "endDate" field.
+func EndDateIn(vs ...float64) predicate.Event {
+	return predicate.Event(sql.FieldIn(FieldEndDate, vs...))
+}
+
+// EndDateNotIn applies the NotIn predicate on the "endDate" field.
+func EndDateNotIn(vs ...float64) predicate.Event {
+	return predicate.Event(sql.FieldNotIn(FieldEndDate, vs...))
+}
+
+// EndDateGT applies the GT predicate on the "endDate" field.
+func EndDateGT(v float64) predicate.Event {
+	return predicate.Event(sql.FieldGT(FieldEndDate, v))
+}
+
+// EndDateGTE applies the GTE predicate on the "endDate" field.
+func EndDateGTE(v float64) predicate.Event {
+	return predicate.Event(sql.FieldGTE(FieldEndDate, v))
+}
+
+// EndDateLT applies the LT predicate on the "endDate" field.
+func EndDateLT(v float64) predicate.Event {
+	return predicate.Event(sql.FieldLT(FieldEndDate, v))
+}
+
+// EndDateLTE applies the LTE predicate on the "endDate" field.
+func EndDateLTE(v float64) predicate.Event {
+	return predicate.Event(sql.FieldLTE(FieldEndDate, v))
+}
+
+// TotalRareNFTEQ applies the EQ predicate on the "totalRareNFT" field.
+func TotalRareNFTEQ(v int) predicate.Event {
+	return predicate.Event(sql.FieldEQ(FieldTotalRareNFT, v))
+}
+
+// TotalRareNFTNEQ applies the NEQ predicate on the "totalRareNFT" field.
+func TotalRareNFTNEQ(v int) predicate.Event {
+	return predicate.Event(sql.FieldNEQ(FieldTotalRareNFT, v))
+}
+
+// TotalRareNFTIn applies the In predicate on the "totalRareNFT" field.
+func TotalRareNFTIn(vs ...int) predicate.Event {
+	return predicate.Event(sql.FieldIn(FieldTotalRareNFT, vs...))
+}
+
+// TotalRareNFTNotIn applies the NotIn predicate on the "totalRareNFT" field.
+func TotalRareNFTNotIn(vs ...int) predicate.Event {
+	return predicate.Event(sql.FieldNotIn(FieldTotalRareNFT, vs...))
+}
+
+// TotalRareNFTGT applies the GT predicate on the "totalRareNFT" field.
+func TotalRareNFTGT(v int) predicate.Event {
+	return predicate.Event(sql.FieldGT(FieldTotalRareNFT, v))
+}
+
+// TotalRareNFTGTE applies the GTE predicate on the "totalRareNFT" field.
+func TotalRareNFTGTE(v int) predicate.Event {
+	return predicate.Event(sql.FieldGTE(FieldTotalRareNFT, v))
+}
+
+// TotalRareNFTLT applies the LT predicate on the "totalRareNFT" field.
+func TotalRareNFTLT(v int) predicate.Event {
+	return predicate.Event(sql.FieldLT(FieldTotalRareNFT, v))
+}
+
+// TotalRareNFTLTE applies the LTE predicate on the "totalRareNFT" field.
+func TotalRareNFTLTE(v int) predicate.Event {
+	return predicate.Event(sql.FieldLTE(FieldTotalRareNFT, v))
 }
 
 // HasEventID applies the HasEdge predicate on the "event_id" edge.

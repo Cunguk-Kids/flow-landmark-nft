@@ -16,6 +16,30 @@ const (
 	FieldEventId = "event_id"
 	// FieldBrandAddress holds the string denoting the brandaddress field in the database.
 	FieldBrandAddress = "brand_address"
+	// FieldEventName holds the string denoting the eventname field in the database.
+	FieldEventName = "event_name"
+	// FieldQuota holds the string denoting the quota field in the database.
+	FieldQuota = "quota"
+	// FieldCounter holds the string denoting the counter field in the database.
+	FieldCounter = "counter"
+	// FieldDescription holds the string denoting the description field in the database.
+	FieldDescription = "description"
+	// FieldImage holds the string denoting the image field in the database.
+	FieldImage = "image"
+	// FieldLat holds the string denoting the lat field in the database.
+	FieldLat = "lat"
+	// FieldLong holds the string denoting the long field in the database.
+	FieldLong = "long"
+	// FieldRadius holds the string denoting the radius field in the database.
+	FieldRadius = "radius"
+	// FieldStatus holds the string denoting the status field in the database.
+	FieldStatus = "status"
+	// FieldStartDate holds the string denoting the startdate field in the database.
+	FieldStartDate = "start_date"
+	// FieldEndDate holds the string denoting the enddate field in the database.
+	FieldEndDate = "end_date"
+	// FieldTotalRareNFT holds the string denoting the totalrarenft field in the database.
+	FieldTotalRareNFT = "total_rare_nft"
 	// EdgeEventID holds the string denoting the event_id edge name in mutations.
 	EdgeEventID = "event_id"
 	// Table holds the table name of the event in the database.
@@ -34,6 +58,18 @@ var Columns = []string{
 	FieldID,
 	FieldEventId,
 	FieldBrandAddress,
+	FieldEventName,
+	FieldQuota,
+	FieldCounter,
+	FieldDescription,
+	FieldImage,
+	FieldLat,
+	FieldLong,
+	FieldRadius,
+	FieldStatus,
+	FieldStartDate,
+	FieldEndDate,
+	FieldTotalRareNFT,
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -67,6 +103,66 @@ func ByEventId(opts ...sql.OrderTermOption) OrderOption {
 // ByBrandAddress orders the results by the brandAddress field.
 func ByBrandAddress(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldBrandAddress, opts...).ToFunc()
+}
+
+// ByEventName orders the results by the eventName field.
+func ByEventName(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldEventName, opts...).ToFunc()
+}
+
+// ByQuota orders the results by the quota field.
+func ByQuota(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldQuota, opts...).ToFunc()
+}
+
+// ByCounter orders the results by the counter field.
+func ByCounter(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldCounter, opts...).ToFunc()
+}
+
+// ByDescription orders the results by the description field.
+func ByDescription(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldDescription, opts...).ToFunc()
+}
+
+// ByImage orders the results by the image field.
+func ByImage(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldImage, opts...).ToFunc()
+}
+
+// ByLat orders the results by the lat field.
+func ByLat(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldLat, opts...).ToFunc()
+}
+
+// ByLong orders the results by the long field.
+func ByLong(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldLong, opts...).ToFunc()
+}
+
+// ByRadius orders the results by the radius field.
+func ByRadius(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldRadius, opts...).ToFunc()
+}
+
+// ByStatus orders the results by the status field.
+func ByStatus(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldStatus, opts...).ToFunc()
+}
+
+// ByStartDate orders the results by the startDate field.
+func ByStartDate(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldStartDate, opts...).ToFunc()
+}
+
+// ByEndDate orders the results by the endDate field.
+func ByEndDate(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldEndDate, opts...).ToFunc()
+}
+
+// ByTotalRareNFT orders the results by the totalRareNFT field.
+func ByTotalRareNFT(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldTotalRareNFT, opts...).ToFunc()
 }
 
 // ByEventIDCount orders the results by event_id count.
