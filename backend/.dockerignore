@@ -1,0 +1,26 @@
+# Git
+.git
+.gitignore
+
+# Environment files
+.env
+.env.local
+
+# Go build artifacts
+*.exe
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# Misc
+README.md
+docker-compose.yml

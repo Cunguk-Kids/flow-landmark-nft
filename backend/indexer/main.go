@@ -24,10 +24,17 @@ import (
 )
 
 const (
-	// Gunakan port gRPC emulator, BUKAN port HTTP/REST
-	EmulatorHost_gRPC = "127.0.0.1:3569"
-	ContractAddress   = "f8d6e0586b0a20c7" // Alamat tempat kontrak di-deploy
+	ContractAddress = "f8d6e0586b0a20c7" // Alamat tempat kontrak di-deploy
 )
+
+func getEmulatorHost() string {
+	// Get emulator host from environment variable, default to localhost
+	host := os.Getenv("FLOW_EMULATOR_HOST")
+	if host == "" {
+		host = "127.0.0.1:3569"
+	}
+	return host
+}
 
 var (
 	EventCreated     = fmt.Sprintf("A.%s.EventPlatform.EventCreated", ContractAddress)
@@ -38,9 +45,10 @@ var (
 
 func main() {
 	ctx := context.Background()
+	// Load .env file if it exists (optional, environment variables can be set by Docker/system)
 	err := godotenv.Load()
 	if err != nil {
-		log.Fatalf("Error loading .env file: %v", err)
+		log.Printf("Warning: .env file not found, using environment variables from system: %v", err)
 	}
 
 	client := Open(os.Getenv("DATABASE_URL"))
@@ -52,8 +60,12 @@ func main() {
 		log.Fatal(err)
 	}
 	log.Println(events)
+
+	emulatorHost := getEmulatorHost()
+	log.Printf("Connecting to Flow emulator at: %s", emulatorHost)
+
 	grpcClient, err := grpc.NewBaseClient(
-		grpc.EmulatorHost,
+		emulatorHost,
 		grpcOpts.WithTransportCredentials(insecure.NewCredentials()),
 	)
 
