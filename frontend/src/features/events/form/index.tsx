@@ -2,7 +2,8 @@ import { useState, type FC, type FormEvent } from "react";
 import { useNavigate, useRouter } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Phone, X } from "lucide-react";
+import { Typhography } from "@/components/ui/typhography";
+import { ArrowLeft, Phone, X } from "lucide-react";
 import {
   Field,
   FieldGroup,
@@ -85,22 +86,24 @@ const EventsFormPage: FC<{ id: string }> = ({ id }) => {
     return (
       <ItemGroup className="p-6 text-center">
         <ItemContent>
-          <ItemHeader className="font-semibold text-xl self-center">
-            Register Success
+          <ItemHeader className="font-semibold self-center">
+            <Typhography variant="3xl">Register Success</Typhography>
           </ItemHeader>
-          <ItemDescription className="text-gray-700 text-lg my-8">
-            Your ticket can be view on My Ticket
+          <ItemDescription className="text-muted-foreground my-8">
+            <Typhography variant="2xl">
+              Your ticket can be viewed on My Ticket
+            </Typhography>
           </ItemDescription>
           <ItemFooter className="flex flex-col md:flex-row justify-between items-center gap-4">
             <Button onClick={handleClickMyTicket} className="flex-1 w-full">
-              My Ticket
+              <Typhography variant="lg">My Ticket</Typhography>
             </Button>
             <Button
               variant={"secondary"}
               onClick={handleClickMyTicket}
               className="flex-1 w-full"
             >
-              Home
+              <Typhography variant="lg">Home</Typhography>
             </Button>
           </ItemFooter>
         </ItemContent>
@@ -109,25 +112,27 @@ const EventsFormPage: FC<{ id: string }> = ({ id }) => {
   }
 
   return (
-    <form>
+    <form className="min-h-screen text-foreground">
       <FieldSet className="w-full py-2 px-6 flex flex-col justify-center items-center">
-        <FieldLegend className="w-full flex justify-center items-center">
-          <div className="w-full flex justify-between items-center">
-            <h1 className="font-bold text-xl lg:text-2xl">Registration Form</h1>
-            <Button
-              onClick={handleClickBack}
-              size={"icon-sm"}
-              variant={"outline"}
-              className="rounded-full"
-            >
-              <X />
-            </Button>
-          </div>
-        </FieldLegend>
-        <FieldGroup className="w-full lg:w-1/2">
+        <div className="w-full flex justify-between items-center gap-2">
+          <Button
+            onClick={handleClickBack}
+            size={"icon-sm"}
+            variant={"outline"}
+            className="rounded-full"
+          >
+            <ArrowLeft />
+          </Button>
+          <Typhography variant="3xl" className="font-bold">
+            Registration Form
+          </Typhography>
+        </div>
+        <FieldGroup>
           <Field>
             <FieldLabel htmlFor="name">
-              Name<span className="text-red-600">*</span>
+              <Typhography variant="lg">
+                Name<span className="text-destructive">*</span>
+              </Typhography>
             </FieldLabel>
             <Input
               id="name"
@@ -142,7 +147,9 @@ const EventsFormPage: FC<{ id: string }> = ({ id }) => {
           </Field>
           <Field>
             <FieldLabel htmlFor="email">
-              Email<span className="text-red-600">*</span>
+              <Typhography variant="lg">
+                Email<span className="text-destructive">*</span>
+              </Typhography>
             </FieldLabel>
             <InputGroup>
               <InputGroupInput
@@ -163,7 +170,9 @@ const EventsFormPage: FC<{ id: string }> = ({ id }) => {
           </Field>
           <Field>
             <FieldLabel htmlFor="phoneNo">
-              Phone Number<span className="text-red-600">*</span>
+              <Typhography variant="lg">
+                Phone Number<span className="text-destructive">*</span>
+              </Typhography>
             </FieldLabel>
             <InputGroup>
               <InputGroupInput
@@ -188,7 +197,7 @@ const EventsFormPage: FC<{ id: string }> = ({ id }) => {
 
           <Field orientation="responsive">
             <Button onClick={handleClickBack} type="button" variant="outline">
-              Cancel
+              <Typhography variant="lg">Cancel</Typhography>
             </Button>
             <Button
               type="submit"
@@ -198,10 +207,11 @@ const EventsFormPage: FC<{ id: string }> = ({ id }) => {
             >
               {isSubmitting ? (
                 <>
-                  <Spinner /> Sending...
+                  <Spinner />
+                  <Typhography variant="lg">Sending...</Typhography>
                 </>
               ) : (
-                "Register"
+                <Typhography variant="lg">Register</Typhography>
               )}
             </Button>
           </Field>

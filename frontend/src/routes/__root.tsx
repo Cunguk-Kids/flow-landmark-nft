@@ -1,7 +1,6 @@
 import { Toaster } from "@/components/ui/sonner";
-import Header from "@/components/Header";
 import { Outlet, createRootRoute } from "@tanstack/react-router";
-import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
+// import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 
 export const Route = createRootRoute({
   component: RootComponent,
@@ -10,11 +9,10 @@ export const Route = createRootRoute({
 function RootComponent() {
   return (
     <>
+      <div className="isolate relative mx-auto bg-background dark">
+        <Outlet />
+      </div>
       <Toaster position="top-center" expand richColors />
-      <Header />
-
-      <Outlet />
-      <TanStackRouterDevtools />
     </>
   );
 }
