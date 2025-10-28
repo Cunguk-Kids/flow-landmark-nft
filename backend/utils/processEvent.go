@@ -95,7 +95,6 @@ func ProcessEventCreated(ctx context.Context, flowClient *grpc.BaseClient, ev fl
 	eventDetailsFields := eventDetailsStruct.FieldsMappedByName()
 	eventNameCadence, err := getCadenceField[cadence.String](eventDetailsFields, "eventName")
 	quotaCadence, _ := getCadenceField[cadence.UInt64](eventDetailsFields, "quota")
-	counterCadence, _ := getCadenceField[cadence.UInt64](eventDetailsFields, "counter")
 	descriptionCadence, _ := getCadenceField[cadence.String](eventDetailsFields, "description")
 	imageCadence, _ := getCadenceField[cadence.String](eventDetailsFields, "image")
 	latCadence, _ := getCadenceField[cadence.Fix64](eventDetailsFields, "lat")
@@ -113,7 +112,6 @@ func ProcessEventCreated(ctx context.Context, flowClient *grpc.BaseClient, ev fl
 
 	eventName := eventNameCadence.String()
 	quota, _ := strconv.Atoi(quotaCadence.String())
-	counter, _ := strconv.Atoi(counterCadence.String())
 	description := descriptionCadence.String()
 	image := imageCadence.String()
 	lat, _ := strconv.ParseFloat(latCadence.String(), 64)
@@ -129,7 +127,7 @@ func ProcessEventCreated(ctx context.Context, flowClient *grpc.BaseClient, ev fl
 		SetBrandAddress(brandAddress).
 		SetEventName(eventName).
 		SetQuota(quota).
-		SetCounter(counter).
+		SetCounter(0).
 		SetDescription(description).
 		SetImage(image).
 		SetLat(lat).
@@ -159,24 +157,50 @@ func ProcessEventRegistered(ctx context.Context, ev flow.Event, client *ent.Clie
 
 	cadenceEventID, err := getCadenceField[cadence.UInt64](Fields, "eventID")
 	if err != nil {
-		log.Printf("Gagal parsing eventID: %v", err)
+		log.Fatalf("Gagal parsing eventID: %v", err)
 		return
 	}
 
 	// Sekarang Anda bisa mengonversinya ke string
 	var userAddress string = cadenceAddr.String()
 	var eventID string = cadenceEventID.String()
-	num, err := strconv.Atoi(eventID) // Convert string to integer
+	num, _ := strconv.Atoi(eventID) // Convert string to integer
 
+	tx, err := client.Tx(ctx)
 	if err != nil {
-		fmt.Println("Error converting string to integer:", err)
-		return
+		log.Fatalf("[ProcessEventRegistered] Gagal memulai DB transaction: %v", err)
 	}
-	event, err := client.EventParticipant.Create().SetEventID(num).SetUserAddress(userAddress).Save(ctx)
+
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+			panic(r) // Re-panic after rollback
+		}
+		if err != nil { // Handle normal errors
+			if rlbkErr := tx.Rollback(); rlbkErr != nil {
+				log.Printf("[ProcessEventRegistered] Gagal rollback transaction: %v", rlbkErr)
+			}
+		}
+	}()
+
+	err = tx.Event.
+		UpdateOneID(num).
+		AddCounter(1).
+		Exec(ctx)
+	if err != nil {
+		log.Printf("[ProcessEventRegistered] Gagal update counter event %d: %v", num, err)
+		return // Will trigger rollback
+	}
+
+	_, err = tx.EventParticipant.Create().SetEventID(num).SetUserAddress(userAddress).Save(ctx)
 	if err != nil {
 		log.Fatalf("failed creating event")
 	}
-	log.Println("user register: ", event)
+	err = tx.Commit()
+	if err != nil {
+		log.Printf("[ProcessEventRegistered] Gagal commit transaction: %v", err)
+		return
+	}
 	log.Println("[ProcessEventRegistered] (Placeholder) Implementasikan fungsi ini...")
 }
 
@@ -204,25 +228,83 @@ func ProcessEventUnregistered(ctx context.Context, ev flow.Event, client *ent.Cl
 		fmt.Println("Error converting string to integer:", err)
 		return
 	}
-	deletedCount, err := client.EventParticipant.Delete().Where(
+
+	tx, err := client.Tx(ctx)
+	if err != nil {
+		log.Fatalf("[ProcessEventRegistered] Gagal memulai DB transaction: %v", err)
+	}
+
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+			panic(r) // Re-panic after rollback
+		}
+		if err != nil { // Handle normal errors
+			if rlbkErr := tx.Rollback(); rlbkErr != nil {
+				log.Printf("[ProcessEventUnregistered] Gagal rollback transaction: %v", rlbkErr)
+			}
+		}
+	}()
+
+	err = tx.Event.
+		UpdateOneID(eventIDInt).
+		AddCounter(-1).
+		Exec(ctx)
+	if err != nil {
+		log.Printf("[ProcessEventUnregistered] Gagal update counter event %d: %v", eventIDInt, err)
+		return // Will trigger rollback
+	}
+
+	_, err = tx.EventParticipant.Delete().Where(
 		eventparticipant.UserAddressEQ(userAddress),
 		eventparticipant.HasEventWith(event.EventIdEQ(eventIDInt)),
 	).Exec(ctx)
+	err = tx.Commit()
 	if err != nil {
-		log.Fatalf("failed creating event")
-	}
-	if err != nil {
-		log.Printf("[ProcessEventUnregistered] Gagal delete user participant: %v", err)
+		log.Printf("[ProcessEventUnregistered] Gagal commit transaction: %v", err)
 		return
-	}
-
-	if deletedCount == 0 {
-		log.Printf("[ProcessEventUnregistered] Tidak ada user participant yang cocok ditemukan untuk dihapus (Event: %d, User: %s)", eventIDInt, userAddress)
-	} else {
-		log.Printf("[DB] Berhasil menghapus %d user participant (Event: %d, User: %s)", deletedCount, eventIDInt, userAddress)
 	}
 }
 
 func ProcessEventStatus(ctx context.Context, ev flow.Event, client *ent.Client) {
+	var Fields = ev.Value.FieldsMappedByName()
 
+	// Parse eventID
+	cadenceEventID, err := getCadenceField[cadence.UInt64](Fields, "eventID")
+	if err != nil {
+		log.Printf("[ProcessEventStatusUpdated] Gagal parsing eventID: %v", err)
+		return
+	}
+
+	// Parse status (UInt8)
+	cadenceStatus, err := getCadenceField[cadence.UInt8](Fields, "status")
+	if err != nil {
+		log.Printf("[ProcessEventStatusUpdated] Gagal parsing status: %v", err)
+		return
+	}
+
+	eventID, err := strconv.Atoi(cadenceEventID.String())
+	status, _ := strconv.Atoi(cadenceStatus.String())
+
+	if err != nil {
+		log.Printf("err convert")
+		return
+	}
+
+	updatedCount, err := client.Event.
+		Update().
+		Where(event.EventIdEQ(eventID)).
+		SetStatus(status).
+		Save(ctx)
+
+	if err != nil {
+		log.Printf("[ProcessEventStatusUpdated] Gagal update status event %d di DB: %v", eventID, err)
+		return
+	}
+
+	if updatedCount == 0 {
+		log.Printf("[ProcessEventStatusUpdated] Event %d tidak ditemukan di DB untuk diupdate.", eventID)
+	} else {
+		log.Printf("[DB] Status event %d berhasil diupdate menjadi %d.", eventID, status)
+	}
 }

@@ -40,7 +40,7 @@ var (
 	EventCreated     = fmt.Sprintf("A.%s.EventPlatform.EventCreated", ContractAddress)
 	UserRegistered   = fmt.Sprintf("A.%s.EventPlatform.UserRegistered", ContractAddress)
 	UserUnregistered = fmt.Sprintf("A.%s.EventPlatform.UserUnregistered", ContractAddress)
-	EventStatus = fmt.Sprintf("A.%s.EventPlatform.EventStatus", ContractAddress)
+	EventStatus      = fmt.Sprintf("A.%s.EventPlatform.EventStatus", ContractAddress)
 )
 
 func main() {
@@ -111,6 +111,8 @@ func main() {
 					utils.ProcessEventRegistered(ctx, ev, client)
 				case UserUnregistered:
 					utils.ProcessEventUnregistered(ctx, ev, client)
+				case EventStatus:
+					utils.ProcessEventStatus(ctx, ev, client)
 				}
 			}
 		case err := <-errCh:
