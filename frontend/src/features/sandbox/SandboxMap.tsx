@@ -74,11 +74,11 @@ const SandboxMap: React.FC = () => {
             <div className="bg-blue-500 w-4 h-4 rounded-full border-2 border-white shadow-lg" />
           </Marker>
         )}
-        {eventList?.map((event) => (
+        {eventList?.data.map((event) => (
           <Marker
             key={event.id}
-            latitude={event.latitude}
-            longitude={event.longitude}
+            latitude={event.lat}
+            longitude={event.long}
             anchor="bottom"
           >
             <Popover>
@@ -88,11 +88,11 @@ const SandboxMap: React.FC = () => {
               <PopoverTrigger asChild>
                 <Button
                   className="cursor-pointer rounded-full"
-                  title={event.title}
+                  title={event.eventName.replace(/^"|"$/g, "")}
                   variant="outline"
                   size="icon"
                 >
-                  <EventCategoryIcon category={event.category} />
+                  <EventCategoryIcon category={''} />
                 </Button>
               </PopoverTrigger>
             </Popover>

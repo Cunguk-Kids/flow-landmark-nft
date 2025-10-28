@@ -17,9 +17,12 @@ import {
 } from "@/components/ui/item";
 import { Calendar, Clock } from "lucide-react";
 import BackButton from "@/components/BackButton";
+import { motion } from "motion/react";
+import { formatEvent } from "@/hooks";
 
 const EventsDetailsPage = () => {
-  const { event } = useLoaderData({ from: "/events/details/$eventId" });
+  const { event: rawEvent } = useLoaderData({ from: "/events/details/$eventId" });
+  const event = rawEvent ? formatEvent(rawEvent) : null;
 
   const renderCategory = (category: string) => {
     let icon;
@@ -54,30 +57,34 @@ const EventsDetailsPage = () => {
     );
 
   return (
-    <div className="min-h-screen bg-background">
+    <motion.div
+      animate={{ opacity: 1 }}
+      initial={{ opacity: 0 }}
+      className="min-h-screen bg-background"
+    >
       <div className="relative h-64 md:h-96 lg:h-128 w-full">
         <div className="w-full absolute left-0 z-50 bg-gradient-to-b from-black/60 via-black/20 to-transparent">
           <BackButton />
         </div>
         <img
-          src={event.bannerUrl}
-          alt={event.title}
+          src={event.image}
+          alt={event.eventName}
           className="object-cover brightness-75 w-full h-full"
         />
         <div className="absolute inset-0 flex flex-col justify-end p-6 text-white bg-gradient-to-t from-black/60 via-black/20 to-transparent">
           <Typhography variant="3xl" className="font-bold">
-            {event.title}
+            {event.eventName}
           </Typhography>
-          <Typhography variant="lg">{event.hostBy}</Typhography>
+          <Typhography variant="lg">{event.brandAddress}</Typhography>
         </div>
       </div>
 
       <ItemGroup className="w-full flex flex-col justify-center items-center">
         <Item className="w-full flex flex-wrap items-center gap-3">
           <Badge>
-            <Typhography variant="lg">{event.status}</Typhography>
+            <Typhography variant="lg">{event.statusLabel}</Typhography>
           </Badge>
-          {renderCategory(event.category)}
+          {/* Category not available in backend yet */}
         </Item>
 
         <Item className="w-full md:w-1/2 md:self-start">
@@ -90,7 +97,7 @@ const EventsDetailsPage = () => {
             <ItemDescription className="flex items-center gap-1 text-muted-foreground">
               <Calendar />
               <Typhography variant="2xl">
-                {formatDateTime(event.date, "date")}
+                {formatDateTime(event.startDateTime.toISOString(), "date")}
               </Typhography>
             </ItemDescription>
           </ItemContent>
@@ -103,7 +110,7 @@ const EventsDetailsPage = () => {
             <ItemDescription className="flex items-center gap-1 text-muted-foreground">
               <Clock />
               <Typhography variant="2xl">
-                {formatDateTime(event.date, "time")}
+                {formatDateTime(event.startDateTime.toISOString(), "time")}
               </Typhography>
             </ItemDescription>
           </ItemContent>
@@ -113,15 +120,17 @@ const EventsDetailsPage = () => {
           <ItemContent>
             <ItemHeader>
               <Typhography variant="2xl" className="font-semibold">
-                Venue Location
+                Location
               </Typhography>
             </ItemHeader>
             <ItemDescription className="text-muted-foreground">
-              <Typhography variant="2xl">{event.venue}</Typhography>
+              <Typhography variant="2xl">
+                Radius: {event.radius}m
+              </Typhography>
             </ItemDescription>
             <ItemFooter className="text-muted-foreground/70">
               <Typhography variant="lg">
-                Coordinate: {event.latitude}, {event.longitude}
+                Coordinate: {event.lat}, {event.long}
               </Typhography>
             </ItemFooter>
           </ItemContent>
@@ -131,26 +140,25 @@ const EventsDetailsPage = () => {
           <ItemContent>
             <ItemTitle>
               <Typhography variant="2xl" className="font-semibold">
-                Capacity
+                Participants
               </Typhography>
             </ItemTitle>
             <ItemDescription className="text-muted-foreground">
               <Typhography variant="2xl">
-                {event.capacity.toLocaleString()} capacity
+                {event.participantCount} / {event.quota}
+                {event.isFull && " (Full)"}
               </Typhography>
             </ItemDescription>
           </ItemContent>
           <ItemContent className="w-40">
             <ItemTitle>
               <Typhography variant="2xl" className="font-semibold">
-                Ticket Price
+                Rare NFTs
               </Typhography>
             </ItemTitle>
             <ItemDescription className="text-muted-foreground">
               <Typhography variant="2xl">
-                {event.ticketPrice > 0
-                  ? `Rp ${event.ticketPrice.toLocaleString()}`
-                  : "Free"}
+                {event.totalRareNFT} available
               </Typhography>
             </ItemDescription>
           </ItemContent>
@@ -173,19 +181,19 @@ const EventsDetailsPage = () => {
           <Button
             asChild
             size={"lg"}
-            disabled={event.status !== "Open"}
-            variant={event.status === "Open" ? "default" : "secondary"}
+            disabled={event.statusLabel !== "Open" || event.isFull}
+            variant={event.statusLabel === "Open" && !event.isFull ? "default" : "secondary"}
             className="w-full font-semibold"
           >
-            <Link to="/events/form/$eventId" params={{ eventId: event.id }}>
+            <Link to="/events/form/$eventId" params={{ eventId: event.id.toString() }}>
               <Typhography variant="2xl">
-                {event.status === "Open" ? "Register Now" : "Sold Out"}
+                {event.isFull ? "Event Full" : event.statusLabel === "Open" ? "Register Now" : event.statusLabel}
               </Typhography>
             </Link>
           </Button>
         </Item>
       </ItemGroup>
-    </div>
+    </motion.div>
   );
 };
 

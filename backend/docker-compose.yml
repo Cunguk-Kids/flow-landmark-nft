@@ -14,8 +14,35 @@ services:
       PRIVATE_KEY2: ""
       PRIVATE_KEY_A: ""
       PRIVATE_KEY_B: ""
-    # Connect to PostgreSQL and Flow emulator running on host machine
     extra_hosts:
       - "host.docker.internal:host-gateway"
     restart: unless-stopped
-    network_mode: bridge
+    networks:
+      - backend-network
+
+  # API Service
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    container_name: flow-api
+    environment:
+      DATABASE_URL: "postgres://postgres:mypassword@host.docker.internal:5432/postgres?sslmode=disable"
+      FLOW_EMULATOR_HOST: "host.docker.internal:3569"
+      PRIVATE_KEY: "c284b0d41e094b67d7664fe615f6d197fb597d1f6c32f7394f04ffe40e562ce2"
+      PRIVATE_KEY2: ""
+      PRIVATE_KEY_A: ""
+      PRIVATE_KEY_B: ""
+    ports:
+      - "6666:6666"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      - indexer
+    restart: unless-stopped
+    networks:
+      - backend-network
+
+networks:
+  backend-network:
+    driver: bridge

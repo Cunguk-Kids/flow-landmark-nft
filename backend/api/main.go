@@ -11,9 +11,10 @@ import (
 )
 
 func main() {
+	// Load .env file if it exists (optional, environment variables can be set by Docker/system)
 	err := godotenv.Load()
 	if err != nil {
-		log.Println("Peringatan: Tidak bisa load .env file:", err)
+		log.Printf("Warning: .env file not found, using environment variables from system: %v", err)
 	}
 	// 1. Buat instance Echo
 	e := echo.New()
