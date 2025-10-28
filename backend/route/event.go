@@ -186,6 +186,7 @@ func HandleGetAllEvents(c echo.Context) error {
 
 	// Filter by brandAddress (opsional)
 	brandAddressFilter := c.QueryParam("brandAddress") // String kosong jika tidak ada
+	statusFilter := c.QueryParam("status")
 
 	// Pagination parameters (dengan default)
 	pageParam := c.QueryParam("page")
@@ -204,7 +205,7 @@ func HandleGetAllEvents(c echo.Context) error {
 	// Hitung offset
 	offset := (page - 1) * limit
 
-	log.Printf("Filter - Brand: '%s', Page: %d, Limit: %d, Offset: %d", brandAddressFilter, page, limit, offset)
+	log.Printf("Filter - Brand: '%s', Page: %d, Limit: %d, Offset: %d, status: %d", brandAddressFilter, page, limit, offset, statusFilter)
 
 	if entClient == nil {
 		// ... (handle client nil) ...
@@ -216,6 +217,16 @@ func HandleGetAllEvents(c echo.Context) error {
 	if brandAddressFilter != "" {
 		query = query.Where(event.BrandAddressEQ(brandAddressFilter))
 		log.Printf("Menerapkan filter BrandAddress: %s", brandAddressFilter)
+	}
+
+	if statusFilter != "" {
+		statusFilterInt, err := strconv.Atoi(statusFilter)
+		if err != nil {
+			log.Printf("Error querying events: %v", err)
+			return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid status format"})
+		}
+		query = query.Where(event.StatusEQ(statusFilterInt))
+		log.Printf("Menerapkan filter BrandAddress: %s", statusFilterInt)
 	}
 
 	// Hitung total item SEBELUM menerapkan limit/offset (untuk metadata pagination)
@@ -232,7 +243,7 @@ func HandleGetAllEvents(c echo.Context) error {
 	query = query.Order(ent.Desc(event.FieldEventId))
 
 	// Jalankan query untuk mendapatkan data halaman ini
-	eventsOnPage, err := query.All(ctx)
+	eventsOnPage, err := query.WithEventID().All(ctx)
 
 	// --- 3. Handle Error Query Utama ---
 	if err != nil {
