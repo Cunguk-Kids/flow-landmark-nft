@@ -1,10 +1,9 @@
-// Simplified NFTMoment contract without external dependencies
+// NFTMoment.cdc
 access(all) contract NFTMoment {
 
     // ========================================
     // Events
     // ========================================
-
     access(all) event ContractInitialized()
     access(all) event Withdraw(id: UInt64, from: Address?)
     access(all) event Deposit(id: UInt64, to: Address?)
@@ -17,7 +16,6 @@ access(all) contract NFTMoment {
     // ========================================
     // Paths
     // ========================================
-
     access(all) let CollectionStoragePath: StoragePath
     access(all) let CollectionPublicPath: PublicPath
     access(all) let AdminStoragePath: StoragePath
@@ -26,14 +24,13 @@ access(all) contract NFTMoment {
     // ========================================
     // Contract State
     // ========================================
-
     access(all) var totalSupply: UInt64
     access(contract) var partners: {Address: PartnerInfo}
+    access(contract) var adminResource: @Admin?
 
     // ========================================
     // Enums
     // ========================================
-
     access(all) enum Rarity: UInt8 {
         access(all) case Common
         access(all) case Rare
@@ -82,8 +79,91 @@ access(all) contract NFTMoment {
     }
 
     // ========================================
+    // Utility functions: enum -> String
+    // ========================================
+    access(all) fun rarityToString(r: Rarity): String {
+        switch r {
+            case Rarity.Common: return "Common"
+            case Rarity.Rare: return "Rare"
+            case Rarity.Epic: return "Epic"
+            case Rarity.Legendary: return "Legendary"
+            default: return "Unknown"
+        }
+    }
+
+    access(all) fun categoryToString(c: Category): String {
+        switch c {
+            case Category.Landscape: return "Landscape"
+            case Category.Cultural: return "Cultural"
+            case Category.Event: return "Event"
+            case Category.Historical: return "Historical"
+            case Category.Nature: return "Nature"
+            case Category.Urban: return "Urban"
+            case Category.Food: return "Food"
+            case Category.Art: return "Art"
+            default: return "Unknown"
+        }
+    }
+
+    access(all) fun borderToString(b: BorderStyle): String {
+        switch b {
+            case BorderStyle.None: return "None"
+            case BorderStyle.Batik: return "Batik"
+            case BorderStyle.Wayang: return "Wayang"
+            case BorderStyle.Songket: return "Songket"
+            case BorderStyle.Tenun: return "Tenun"
+            default: return "Unknown"
+        }
+    }
+
+    access(all) fun stickerToString(s: StickerStyle): String {
+        switch s {
+            case StickerStyle.None: return "None"
+            case StickerStyle.JavaneseScript: return "JavaneseScript"
+            case StickerStyle.TraditionalPattern: return "TraditionalPattern"
+            case StickerStyle.CulturalIcon: return "CulturalIcon"
+            default: return "Unknown"
+        }
+    }
+
+    access(all) fun filterToString(f: FilterStyle): String {
+        switch f {
+            case FilterStyle.None: return "None"
+            case FilterStyle.Vintage: return "Vintage"
+            case FilterStyle.Cultural: return "Cultural"
+            case FilterStyle.Vibrant: return "Vibrant"
+            default: return "Unknown"
+        }
+    }
+
+    access(all) fun audioToString(a: AudioStyle): String {
+        switch a {
+            case AudioStyle.None: return "None"
+            case AudioStyle.Gamelan: return "Gamelan"
+            case AudioStyle.Angklung: return "Angklung"
+            case AudioStyle.Kendang: return "Kendang"
+            default: return "Unknown"
+        }
+    }
+
+    // ========================================
     // Structs
     // ========================================
+    access(all) struct Location {
+        access(all) let placeName: String?
+        access(all) let city: String?
+        access(all) let country: String?
+        access(all) let latitude: Fix64
+        access(all) let longitude: Fix64
+
+        init(latitude: Fix64, longitude: Fix64, placeName: String?, city: String?, country: String?) {
+            self.latitude = latitude
+            self.longitude = longitude
+            self.placeName = placeName
+            self.city = city
+            self.country = country
+        }
+    }
 
     access(all) struct MomentMetadata {
         access(all) let title: String
@@ -91,23 +171,17 @@ access(all) contract NFTMoment {
         access(all) let category: Category
         access(all) let imageURL: String
         access(all) let thumbnailURL: String
-
-        // Auto-captured metadata
         access(all) let timestamp: UFix64
         access(all) let weather: String?
         access(all) let temperature: String?
         access(all) let location: Location?
         access(all) let altitude: String?
         access(all) let windSpeed: String?
-
-        // Cultural customization
         access(all) let border: BorderStyle
         access(all) let sticker: StickerStyle
         access(all) let filter: FilterStyle
         access(all) let audio: AudioStyle
         access(all) let javaneseText: String?
-
-        // Additional metadata
         access(all) let tags: [String]
         access(all) let attributes: {String: String}
 
@@ -152,29 +226,13 @@ access(all) contract NFTMoment {
         }
     }
 
-    access(all) struct Location {
-        access(all) let latitude: String
-        access(all) let longitude: String
-        access(all) let placeName: String?
-        access(all) let city: String?
-        access(all) let country: String?
-
-        init(latitude: String, longitude: String, placeName: String?, city: String?, country: String?) {
-            self.latitude = latitude
-            self.longitude = longitude
-            self.placeName = placeName
-            self.city = city
-            self.country = country
-        }
-    }
-
     access(all) struct PartnerInfo {
         access(all) let name: String
         access(all) let description: String
         access(all) let address: Address
         access(all) let allowedCategories: [Category]
         access(all) let location: Location?
-        access(all) let radius: UFix64? // in meters for geo-fencing
+        access(all) let radius: UFix64?
         access(all) let qrCodeEnabled: Bool
         access(all) let eventBased: Bool
         access(all) let eventStartTime: UFix64?
@@ -208,7 +266,6 @@ access(all) contract NFTMoment {
     // ========================================
     // Interfaces
     // ========================================
-
     access(all) resource interface NFTPublic {
         access(all) let id: UInt64
         access(all) let metadata: MomentMetadata
@@ -228,7 +285,6 @@ access(all) contract NFTMoment {
     // ========================================
     // NFT Resource
     // ========================================
-
     access(all) resource NFT: NFTPublic {
         access(all) let id: UInt64
         access(all) let metadata: MomentMetadata
@@ -254,16 +310,12 @@ access(all) contract NFTMoment {
             self.mergedFrom = []
         }
 
-        // Upgrade the rarity of this NFT
         access(contract) fun upgrade(newRarity: Rarity) {
-            pre {
-                newRarity.rawValue > self.rarity.rawValue: "New rarity must be higher than current"
-            }
+            pre { newRarity.rawValue > self.rarity.rawValue: "New rarity must be higher than current" }
             self.rarity = newRarity
             self.upgradeCount = self.upgradeCount + 1
         }
 
-        // Add merged NFT ID to history
         access(contract) fun addMergedNFT(id: UInt64) {
             self.mergedFrom.append(id)
         }
@@ -272,74 +324,42 @@ access(all) contract NFTMoment {
     // ========================================
     // Collection Resource
     // ========================================
-
     access(all) resource Collection: CollectionPublic {
         access(all) var ownedNFTs: @{UInt64: NFT}
+        access(all) let ownerAddress: Address
 
-        init() {
+        init(ownerAddress: Address) {
             self.ownedNFTs <- {}
+            self.ownerAddress = ownerAddress
         }
 
-        access(all) fun getIDs(): [UInt64] {
-            return self.ownedNFTs.keys
-        }
+        access(all) fun getIDs(): [UInt64] { return self.ownedNFTs.keys }
 
         access(all) fun borrowNFT(id: UInt64): &NFT? {
-            if self.ownedNFTs[id] != nil {
-                return &self.ownedNFTs[id] as &NFT?
-            }
+            if self.ownedNFTs[id] != nil { return &self.ownedNFTs[id] }
             return nil
         }
 
         access(all) fun withdraw(withdrawID: UInt64): @NFT {
-            let token <- self.ownedNFTs.remove(key: withdrawID)
-                ?? panic("NFT not found in collection")
-
-            emit Withdraw(id: token.id, from: self.owner?.address)
+            let token <- self.ownedNFTs.remove(key: withdrawID) ?? panic("NFT not found")
+            emit Withdraw(id: token.id, from: self.ownerAddress)
             return <- token
         }
 
         access(all) fun deposit(token: @NFT) {
             let id = token.id
-
-            let oldToken <- self.ownedNFTs[id] <- token
-            destroy oldToken
-
-            emit Deposit(id: id, to: self.owner?.address)
-        }
-
-        // Get NFTs by category
-        access(all) fun getNFTsByCategory(category: Category): [UInt64] {
-            let ids: [UInt64] = []
-            for id in self.ownedNFTs.keys {
-                let nft = self.borrowNFT(id: id)
-                if nft != nil && nft!.metadata.category == category {
-                    ids.append(id)
-                }
-            }
-            return ids
-        }
-
-        // Get NFTs by rarity
-        access(all) fun getNFTsByRarity(rarity: Rarity): [UInt64] {
-            let ids: [UInt64] = []
-            for id in self.ownedNFTs.keys {
-                let nft = self.borrowNFT(id: id)
-                if nft != nil && nft!.rarity == rarity {
-                    ids.append(id)
-                }
-            }
-            return ids
+            var oldTokenOpt <- self.ownedNFTs.remove(key: id)
+            self.ownedNFTs[id] <-! token
+            if let old <- oldTokenOpt { destroy old }
+            emit Deposit(id: id, to: self.ownerAddress)
         }
     }
 
     // ========================================
     // Admin Resource
     // ========================================
-
     access(all) resource Admin {
 
-        // Add a partner
         access(all) fun addPartner(
             address: Address,
             name: String,
@@ -368,12 +388,10 @@ access(all) contract NFTMoment {
             emit PartnerAdded(address: address, name: name)
         }
 
-        // Remove a partner
         access(all) fun removePartner(address: Address) {
             NFTMoment.partners.remove(key: address)
         }
 
-        // Create Partner capability
         access(all) fun createPartner(): @Partner {
             return <- create Partner()
         }
@@ -382,55 +400,46 @@ access(all) contract NFTMoment {
     // ========================================
     // Partner Resource
     // ========================================
-
     access(all) resource Partner {
 
-        // Mint NFT as partner (with restrictions)
         access(all) fun mintPartnerNFT(
             recipient: &Collection,
             metadata: MomentMetadata,
             rarity: Rarity,
             partnerAddress: Address
         ): UInt64 {
-            pre {
-                NFTMoment.partners[partnerAddress] != nil: "Partner not registered"
-            }
+            pre { NFTMoment.partners[partnerAddress] != nil: "Partner not registered" }
 
             let partnerInfo = NFTMoment.partners[partnerAddress]!
 
-            // Validate category is allowed for this partner
-            assert(
-                partnerInfo.allowedCategories.contains(metadata.category),
+            assert(partnerInfo.allowedCategories.contains(metadata.category),
                 message: "Category not allowed for this partner"
             )
 
-            // Validate event timing if event-based
             if partnerInfo.eventBased {
                 let now = getCurrentBlock().timestamp
-                if partnerInfo.eventStartTime != nil {
-                    assert(now >= partnerInfo.eventStartTime!, message: "Event has not started yet")
-                }
-                if partnerInfo.eventEndTime != nil {
-                    assert(now <= partnerInfo.eventEndTime!, message: "Event has ended")
-                }
+                if partnerInfo.eventStartTime != nil { assert(now >= partnerInfo.eventStartTime!, message: "Event has not started") }
+                if partnerInfo.eventEndTime != nil { assert(now <= partnerInfo.eventEndTime!, message: "Event has ended") }
             }
 
+            if partnerInfo.radius != nil { assert(metadata.location != nil, message: "Location required for radius") }
+
+            let id = NFTMoment.totalSupply
+            NFTMoment.totalSupply = NFTMoment.totalSupply + 1
+
             let nft <- create NFT(
-                id: NFTMoment.totalSupply,
+                id: id,
                 metadata: metadata,
                 rarity: rarity,
-                createdBy: recipient.owner!.address,
+                createdBy: recipient.ownerAddress,
                 partnerAddress: partnerAddress
             )
 
-            let id = nft.id
-            NFTMoment.totalSupply = NFTMoment.totalSupply + 1
-
             emit MomentMinted(
                 id: id,
-                owner: recipient.owner!.address,
-                category: metadata.category.rawValue.toString(),
-                rarity: rarity.rawValue.toString()
+                owner: recipient.ownerAddress,
+                category: NFTMoment.categoryToString(c: metadata.category),
+                rarity: NFTMoment.rarityToString(r: rarity)
             )
 
             recipient.deposit(token: <- nft)
@@ -441,119 +450,26 @@ access(all) contract NFTMoment {
     // ========================================
     // Public Functions
     // ========================================
-
-    // Create empty collection
-    access(all) fun createEmptyCollection(): @Collection {
-        return <- create Collection()
+    access(all) fun createEmptyCollection(ownerAddress: Address): @Collection {
+        return <- create Collection(ownerAddress: ownerAddress)
     }
 
-    // Mint NFT (public minting for users)
-    access(all) fun mintNFT(
-        recipient: &Collection,
-        metadata: MomentMetadata,
-        rarity: Rarity
-    ): UInt64 {
-        let nft <- create NFT(
-            id: self.totalSupply,
-            metadata: metadata,
-            rarity: rarity,
-            createdBy: recipient.owner!.address,
-            partnerAddress: nil
-        )
-
-        let id = nft.id
-        self.totalSupply = self.totalSupply + 1
-
-        emit MomentMinted(
-            id: id,
-            owner: recipient.owner!.address,
-            category: metadata.category.rawValue.toString(),
-            rarity: rarity.rawValue.toString()
-        )
-
-        recipient.deposit(token: <- nft)
-        return id
-    }
-
-    // Upgrade NFT rarity
-    access(all) fun upgradeNFT(collection: &Collection, id: UInt64, newRarity: Rarity) {
-        let nft = collection.borrowNFT(id: id) ?? panic("NFT not found")
-        nft.upgrade(newRarity: newRarity)
-        emit MomentUpgraded(id: id, newRarity: newRarity.rawValue.toString())
-    }
-
-    // Merge two NFTs into one (burns the source NFTs, creates new one)
-    access(all) fun mergeNFTs(
-        collection: &Collection,
-        id1: UInt64,
-        id2: UInt64,
-        newMetadata: MomentMetadata,
-        newRarity: Rarity
-    ): UInt64 {
-        // Withdraw both NFTs
-        let nft1 <- collection.withdraw(withdrawID: id1)
-        let nft2 <- collection.withdraw(withdrawID: id2)
-
-        // Create new merged NFT
-        let mergedNFT <- create NFT(
-            id: self.totalSupply,
-            metadata: newMetadata,
-            rarity: newRarity,
-            createdBy: collection.owner!.address,
-            partnerAddress: nil
-        )
-
-        // Track merge history
-        mergedNFT.addMergedNFT(id: id1)
-        mergedNFT.addMergedNFT(id: id2)
-
-        let newId = mergedNFT.id
-        self.totalSupply = self.totalSupply + 1
-
-        emit MomentsMerged(id1: id1, id2: id2, newId: newId)
-
-        // Deposit merged NFT
-        collection.deposit(token: <- mergedNFT)
-
-        // Destroy old NFTs
-        destroy nft1
-        destroy nft2
-
-        return newId
-    }
-
-    // Get partner info
-    access(all) fun getPartnerInfo(address: Address): PartnerInfo? {
-        return self.partners[address]
-    }
-
-    // Get all partners
-    access(all) fun getAllPartners(): {Address: PartnerInfo} {
-        return self.partners
-    }
-
-    // Get total supply
-    access(all) fun getTotalSupply(): UInt64 {
-        return self.totalSupply
-    }
+    access(all) fun getPartnerInfo(address: Address): PartnerInfo? { return self.partners[address] }
+    access(all) fun getAllPartners(): {Address: PartnerInfo} { return self.partners }
+    access(all) fun getTotalSupply(): UInt64 { return self.totalSupply }
 
     // ========================================
     // Contract Init
     // ========================================
-
     init() {
         self.totalSupply = 0
         self.partners = {}
+        self.adminResource <- create Admin()
 
-        // Set paths
         self.CollectionStoragePath = /storage/NFTMomentCollection
         self.CollectionPublicPath = /public/NFTMomentCollection
         self.AdminStoragePath = /storage/NFTMomentAdmin
         self.PartnerStoragePath = /storage/NFTMomentPartner
-
-        // Create Admin resource and save it
-        let admin <- create Admin()
-        self.account.storage.save(<- admin, to: self.AdminStoragePath)
 
         emit ContractInitialized()
     }
