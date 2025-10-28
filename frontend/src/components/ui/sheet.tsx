@@ -55,7 +55,6 @@ function SheetContent({
       <SheetOverlay />
       <SheetPrimitive.Content
       onPointerDownOutside={(event) => {
-        console.log(event.target.closest("#FCL_IFRAME"));
         // @ts-expect-error idk
         if (event instanceof Element && event.target.closest("#FCL_IFRAME")) event.preventDefault();
       }}

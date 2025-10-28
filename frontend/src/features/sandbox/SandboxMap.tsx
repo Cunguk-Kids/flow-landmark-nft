@@ -5,6 +5,15 @@ import "maplibre-gl/dist/maplibre-gl.css";
 import { useQuery } from "@tanstack/react-query";
 import { useStore } from "@tanstack/react-store";
 import { store } from "@/stores";
+import { LocateFixed } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useEventList } from "@/hooks/useEventList";
+import { EventCategoryIcon, EventMarkerContent } from "./EventMarkerContent";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
 async function getCurrentLocation() {
   return new Promise<GeolocationPosition>((resolve, reject) => {
@@ -33,9 +42,23 @@ const SandboxMap: React.FC = () => {
     retry: false,
   });
 
+  const { data: eventList } = useEventList();
+
+  const handleCenterToUser = () => {
+    if (!position?.coords) return;
+    store.state.ref?.getMap().flyTo({
+      center: [position?.coords.longitude, position?.coords.latitude],
+      zoom: 15,
+      essential: true,
+    });
+  };
+
   return (
-    <div className="col-[1/-1] row-[1/-1] relative -z-1">
+    <div className="col-span-full row-span-full relative -z-1">
       <Map
+        ref={(ref) => {
+          store.state.ref = ref;
+        }}
         mapLib={maplibregl}
         initialViewState={viewport}
         onMove={(evt) => setViewport(evt.viewState)}
@@ -51,7 +74,41 @@ const SandboxMap: React.FC = () => {
             <div className="bg-blue-500 w-4 h-4 rounded-full border-2 border-white shadow-lg" />
           </Marker>
         )}
+        {eventList?.map((event) => (
+          <Marker
+            key={event.id}
+            latitude={event.latitude}
+            longitude={event.longitude}
+            anchor="bottom"
+          >
+            <Popover>
+              <PopoverContent>
+                <EventMarkerContent event={event} />
+              </PopoverContent>
+              <PopoverTrigger asChild>
+                <Button
+                  className="cursor-pointer rounded-full"
+                  title={event.title}
+                  variant="outline"
+                  size="icon"
+                >
+                  <EventCategoryIcon category={event.category} />
+                </Button>
+              </PopoverTrigger>
+            </Popover>
+          </Marker>
+        ))}
       </Map>
+      {position?.coords && (
+        <Button
+          onClick={handleCenterToUser}
+          variant="secondary"
+          size="icon"
+          className="rounded-full shadow-lg bg-white hover:bg-gray-100 absolute bottom-12 right-2"
+        >
+          <LocateFixed className="w-8 h-8 text-blue-600" />
+        </Button>
+      )}
     </div>
   );
 };

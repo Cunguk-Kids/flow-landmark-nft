@@ -1,5 +1,5 @@
 import { Store } from "@tanstack/react-store";
-import type { ViewState } from "react-map-gl/maplibre";
+import type { MapRef, ViewState } from "react-map-gl/maplibre";
 
 export const store = new Store({
   mapViewState: {
@@ -15,4 +15,5 @@ export const store = new Store({
     },
     pitch: 0,
   } as ViewState,
+  ref: null as MapRef | null,
 });

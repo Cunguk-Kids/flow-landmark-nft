@@ -1,0 +1,21 @@
+version: '3.8'
+
+services:
+  # Flow Indexer
+  indexer:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: flow-indexer
+    environment:
+      DATABASE_URL: "postgres://postgres:mypassword@host.docker.internal:5432/postgres?sslmode=disable"
+      FLOW_EMULATOR_HOST: "host.docker.internal:3569"
+      PRIVATE_KEY: ""
+      PRIVATE_KEY2: ""
+      PRIVATE_KEY_A: ""
+      PRIVATE_KEY_B: ""
+    # Connect to PostgreSQL and Flow emulator running on host machine
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: unless-stopped
+    network_mode: bridge

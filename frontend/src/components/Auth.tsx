@@ -2,7 +2,12 @@ import { useFlowCurrentUser } from "@onflow/react-sdk";
 import { Typhography } from "./ui/typhography";
 import { useAccount } from "@/hooks/useAccount";
 import { Button } from "./ui/button";
-import { LucideCircleUserRound, LucideLogIn, LucideLogOut, LucideMenu } from "lucide-react";
+import {
+  LucideCircleUserRound,
+  LucideLogIn,
+  LucideLogOut,
+  LucideMenu,
+} from "lucide-react";
 import {
   Sheet,
   SheetContent,
@@ -56,7 +61,17 @@ export default function Auth() {
               <Typhography>Disconect Wallet</Typhography>
             </Button>
           ) : (
-            <Button onClick={authenticate} variant="default">
+            <Button
+              onClick={() => {
+                authenticate();
+                requestAnimationFrame(() => {
+                  (
+                    document.querySelector("#FCL_IFRAME") as HTMLIFrameElement
+                  ).style.pointerEvents = "auto";
+                });
+              }}
+              variant="default"
+            >
               <LucideLogIn />
               <Typhography>Connect Wallet</Typhography>
             </Button>

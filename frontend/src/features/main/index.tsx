@@ -1,5 +1,5 @@
 import Header from "@/components/Header";
-import SandboxMap from "@/features/sandbox/SandboxMap";
+import SandboxMap from "../sandbox/SandboxMap";
 
 const MainPage = () => {
   return (
