@@ -14,6 +14,8 @@ const (
 	FieldID = "id"
 	// FieldUserAddress holds the string denoting the useraddress field in the database.
 	FieldUserAddress = "user_address"
+	// FieldIsCheckedIn holds the string denoting the ischeckedin field in the database.
+	FieldIsCheckedIn = "is_checked_in"
 	// EdgeEvent holds the string denoting the event edge name in mutations.
 	EdgeEvent = "event"
 	// Table holds the table name of the eventparticipant in the database.
@@ -31,6 +33,7 @@ const (
 var Columns = []string{
 	FieldID,
 	FieldUserAddress,
+	FieldIsCheckedIn,
 }
 
 // ForeignKeys holds the SQL foreign-keys that are owned by the "event_participants"
@@ -57,6 +60,8 @@ func ValidColumn(column string) bool {
 var (
 	// DefaultUserAddress holds the default value on creation for the "userAddress" field.
 	DefaultUserAddress string
+	// DefaultIsCheckedIn holds the default value on creation for the "isCheckedIn" field.
+	DefaultIsCheckedIn bool
 )
 
 // OrderOption defines the ordering options for the EventParticipant queries.
@@ -70,6 +75,11 @@ func ByID(opts ...sql.OrderTermOption) OrderOption {
 // ByUserAddress orders the results by the userAddress field.
 func ByUserAddress(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldUserAddress, opts...).ToFunc()
+}
+
+// ByIsCheckedIn orders the results by the isCheckedIn field.
+func ByIsCheckedIn(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldIsCheckedIn, opts...).ToFunc()
 }
 
 // ByEventField orders the results by event field.
