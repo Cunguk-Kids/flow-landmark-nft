@@ -36,6 +36,7 @@ var (
 	EventParticipantsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
 		{Name: "user_address", Type: field.TypeString, Default: ""},
+		{Name: "is_checked_in", Type: field.TypeBool, Default: false},
 		{Name: "event_event_id", Type: field.TypeInt},
 	}
 	// EventParticipantsTable holds the schema information for the "event_participants" table.
@@ -46,7 +47,7 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "event_participants_events_event_id",
-				Columns:    []*schema.Column{EventParticipantsColumns[2]},
+				Columns:    []*schema.Column{EventParticipantsColumns[3]},
 				RefColumns: []*schema.Column{EventsColumns[0]},
 				OnDelete:   schema.NoAction,
 			},

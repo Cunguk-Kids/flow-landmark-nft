@@ -59,6 +59,11 @@ func UserAddress(v string) predicate.EventParticipant {
 	return predicate.EventParticipant(sql.FieldEQ(FieldUserAddress, v))
 }
 
+// IsCheckedIn applies equality check predicate on the "isCheckedIn" field. It's identical to IsCheckedInEQ.
+func IsCheckedIn(v bool) predicate.EventParticipant {
+	return predicate.EventParticipant(sql.FieldEQ(FieldIsCheckedIn, v))
+}
+
 // UserAddressEQ applies the EQ predicate on the "userAddress" field.
 func UserAddressEQ(v string) predicate.EventParticipant {
 	return predicate.EventParticipant(sql.FieldEQ(FieldUserAddress, v))
@@ -122,6 +127,16 @@ func UserAddressEqualFold(v string) predicate.EventParticipant {
 // UserAddressContainsFold applies the ContainsFold predicate on the "userAddress" field.
 func UserAddressContainsFold(v string) predicate.EventParticipant {
 	return predicate.EventParticipant(sql.FieldContainsFold(FieldUserAddress, v))
+}
+
+// IsCheckedInEQ applies the EQ predicate on the "isCheckedIn" field.
+func IsCheckedInEQ(v bool) predicate.EventParticipant {
+	return predicate.EventParticipant(sql.FieldEQ(FieldIsCheckedIn, v))
+}
+
+// IsCheckedInNEQ applies the NEQ predicate on the "isCheckedIn" field.
+func IsCheckedInNEQ(v bool) predicate.EventParticipant {
+	return predicate.EventParticipant(sql.FieldNEQ(FieldIsCheckedIn, v))
 }
 
 // HasEvent applies the HasEdge predicate on the "event" edge.

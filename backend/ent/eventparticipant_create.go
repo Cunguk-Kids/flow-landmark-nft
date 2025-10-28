@@ -34,6 +34,20 @@ func (_c *EventParticipantCreate) SetNillableUserAddress(v *string) *EventPartic
 	return _c
 }
 
+// SetIsCheckedIn sets the "isCheckedIn" field.
+func (_c *EventParticipantCreate) SetIsCheckedIn(v bool) *EventParticipantCreate {
+	_c.mutation.SetIsCheckedIn(v)
+	return _c
+}
+
+// SetNillableIsCheckedIn sets the "isCheckedIn" field if the given value is not nil.
+func (_c *EventParticipantCreate) SetNillableIsCheckedIn(v *bool) *EventParticipantCreate {
+	if v != nil {
+		_c.SetIsCheckedIn(*v)
+	}
+	return _c
+}
+
 // SetEventID sets the "event" edge to the Event entity by ID.
 func (_c *EventParticipantCreate) SetEventID(id int) *EventParticipantCreate {
 	_c.mutation.SetEventID(id)
@@ -84,12 +98,19 @@ func (_c *EventParticipantCreate) defaults() {
 		v := eventparticipant.DefaultUserAddress
 		_c.mutation.SetUserAddress(v)
 	}
+	if _, ok := _c.mutation.IsCheckedIn(); !ok {
+		v := eventparticipant.DefaultIsCheckedIn
+		_c.mutation.SetIsCheckedIn(v)
+	}
 }
 
 // check runs all checks and user-defined validators on the builder.
 func (_c *EventParticipantCreate) check() error {
 	if _, ok := _c.mutation.UserAddress(); !ok {
 		return &ValidationError{Name: "userAddress", err: errors.New(`ent: missing required field "EventParticipant.userAddress"`)}
+	}
+	if _, ok := _c.mutation.IsCheckedIn(); !ok {
+		return &ValidationError{Name: "isCheckedIn", err: errors.New(`ent: missing required field "EventParticipant.isCheckedIn"`)}
 	}
 	if len(_c.mutation.EventIDs()) == 0 {
 		return &ValidationError{Name: "event", err: errors.New(`ent: missing required edge "EventParticipant.event"`)}
@@ -123,6 +144,10 @@ func (_c *EventParticipantCreate) createSpec() (*EventParticipant, *sqlgraph.Cre
 	if value, ok := _c.mutation.UserAddress(); ok {
 		_spec.SetField(eventparticipant.FieldUserAddress, field.TypeString, value)
 		_node.UserAddress = value
+	}
+	if value, ok := _c.mutation.IsCheckedIn(); ok {
+		_spec.SetField(eventparticipant.FieldIsCheckedIn, field.TypeBool, value)
+		_node.IsCheckedIn = value
 	}
 	if nodes := _c.mutation.EventIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{

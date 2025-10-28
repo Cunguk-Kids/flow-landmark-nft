@@ -42,6 +42,20 @@ func (_u *EventParticipantUpdate) SetNillableUserAddress(v *string) *EventPartic
 	return _u
 }
 
+// SetIsCheckedIn sets the "isCheckedIn" field.
+func (_u *EventParticipantUpdate) SetIsCheckedIn(v bool) *EventParticipantUpdate {
+	_u.mutation.SetIsCheckedIn(v)
+	return _u
+}
+
+// SetNillableIsCheckedIn sets the "isCheckedIn" field if the given value is not nil.
+func (_u *EventParticipantUpdate) SetNillableIsCheckedIn(v *bool) *EventParticipantUpdate {
+	if v != nil {
+		_u.SetIsCheckedIn(*v)
+	}
+	return _u
+}
+
 // SetEventID sets the "event" edge to the Event entity by ID.
 func (_u *EventParticipantUpdate) SetEventID(id int) *EventParticipantUpdate {
 	_u.mutation.SetEventID(id)
@@ -114,6 +128,9 @@ func (_u *EventParticipantUpdate) sqlSave(ctx context.Context) (_node int, err e
 	if value, ok := _u.mutation.UserAddress(); ok {
 		_spec.SetField(eventparticipant.FieldUserAddress, field.TypeString, value)
 	}
+	if value, ok := _u.mutation.IsCheckedIn(); ok {
+		_spec.SetField(eventparticipant.FieldIsCheckedIn, field.TypeBool, value)
+	}
 	if _u.mutation.EventCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
@@ -173,6 +190,20 @@ func (_u *EventParticipantUpdateOne) SetUserAddress(v string) *EventParticipantU
 func (_u *EventParticipantUpdateOne) SetNillableUserAddress(v *string) *EventParticipantUpdateOne {
 	if v != nil {
 		_u.SetUserAddress(*v)
+	}
+	return _u
+}
+
+// SetIsCheckedIn sets the "isCheckedIn" field.
+func (_u *EventParticipantUpdateOne) SetIsCheckedIn(v bool) *EventParticipantUpdateOne {
+	_u.mutation.SetIsCheckedIn(v)
+	return _u
+}
+
+// SetNillableIsCheckedIn sets the "isCheckedIn" field if the given value is not nil.
+func (_u *EventParticipantUpdateOne) SetNillableIsCheckedIn(v *bool) *EventParticipantUpdateOne {
+	if v != nil {
+		_u.SetIsCheckedIn(*v)
 	}
 	return _u
 }
@@ -278,6 +309,9 @@ func (_u *EventParticipantUpdateOne) sqlSave(ctx context.Context) (_node *EventP
 	}
 	if value, ok := _u.mutation.UserAddress(); ok {
 		_spec.SetField(eventparticipant.FieldUserAddress, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.IsCheckedIn(); ok {
+		_spec.SetField(eventparticipant.FieldIsCheckedIn, field.TypeBool, value)
 	}
 	if _u.mutation.EventCleared() {
 		edge := &sqlgraph.EdgeSpec{

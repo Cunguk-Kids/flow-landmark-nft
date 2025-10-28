@@ -24,4 +24,8 @@ func init() {
 	eventparticipantDescUserAddress := eventparticipantFields[0].Descriptor()
 	// eventparticipant.DefaultUserAddress holds the default value on creation for the userAddress field.
 	eventparticipant.DefaultUserAddress = eventparticipantDescUserAddress.Default.(string)
+	// eventparticipantDescIsCheckedIn is the schema descriptor for isCheckedIn field.
+	eventparticipantDescIsCheckedIn := eventparticipantFields[1].Descriptor()
+	// eventparticipant.DefaultIsCheckedIn holds the default value on creation for the isCheckedIn field.
+	eventparticipant.DefaultIsCheckedIn = eventparticipantDescIsCheckedIn.Default.(bool)
 }
