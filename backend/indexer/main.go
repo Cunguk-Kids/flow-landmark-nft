@@ -13,14 +13,9 @@ import (
 
 	grpcOpts "google.golang.org/grpc"
 
-	"backend/ent"
 	"backend/utils"
 
-	"entgo.io/ent/dialect"
-	entsql "entgo.io/ent/dialect/sql"
 	_ "github.com/jackc/pgx/v5/stdlib"
-
-	"database/sql"
 )
 
 const (
@@ -51,7 +46,7 @@ func main() {
 		log.Printf("Warning: .env file not found, using environment variables from system: %v", err)
 	}
 
-	client := Open(os.Getenv("DATABASE_URL"))
+	client := utils.Open(os.Getenv("DATABASE_URL"))
 	if err := client.Schema.Create(ctx); err != nil {
 		log.Fatal(err)
 	}
@@ -122,15 +117,4 @@ func main() {
 			}
 		}
 	}
-}
-
-func Open(databaseUrl string) *ent.Client {
-	db, err := sql.Open("pgx", databaseUrl)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	// Create an ent.Driver from `db`.
-	drv := entsql.OpenDB(dialect.Postgres, db)
-	return ent.NewClient(ent.Driver(drv))
 }

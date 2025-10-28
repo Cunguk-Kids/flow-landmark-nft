@@ -1,4 +1,4 @@
-package utils // Atau package tempat helper indexer Anda berada
+package utils
 
 import (
 	"backend/ent"
