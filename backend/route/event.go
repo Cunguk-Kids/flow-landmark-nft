@@ -73,7 +73,30 @@ func HandleCreateEvent(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid endDate format. Use RFC3339Nano (e.g., YYYY-MM-DDTHH:MM:SSZ)"})
 	}
 
-	// 3. Panggil Fungsi Transaksi (Sinkron)
+	// --- 3. TAMBAHKAN VALIDASI DI SINI ---
+	now := time.Now()
+	log.Println(now)
+	// Validasi 1: StartDate tidak boleh di masa lalu
+	// Kita gunakan Toleransi 1 menit untuk menghindari masalah clock skew
+	if startDate.Before(now.Add(-1 * time.Minute)) {
+		log.Printf("Validation failed: StartDate (%s) is in the past.", startDate.String())
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Start date cannot be in the past"})
+	}
+
+	// Validasi 2: EndDate harus setelah StartDate
+	if !endDate.After(startDate) {
+		log.Printf("Validation failed: EndDate (%s) is not after StartDate (%s).", endDate.String(), startDate.String())
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "End date must be after start date"})
+	}
+
+	// Validasi 3: TotalRareNFT tidak boleh melebihi Quota
+	if req.TotalRareNFT > req.Quota {
+		log.Printf("Validation failed: TotalRareNFT (%d) exceeds Quota (%d).", req.TotalRareNFT, req.Quota)
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Total rare NFT cannot exceed the total quota"})
+	}
+	// --- AKHIR VALIDASI ---
+
+	// 4. Panggil Fungsi Transaksi (Sinkron)
 	// Menjalankannya secara sinkron lebih mudah untuk debugging di hackathon.
 	// Jika transaksi gagal dikirim (bukan di-seal, tapi GAGAL KIRIM),
 	// fungsi CreateEvent Anda harusnya mengembalikan error (atau panic).
