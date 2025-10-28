@@ -6,7 +6,6 @@ import (
 	"backend/transactions" // <-- Kode bersama Anda
 	"backend/utils"
 	"context"
-	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -97,44 +96,27 @@ func HandleCreateEvent(c echo.Context) error {
 	// --- AKHIR VALIDASI ---
 
 	// 4. Panggil Fungsi Transaksi (Sinkron)
-	// Menjalankannya secara sinkron lebih mudah untuk debugging di hackathon.
-	// Jika transaksi gagal dikirim (bukan di-seal, tapi GAGAL KIRIM),
-	// fungsi CreateEvent Anda harusnya mengembalikan error (atau panic).
-	// Kita akan menangkap panic di sini (jika CreateEvent panic).
-	// Anda bisa juga modifikasi CreateEvent agar return error.
-	var txErr error
-	func() {
-		// Menjalankan di dalam func agar bisa recover dari panic
-		defer func() {
-			if r := recover(); r != nil {
-				log.Printf("PANIC saat mengirim transaksi CreateEvent: %v", r)
-				// Ubah panic menjadi error biasa
-				txErr = fmt.Errorf("transaction submission failed: %v", r)
-			}
-		}()
-		// Panggil fungsi transaksi dengan data dari request
-		transactions.CreateEvent(
-			req.BrandAddress,
-			req.EventName,
-			req.Quota,
-			req.Description,
-			req.Image,
-			req.Lat,
-			req.Long,
-			req.Radius,
-			startDate, // Gunakan time.Time yang sudah diparsing
-			endDate,   // Gunakan time.Time yang sudah diparsing
-			req.TotalRareNFT,
-		)
-	}() // Langsung panggil anonymous function
+	err = transactions.CreateEvent(
+		req.BrandAddress,
+		req.EventName,
+		req.Quota,
+		req.Description,
+		req.Image,
+		req.Lat,
+		req.Long,
+		req.Radius,
+		startDate, // Gunakan time.Time yang sudah diparsing
+		endDate,   // Gunakan time.Time yang sudah diparsing
+		req.TotalRareNFT,
+	)
 
 	// 4. Handle Error Pengiriman Transaksi
-	if txErr != nil {
+	if err != nil {
 		// Jika terjadi panic/error saat mengirim tx
 		return c.JSON(http.StatusInternalServerError, map[string]string{
 			"status":  "error",
 			"message": "Gagal mengirim transaksi ke blockchain.",
-			"details": txErr.Error(), // Berikan detail error (hati-hati di produksi)
+			"details": err.Error(), // Berikan detail error (hati-hati di produksi)
 		})
 	}
 
