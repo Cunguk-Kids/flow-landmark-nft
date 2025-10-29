@@ -7,7 +7,7 @@ access(all) contract NFTMoment {
     access(all) event ContractInitialized()
     access(all) event Withdraw(id: UInt64, from: Address?)
     access(all) event Deposit(id: UInt64, to: Address?)
-    access(all) event MomentMinted(id: UInt64, owner: Address, category: String, rarity: String)
+    access(all) event MomentMinted(id: UInt64, owner: Address, category: String, rarity: String, eventId: UInt64)
     access(all) event MomentUpgraded(id: UInt64, newRarity: String)
     access(all) event MomentsMerged(id1: UInt64, id2: UInt64, newId: UInt64)
     access(all) event PartnerAdded(address: Address, name: String)
@@ -26,7 +26,6 @@ access(all) contract NFTMoment {
     // ========================================
     access(all) var totalSupply: UInt64
     access(contract) var partners: {Address: PartnerInfo}
-    access(contract) var adminResource: @Admin?
 
     // ========================================
     // Enums
@@ -170,27 +169,27 @@ access(all) contract NFTMoment {
         access(all) let description: String
         access(all) let category: Category
         access(all) let imageURL: String
-        access(all) let thumbnailURL: String
+        access(all) let thumbnailURL: String?
         access(all) let timestamp: UFix64
         access(all) let weather: String?
         access(all) let temperature: String?
         access(all) let location: Location?
         access(all) let altitude: String?
         access(all) let windSpeed: String?
-        access(all) let border: BorderStyle
-        access(all) let sticker: StickerStyle
-        access(all) let filter: FilterStyle
-        access(all) let audio: AudioStyle
+        access(all) let border: BorderStyle?
+        access(all) let sticker: StickerStyle?
+        access(all) let filter: FilterStyle?
+        access(all) let audio: AudioStyle?
         access(all) let javaneseText: String?
-        access(all) let tags: [String]
-        access(all) let attributes: {String: String}
+        access(all) let tags: [String]?
+        access(all) let attributes: {String: String}?
 
         init(
             title: String,
             description: String,
             category: Category,
             imageURL: String,
-            thumbnailURL: String,
+            thumbnailURL: String?,
             timestamp: UFix64,
             weather: String?,
             temperature: String?,
@@ -198,12 +197,12 @@ access(all) contract NFTMoment {
             altitude: String?,
             windSpeed: String?,
             border: BorderStyle,
-            sticker: StickerStyle,
-            filter: FilterStyle,
-            audio: AudioStyle,
+            sticker: StickerStyle?,
+            filter: FilterStyle?,
+            audio: AudioStyle?,
             javaneseText: String?,
-            tags: [String],
-            attributes: {String: String}
+            tags: [String]?,
+            attributes: {String: String}?
         ) {
             self.title = title
             self.description = description
@@ -230,36 +229,21 @@ access(all) contract NFTMoment {
         access(all) let name: String
         access(all) let description: String
         access(all) let address: Address
-        access(all) let allowedCategories: [Category]
-        access(all) let location: Location?
-        access(all) let radius: UFix64?
-        access(all) let qrCodeEnabled: Bool
-        access(all) let eventBased: Bool
-        access(all) let eventStartTime: UFix64?
-        access(all) let eventEndTime: UFix64?
+        access(all) let email: String
+        access(all) let image: String
 
         init(
             name: String,
             description: String,
             address: Address,
-            allowedCategories: [Category],
-            location: Location?,
-            radius: UFix64?,
-            qrCodeEnabled: Bool,
-            eventBased: Bool,
-            eventStartTime: UFix64?,
-            eventEndTime: UFix64?
+            email: String,
+            image: String,
         ) {
             self.name = name
             self.description = description
             self.address = address
-            self.allowedCategories = allowedCategories
-            self.location = location
-            self.radius = radius
-            self.qrCodeEnabled = qrCodeEnabled
-            self.eventBased = eventBased
-            self.eventStartTime = eventStartTime
-            self.eventEndTime = eventEndTime
+            self.email = email
+            self.image = image
         }
     }
 
@@ -274,6 +258,7 @@ access(all) contract NFTMoment {
         access(all) let partnerAddress: Address?
         access(all) var upgradeCount: UInt64
         access(all) var mergedFrom: [UInt64]
+        access(all) var eventId: UInt64
     }
 
     access(all) resource interface CollectionPublic {
@@ -293,13 +278,15 @@ access(all) contract NFTMoment {
         access(all) let partnerAddress: Address?
         access(all) var upgradeCount: UInt64
         access(all) var mergedFrom: [UInt64]
+        access(all) var eventId: UInt64
 
         init(
             id: UInt64,
             metadata: MomentMetadata,
             rarity: Rarity,
             createdBy: Address,
-            partnerAddress: Address?
+            partnerAddress: Address?,
+            eventId: UInt64
         ) {
             self.id = id
             self.metadata = metadata
@@ -308,6 +295,7 @@ access(all) contract NFTMoment {
             self.partnerAddress = partnerAddress
             self.upgradeCount = 0
             self.mergedFrom = []
+            self.eventId = eventId
         }
 
         access(contract) fun upgrade(newRarity: Rarity) {
@@ -364,25 +352,15 @@ access(all) contract NFTMoment {
             address: Address,
             name: String,
             description: String,
-            allowedCategories: [Category],
-            location: Location?,
-            radius: UFix64?,
-            qrCodeEnabled: Bool,
-            eventBased: Bool,
-            eventStartTime: UFix64?,
-            eventEndTime: UFix64?
+            email: String,
+            image: String,
         ) {
             let partnerInfo = PartnerInfo(
                 name: name,
                 description: description,
                 address: address,
-                allowedCategories: allowedCategories,
-                location: location,
-                radius: radius,
-                qrCodeEnabled: qrCodeEnabled,
-                eventBased: eventBased,
-                eventStartTime: eventStartTime,
-                eventEndTime: eventEndTime
+                email: email,
+                image: image
             )
             NFTMoment.partners[address] = partnerInfo
             emit PartnerAdded(address: address, name: name)
@@ -392,9 +370,7 @@ access(all) contract NFTMoment {
             NFTMoment.partners.remove(key: address)
         }
 
-        access(all) fun createPartner(): @Partner {
-            return <- create Partner()
-        }
+        access(all) fun createPartner(): @Partner { return <- create Partner() }
     }
 
     // ========================================
@@ -406,23 +382,12 @@ access(all) contract NFTMoment {
             recipient: &Collection,
             metadata: MomentMetadata,
             rarity: Rarity,
-            partnerAddress: Address
+            partnerAddress: Address,
+            eventId: UInt64
         ): UInt64 {
             pre { NFTMoment.partners[partnerAddress] != nil: "Partner not registered" }
 
             let partnerInfo = NFTMoment.partners[partnerAddress]!
-
-            assert(partnerInfo.allowedCategories.contains(metadata.category),
-                message: "Category not allowed for this partner"
-            )
-
-            if partnerInfo.eventBased {
-                let now = getCurrentBlock().timestamp
-                if partnerInfo.eventStartTime != nil { assert(now >= partnerInfo.eventStartTime!, message: "Event has not started") }
-                if partnerInfo.eventEndTime != nil { assert(now <= partnerInfo.eventEndTime!, message: "Event has ended") }
-            }
-
-            if partnerInfo.radius != nil { assert(metadata.location != nil, message: "Location required for radius") }
 
             let id = NFTMoment.totalSupply
             NFTMoment.totalSupply = NFTMoment.totalSupply + 1
@@ -432,14 +397,16 @@ access(all) contract NFTMoment {
                 metadata: metadata,
                 rarity: rarity,
                 createdBy: recipient.ownerAddress,
-                partnerAddress: partnerAddress
+                partnerAddress: partnerAddress,
+                eventId: eventId
             )
 
             emit MomentMinted(
                 id: id,
                 owner: recipient.ownerAddress,
                 category: NFTMoment.categoryToString(c: metadata.category),
-                rarity: NFTMoment.rarityToString(r: rarity)
+                rarity: NFTMoment.rarityToString(r: rarity),
+                eventId: eventId
             )
 
             recipient.deposit(token: <- nft)
@@ -464,13 +431,22 @@ access(all) contract NFTMoment {
     init() {
         self.totalSupply = 0
         self.partners = {}
-        self.adminResource <- create Admin()
 
+        // Definisikan Path DULU
         self.CollectionStoragePath = /storage/NFTMomentCollection
         self.CollectionPublicPath = /public/NFTMomentCollection
         self.AdminStoragePath = /storage/NFTMomentAdmin
         self.PartnerStoragePath = /storage/NFTMomentPartner
 
+        // --- PERBAIKAN: Buat dan LANGSUNG simpan Admin Resource ---
+        // 1. Buat resource Admin
+        let admin <- create Admin()
+
+        // 2. Simpan resource ke storage path yang sudah didefinisikan
+        self.account.storage.save(<-admin, to: self.AdminStoragePath)
+        // --------------------------------------------------------
+
+        log("Admin resource berhasil dibuat dan disimpan ke ".concat(self.AdminStoragePath.toString()))
         emit ContractInitialized()
     }
 }

@@ -225,7 +225,7 @@ access(all) contract EventPlatform {
             eventID: UInt64,
             user: Address,
             metadata: NFTMoment.MomentMetadata,
-            rarity: NFTMoment.Rarity
+            rarity: NFTMoment.Rarity,
         ): UInt64 {
             
             let adminCap = EventPlatform.nftAdminCap ?? panic("Capability NFTMoment Admin belum disetel. Harap lakukan delegasi.")
@@ -257,10 +257,13 @@ access(all) contract EventPlatform {
                 recipient: userCollectionRef,
                 metadata: metadata,
                 rarity: rarity,
-                partnerAddress: self.owner!.address
+                partnerAddress: self.owner!.address,
+                eventId: eventID
             )
 
-            eventRef.decrementRareNFT()
+            if (rarity.rawValue == 1) {
+                eventRef.decrementRareNFT()
+            }
             
             emit EventNFTMinted(
                 eventID: eventID, 
