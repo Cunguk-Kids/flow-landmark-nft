@@ -59,11 +59,6 @@ func EventId(v int) predicate.Event {
 	return predicate.Event(sql.FieldEQ(FieldEventId, v))
 }
 
-// BrandAddress applies equality check predicate on the "brandAddress" field. It's identical to BrandAddressEQ.
-func BrandAddress(v string) predicate.Event {
-	return predicate.Event(sql.FieldEQ(FieldBrandAddress, v))
-}
-
 // EventName applies equality check predicate on the "eventName" field. It's identical to EventNameEQ.
 func EventName(v string) predicate.Event {
 	return predicate.Event(sql.FieldEQ(FieldEventName, v))
@@ -162,71 +157,6 @@ func EventIdLT(v int) predicate.Event {
 // EventIdLTE applies the LTE predicate on the "eventId" field.
 func EventIdLTE(v int) predicate.Event {
 	return predicate.Event(sql.FieldLTE(FieldEventId, v))
-}
-
-// BrandAddressEQ applies the EQ predicate on the "brandAddress" field.
-func BrandAddressEQ(v string) predicate.Event {
-	return predicate.Event(sql.FieldEQ(FieldBrandAddress, v))
-}
-
-// BrandAddressNEQ applies the NEQ predicate on the "brandAddress" field.
-func BrandAddressNEQ(v string) predicate.Event {
-	return predicate.Event(sql.FieldNEQ(FieldBrandAddress, v))
-}
-
-// BrandAddressIn applies the In predicate on the "brandAddress" field.
-func BrandAddressIn(vs ...string) predicate.Event {
-	return predicate.Event(sql.FieldIn(FieldBrandAddress, vs...))
-}
-
-// BrandAddressNotIn applies the NotIn predicate on the "brandAddress" field.
-func BrandAddressNotIn(vs ...string) predicate.Event {
-	return predicate.Event(sql.FieldNotIn(FieldBrandAddress, vs...))
-}
-
-// BrandAddressGT applies the GT predicate on the "brandAddress" field.
-func BrandAddressGT(v string) predicate.Event {
-	return predicate.Event(sql.FieldGT(FieldBrandAddress, v))
-}
-
-// BrandAddressGTE applies the GTE predicate on the "brandAddress" field.
-func BrandAddressGTE(v string) predicate.Event {
-	return predicate.Event(sql.FieldGTE(FieldBrandAddress, v))
-}
-
-// BrandAddressLT applies the LT predicate on the "brandAddress" field.
-func BrandAddressLT(v string) predicate.Event {
-	return predicate.Event(sql.FieldLT(FieldBrandAddress, v))
-}
-
-// BrandAddressLTE applies the LTE predicate on the "brandAddress" field.
-func BrandAddressLTE(v string) predicate.Event {
-	return predicate.Event(sql.FieldLTE(FieldBrandAddress, v))
-}
-
-// BrandAddressContains applies the Contains predicate on the "brandAddress" field.
-func BrandAddressContains(v string) predicate.Event {
-	return predicate.Event(sql.FieldContains(FieldBrandAddress, v))
-}
-
-// BrandAddressHasPrefix applies the HasPrefix predicate on the "brandAddress" field.
-func BrandAddressHasPrefix(v string) predicate.Event {
-	return predicate.Event(sql.FieldHasPrefix(FieldBrandAddress, v))
-}
-
-// BrandAddressHasSuffix applies the HasSuffix predicate on the "brandAddress" field.
-func BrandAddressHasSuffix(v string) predicate.Event {
-	return predicate.Event(sql.FieldHasSuffix(FieldBrandAddress, v))
-}
-
-// BrandAddressEqualFold applies the EqualFold predicate on the "brandAddress" field.
-func BrandAddressEqualFold(v string) predicate.Event {
-	return predicate.Event(sql.FieldEqualFold(FieldBrandAddress, v))
-}
-
-// BrandAddressContainsFold applies the ContainsFold predicate on the "brandAddress" field.
-func BrandAddressContainsFold(v string) predicate.Event {
-	return predicate.Event(sql.FieldContainsFold(FieldBrandAddress, v))
 }
 
 // EventNameEQ applies the EQ predicate on the "eventName" field.
@@ -784,21 +714,67 @@ func TotalRareNFTLTE(v int) predicate.Event {
 	return predicate.Event(sql.FieldLTE(FieldTotalRareNFT, v))
 }
 
-// HasEventID applies the HasEdge predicate on the "event_id" edge.
-func HasEventID() predicate.Event {
+// HasParticipants applies the HasEdge predicate on the "participants" edge.
+func HasParticipants() predicate.Event {
 	return predicate.Event(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, EventIDTable, EventIDColumn),
+			sqlgraph.Edge(sqlgraph.O2M, false, ParticipantsTable, ParticipantsColumn),
 		)
 		sqlgraph.HasNeighbors(s, step)
 	})
 }
 
-// HasEventIDWith applies the HasEdge predicate on the "event_id" edge with a given conditions (other predicates).
-func HasEventIDWith(preds ...predicate.EventParticipant) predicate.Event {
+// HasParticipantsWith applies the HasEdge predicate on the "participants" edge with a given conditions (other predicates).
+func HasParticipantsWith(preds ...predicate.EventParticipant) predicate.Event {
 	return predicate.Event(func(s *sql.Selector) {
-		step := newEventIDStep()
+		step := newParticipantsStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasPartner applies the HasEdge predicate on the "partner" edge.
+func HasPartner() predicate.Event {
+	return predicate.Event(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, PartnerTable, PartnerColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasPartnerWith applies the HasEdge predicate on the "partner" edge with a given conditions (other predicates).
+func HasPartnerWith(preds ...predicate.Partner) predicate.Event {
+	return predicate.Event(func(s *sql.Selector) {
+		step := newPartnerStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasNfts applies the HasEdge predicate on the "nfts" edge.
+func HasNfts() predicate.Event {
+	return predicate.Event(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, NftsTable, NftsColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasNftsWith applies the HasEdge predicate on the "nfts" edge with a given conditions (other predicates).
+func HasNftsWith(preds ...predicate.Nft) predicate.Event {
+	return predicate.Event(func(s *sql.Selector) {
+		step := newNftsStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

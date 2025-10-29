@@ -5,6 +5,8 @@ package ent
 import (
 	"backend/ent/event"
 	"backend/ent/eventparticipant"
+	"backend/ent/nft"
+	"backend/ent/partner"
 	"backend/ent/predicate"
 	"context"
 	"errors"
@@ -46,20 +48,6 @@ func (_u *EventUpdate) SetNillableEventId(v *int) *EventUpdate {
 // AddEventId adds value to the "eventId" field.
 func (_u *EventUpdate) AddEventId(v int) *EventUpdate {
 	_u.mutation.AddEventId(v)
-	return _u
-}
-
-// SetBrandAddress sets the "brandAddress" field.
-func (_u *EventUpdate) SetBrandAddress(v string) *EventUpdate {
-	_u.mutation.SetBrandAddress(v)
-	return _u
-}
-
-// SetNillableBrandAddress sets the "brandAddress" field if the given value is not nil.
-func (_u *EventUpdate) SetNillableBrandAddress(v *string) *EventUpdate {
-	if v != nil {
-		_u.SetBrandAddress(*v)
-	}
 	return _u
 }
 
@@ -294,19 +282,45 @@ func (_u *EventUpdate) AddTotalRareNFT(v int) *EventUpdate {
 	return _u
 }
 
-// AddEventIDIDs adds the "event_id" edge to the EventParticipant entity by IDs.
-func (_u *EventUpdate) AddEventIDIDs(ids ...int) *EventUpdate {
-	_u.mutation.AddEventIDIDs(ids...)
+// AddParticipantIDs adds the "participants" edge to the EventParticipant entity by IDs.
+func (_u *EventUpdate) AddParticipantIDs(ids ...int) *EventUpdate {
+	_u.mutation.AddParticipantIDs(ids...)
 	return _u
 }
 
-// AddEventID adds the "event_id" edges to the EventParticipant entity.
-func (_u *EventUpdate) AddEventID(v ...*EventParticipant) *EventUpdate {
+// AddParticipants adds the "participants" edges to the EventParticipant entity.
+func (_u *EventUpdate) AddParticipants(v ...*EventParticipant) *EventUpdate {
 	ids := make([]int, len(v))
 	for i := range v {
 		ids[i] = v[i].ID
 	}
-	return _u.AddEventIDIDs(ids...)
+	return _u.AddParticipantIDs(ids...)
+}
+
+// SetPartnerID sets the "partner" edge to the Partner entity by ID.
+func (_u *EventUpdate) SetPartnerID(id int) *EventUpdate {
+	_u.mutation.SetPartnerID(id)
+	return _u
+}
+
+// SetPartner sets the "partner" edge to the Partner entity.
+func (_u *EventUpdate) SetPartner(v *Partner) *EventUpdate {
+	return _u.SetPartnerID(v.ID)
+}
+
+// AddNftIDs adds the "nfts" edge to the Nft entity by IDs.
+func (_u *EventUpdate) AddNftIDs(ids ...int) *EventUpdate {
+	_u.mutation.AddNftIDs(ids...)
+	return _u
+}
+
+// AddNfts adds the "nfts" edges to the Nft entity.
+func (_u *EventUpdate) AddNfts(v ...*Nft) *EventUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddNftIDs(ids...)
 }
 
 // Mutation returns the EventMutation object of the builder.
@@ -314,25 +328,52 @@ func (_u *EventUpdate) Mutation() *EventMutation {
 	return _u.mutation
 }
 
-// ClearEventID clears all "event_id" edges to the EventParticipant entity.
-func (_u *EventUpdate) ClearEventID() *EventUpdate {
-	_u.mutation.ClearEventID()
+// ClearParticipants clears all "participants" edges to the EventParticipant entity.
+func (_u *EventUpdate) ClearParticipants() *EventUpdate {
+	_u.mutation.ClearParticipants()
 	return _u
 }
 
-// RemoveEventIDIDs removes the "event_id" edge to EventParticipant entities by IDs.
-func (_u *EventUpdate) RemoveEventIDIDs(ids ...int) *EventUpdate {
-	_u.mutation.RemoveEventIDIDs(ids...)
+// RemoveParticipantIDs removes the "participants" edge to EventParticipant entities by IDs.
+func (_u *EventUpdate) RemoveParticipantIDs(ids ...int) *EventUpdate {
+	_u.mutation.RemoveParticipantIDs(ids...)
 	return _u
 }
 
-// RemoveEventID removes "event_id" edges to EventParticipant entities.
-func (_u *EventUpdate) RemoveEventID(v ...*EventParticipant) *EventUpdate {
+// RemoveParticipants removes "participants" edges to EventParticipant entities.
+func (_u *EventUpdate) RemoveParticipants(v ...*EventParticipant) *EventUpdate {
 	ids := make([]int, len(v))
 	for i := range v {
 		ids[i] = v[i].ID
 	}
-	return _u.RemoveEventIDIDs(ids...)
+	return _u.RemoveParticipantIDs(ids...)
+}
+
+// ClearPartner clears the "partner" edge to the Partner entity.
+func (_u *EventUpdate) ClearPartner() *EventUpdate {
+	_u.mutation.ClearPartner()
+	return _u
+}
+
+// ClearNfts clears all "nfts" edges to the Nft entity.
+func (_u *EventUpdate) ClearNfts() *EventUpdate {
+	_u.mutation.ClearNfts()
+	return _u
+}
+
+// RemoveNftIDs removes the "nfts" edge to Nft entities by IDs.
+func (_u *EventUpdate) RemoveNftIDs(ids ...int) *EventUpdate {
+	_u.mutation.RemoveNftIDs(ids...)
+	return _u
+}
+
+// RemoveNfts removes "nfts" edges to Nft entities.
+func (_u *EventUpdate) RemoveNfts(v ...*Nft) *EventUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveNftIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -362,7 +403,18 @@ func (_u *EventUpdate) ExecX(ctx context.Context) {
 	}
 }
 
+// check runs all checks and user-defined validators on the builder.
+func (_u *EventUpdate) check() error {
+	if _u.mutation.PartnerCleared() && len(_u.mutation.PartnerIDs()) > 0 {
+		return errors.New(`ent: clearing a required unique edge "Event.partner"`)
+	}
+	return nil
+}
+
 func (_u *EventUpdate) sqlSave(ctx context.Context) (_node int, err error) {
+	if err := _u.check(); err != nil {
+		return _node, err
+	}
 	_spec := sqlgraph.NewUpdateSpec(event.Table, event.Columns, sqlgraph.NewFieldSpec(event.FieldID, field.TypeInt))
 	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
@@ -376,9 +428,6 @@ func (_u *EventUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	}
 	if value, ok := _u.mutation.AddedEventId(); ok {
 		_spec.AddField(event.FieldEventId, field.TypeInt, value)
-	}
-	if value, ok := _u.mutation.BrandAddress(); ok {
-		_spec.SetField(event.FieldBrandAddress, field.TypeString, value)
 	}
 	if value, ok := _u.mutation.EventName(); ok {
 		_spec.SetField(event.FieldEventName, field.TypeString, value)
@@ -443,12 +492,12 @@ func (_u *EventUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	if value, ok := _u.mutation.AddedTotalRareNFT(); ok {
 		_spec.AddField(event.FieldTotalRareNFT, field.TypeInt, value)
 	}
-	if _u.mutation.EventIDCleared() {
+	if _u.mutation.ParticipantsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   event.EventIDTable,
-			Columns: []string{event.EventIDColumn},
+			Table:   event.ParticipantsTable,
+			Columns: []string{event.ParticipantsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(eventparticipant.FieldID, field.TypeInt),
@@ -456,12 +505,12 @@ func (_u *EventUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := _u.mutation.RemovedEventIDIDs(); len(nodes) > 0 && !_u.mutation.EventIDCleared() {
+	if nodes := _u.mutation.RemovedParticipantsIDs(); len(nodes) > 0 && !_u.mutation.ParticipantsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   event.EventIDTable,
-			Columns: []string{event.EventIDColumn},
+			Table:   event.ParticipantsTable,
+			Columns: []string{event.ParticipantsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(eventparticipant.FieldID, field.TypeInt),
@@ -472,15 +521,89 @@ func (_u *EventUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := _u.mutation.EventIDIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.ParticipantsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   event.EventIDTable,
-			Columns: []string{event.EventIDColumn},
+			Table:   event.ParticipantsTable,
+			Columns: []string{event.ParticipantsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(eventparticipant.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.PartnerCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   event.PartnerTable,
+			Columns: []string{event.PartnerColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(partner.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.PartnerIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   event.PartnerTable,
+			Columns: []string{event.PartnerColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(partner.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.NftsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   event.NftsTable,
+			Columns: []string{event.NftsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(nft.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedNftsIDs(); len(nodes) > 0 && !_u.mutation.NftsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   event.NftsTable,
+			Columns: []string{event.NftsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(nft.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.NftsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   event.NftsTable,
+			Columns: []string{event.NftsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(nft.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -526,20 +649,6 @@ func (_u *EventUpdateOne) SetNillableEventId(v *int) *EventUpdateOne {
 // AddEventId adds value to the "eventId" field.
 func (_u *EventUpdateOne) AddEventId(v int) *EventUpdateOne {
 	_u.mutation.AddEventId(v)
-	return _u
-}
-
-// SetBrandAddress sets the "brandAddress" field.
-func (_u *EventUpdateOne) SetBrandAddress(v string) *EventUpdateOne {
-	_u.mutation.SetBrandAddress(v)
-	return _u
-}
-
-// SetNillableBrandAddress sets the "brandAddress" field if the given value is not nil.
-func (_u *EventUpdateOne) SetNillableBrandAddress(v *string) *EventUpdateOne {
-	if v != nil {
-		_u.SetBrandAddress(*v)
-	}
 	return _u
 }
 
@@ -774,19 +883,45 @@ func (_u *EventUpdateOne) AddTotalRareNFT(v int) *EventUpdateOne {
 	return _u
 }
 
-// AddEventIDIDs adds the "event_id" edge to the EventParticipant entity by IDs.
-func (_u *EventUpdateOne) AddEventIDIDs(ids ...int) *EventUpdateOne {
-	_u.mutation.AddEventIDIDs(ids...)
+// AddParticipantIDs adds the "participants" edge to the EventParticipant entity by IDs.
+func (_u *EventUpdateOne) AddParticipantIDs(ids ...int) *EventUpdateOne {
+	_u.mutation.AddParticipantIDs(ids...)
 	return _u
 }
 
-// AddEventID adds the "event_id" edges to the EventParticipant entity.
-func (_u *EventUpdateOne) AddEventID(v ...*EventParticipant) *EventUpdateOne {
+// AddParticipants adds the "participants" edges to the EventParticipant entity.
+func (_u *EventUpdateOne) AddParticipants(v ...*EventParticipant) *EventUpdateOne {
 	ids := make([]int, len(v))
 	for i := range v {
 		ids[i] = v[i].ID
 	}
-	return _u.AddEventIDIDs(ids...)
+	return _u.AddParticipantIDs(ids...)
+}
+
+// SetPartnerID sets the "partner" edge to the Partner entity by ID.
+func (_u *EventUpdateOne) SetPartnerID(id int) *EventUpdateOne {
+	_u.mutation.SetPartnerID(id)
+	return _u
+}
+
+// SetPartner sets the "partner" edge to the Partner entity.
+func (_u *EventUpdateOne) SetPartner(v *Partner) *EventUpdateOne {
+	return _u.SetPartnerID(v.ID)
+}
+
+// AddNftIDs adds the "nfts" edge to the Nft entity by IDs.
+func (_u *EventUpdateOne) AddNftIDs(ids ...int) *EventUpdateOne {
+	_u.mutation.AddNftIDs(ids...)
+	return _u
+}
+
+// AddNfts adds the "nfts" edges to the Nft entity.
+func (_u *EventUpdateOne) AddNfts(v ...*Nft) *EventUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddNftIDs(ids...)
 }
 
 // Mutation returns the EventMutation object of the builder.
@@ -794,25 +929,52 @@ func (_u *EventUpdateOne) Mutation() *EventMutation {
 	return _u.mutation
 }
 
-// ClearEventID clears all "event_id" edges to the EventParticipant entity.
-func (_u *EventUpdateOne) ClearEventID() *EventUpdateOne {
-	_u.mutation.ClearEventID()
+// ClearParticipants clears all "participants" edges to the EventParticipant entity.
+func (_u *EventUpdateOne) ClearParticipants() *EventUpdateOne {
+	_u.mutation.ClearParticipants()
 	return _u
 }
 
-// RemoveEventIDIDs removes the "event_id" edge to EventParticipant entities by IDs.
-func (_u *EventUpdateOne) RemoveEventIDIDs(ids ...int) *EventUpdateOne {
-	_u.mutation.RemoveEventIDIDs(ids...)
+// RemoveParticipantIDs removes the "participants" edge to EventParticipant entities by IDs.
+func (_u *EventUpdateOne) RemoveParticipantIDs(ids ...int) *EventUpdateOne {
+	_u.mutation.RemoveParticipantIDs(ids...)
 	return _u
 }
 
-// RemoveEventID removes "event_id" edges to EventParticipant entities.
-func (_u *EventUpdateOne) RemoveEventID(v ...*EventParticipant) *EventUpdateOne {
+// RemoveParticipants removes "participants" edges to EventParticipant entities.
+func (_u *EventUpdateOne) RemoveParticipants(v ...*EventParticipant) *EventUpdateOne {
 	ids := make([]int, len(v))
 	for i := range v {
 		ids[i] = v[i].ID
 	}
-	return _u.RemoveEventIDIDs(ids...)
+	return _u.RemoveParticipantIDs(ids...)
+}
+
+// ClearPartner clears the "partner" edge to the Partner entity.
+func (_u *EventUpdateOne) ClearPartner() *EventUpdateOne {
+	_u.mutation.ClearPartner()
+	return _u
+}
+
+// ClearNfts clears all "nfts" edges to the Nft entity.
+func (_u *EventUpdateOne) ClearNfts() *EventUpdateOne {
+	_u.mutation.ClearNfts()
+	return _u
+}
+
+// RemoveNftIDs removes the "nfts" edge to Nft entities by IDs.
+func (_u *EventUpdateOne) RemoveNftIDs(ids ...int) *EventUpdateOne {
+	_u.mutation.RemoveNftIDs(ids...)
+	return _u
+}
+
+// RemoveNfts removes "nfts" edges to Nft entities.
+func (_u *EventUpdateOne) RemoveNfts(v ...*Nft) *EventUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveNftIDs(ids...)
 }
 
 // Where appends a list predicates to the EventUpdate builder.
@@ -855,7 +1017,18 @@ func (_u *EventUpdateOne) ExecX(ctx context.Context) {
 	}
 }
 
+// check runs all checks and user-defined validators on the builder.
+func (_u *EventUpdateOne) check() error {
+	if _u.mutation.PartnerCleared() && len(_u.mutation.PartnerIDs()) > 0 {
+		return errors.New(`ent: clearing a required unique edge "Event.partner"`)
+	}
+	return nil
+}
+
 func (_u *EventUpdateOne) sqlSave(ctx context.Context) (_node *Event, err error) {
+	if err := _u.check(); err != nil {
+		return _node, err
+	}
 	_spec := sqlgraph.NewUpdateSpec(event.Table, event.Columns, sqlgraph.NewFieldSpec(event.FieldID, field.TypeInt))
 	id, ok := _u.mutation.ID()
 	if !ok {
@@ -886,9 +1059,6 @@ func (_u *EventUpdateOne) sqlSave(ctx context.Context) (_node *Event, err error)
 	}
 	if value, ok := _u.mutation.AddedEventId(); ok {
 		_spec.AddField(event.FieldEventId, field.TypeInt, value)
-	}
-	if value, ok := _u.mutation.BrandAddress(); ok {
-		_spec.SetField(event.FieldBrandAddress, field.TypeString, value)
 	}
 	if value, ok := _u.mutation.EventName(); ok {
 		_spec.SetField(event.FieldEventName, field.TypeString, value)
@@ -953,12 +1123,12 @@ func (_u *EventUpdateOne) sqlSave(ctx context.Context) (_node *Event, err error)
 	if value, ok := _u.mutation.AddedTotalRareNFT(); ok {
 		_spec.AddField(event.FieldTotalRareNFT, field.TypeInt, value)
 	}
-	if _u.mutation.EventIDCleared() {
+	if _u.mutation.ParticipantsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   event.EventIDTable,
-			Columns: []string{event.EventIDColumn},
+			Table:   event.ParticipantsTable,
+			Columns: []string{event.ParticipantsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(eventparticipant.FieldID, field.TypeInt),
@@ -966,12 +1136,12 @@ func (_u *EventUpdateOne) sqlSave(ctx context.Context) (_node *Event, err error)
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := _u.mutation.RemovedEventIDIDs(); len(nodes) > 0 && !_u.mutation.EventIDCleared() {
+	if nodes := _u.mutation.RemovedParticipantsIDs(); len(nodes) > 0 && !_u.mutation.ParticipantsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   event.EventIDTable,
-			Columns: []string{event.EventIDColumn},
+			Table:   event.ParticipantsTable,
+			Columns: []string{event.ParticipantsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(eventparticipant.FieldID, field.TypeInt),
@@ -982,15 +1152,89 @@ func (_u *EventUpdateOne) sqlSave(ctx context.Context) (_node *Event, err error)
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := _u.mutation.EventIDIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.ParticipantsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   event.EventIDTable,
-			Columns: []string{event.EventIDColumn},
+			Table:   event.ParticipantsTable,
+			Columns: []string{event.ParticipantsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(eventparticipant.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.PartnerCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   event.PartnerTable,
+			Columns: []string{event.PartnerColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(partner.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.PartnerIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   event.PartnerTable,
+			Columns: []string{event.PartnerColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(partner.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.NftsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   event.NftsTable,
+			Columns: []string{event.NftsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(nft.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedNftsIDs(); len(nodes) > 0 && !_u.mutation.NftsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   event.NftsTable,
+			Columns: []string{event.NftsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(nft.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.NftsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   event.NftsTable,
+			Columns: []string{event.NftsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(nft.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

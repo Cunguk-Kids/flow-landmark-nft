@@ -4,6 +4,7 @@ import (
 	"backend/ent"
 	"backend/ent/event"
 	"backend/ent/eventparticipant"
+	"backend/ent/partner"
 	"backend/transactions" // <-- Kode bersama Anda
 	"backend/utils"
 	"context"
@@ -156,7 +157,7 @@ func HandleGetEventByID(c echo.Context) error {
 	eventRecord, err := entClient.Event.
 		Query().
 		Where(event.EventIdEQ(eventIDInt64)).
-		WithEventID(). // Cari berdasarkan eventID
+		WithParticipants(). // Cari berdasarkan eventID
 		// Load("participants"). // Opsional: Muat relasi jika perlu
 		Only(ctx) // Ambil satu record, error jika tidak ada atau > 1
 
@@ -215,7 +216,7 @@ func HandleGetAllEvents(c echo.Context) error {
 	query := entClient.Event.Query()
 
 	if brandAddressFilter != "" {
-		query = query.Where(event.BrandAddressEQ(brandAddressFilter))
+		query = query.Where(event.HasPartnerWith(partner.AddressEQ(brandAddressFilter)))
 		log.Printf("Menerapkan filter BrandAddress: %s", brandAddressFilter)
 	}
 
@@ -243,7 +244,7 @@ func HandleGetAllEvents(c echo.Context) error {
 	query = query.Order(ent.Desc(event.FieldEventId))
 
 	// Jalankan query untuk mendapatkan data halaman ini
-	eventsOnPage, err := query.WithEventID().All(ctx)
+	eventsOnPage, err := query.WithParticipants().All(ctx)
 
 	// --- 3. Handle Error Query Utama ---
 	if err != nil {
@@ -345,4 +346,199 @@ func HandleCheckin(c echo.Context) error {
 	go transactions.SendCheckinTransactionAsync(brandAddress, eventIDInt, userAddress)
 
 	return c.JSON(http.StatusOK, map[string]string{"status": "success", "message": "Check-in successful"})
+}
+
+type UserEventView struct {
+	*ent.Event                           // Embed *ent.Event agar semua field-nya ada
+	UserStatus   string                  `json:"userStatus"` // Status user: "Available", "Registered", dll.
+	Participants []*ent.EventParticipant `json:"participants,omitempty"`
+}
+
+const (
+	StatusAvailable   = "Available"
+	StatusRegistered  = "Registered"
+	StatusAttended    = "Attended"    // Event selesai, user check-in
+	StatusNotAttended = "NotAttended" // Event selesai, user terdaftar tapi tidak check-in
+	StatusEnded       = "Ended"       // Event selesai, user tidak terdaftar
+)
+
+func HandleGetEventsForUser(c echo.Context) error {
+	log.Println("Menerima request /user-events...")
+	ctx := context.Background()
+	entClient := utils.Open(os.Getenv("DATABASE_URL"))
+	defer entClient.Close()
+
+	// --- 1. Ambil Query Parameters (Termasuk userAddress WAJIB) ---
+	userAddress := c.QueryParam("userAddress")
+	if userAddress == "" {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Query parameter 'userAddress' is required"})
+	}
+
+	brandAddressFilter := c.QueryParam("brandAddress")
+	statusFilter := c.QueryParam("status") // Filter status event (pending, active, ended)
+	pageParam := c.QueryParam("page")
+	limitParam := c.QueryParam("limit")
+
+	page, _ := strconv.Atoi(pageParam)
+	if page < 1 {
+		page = 1
+	}
+	limit, _ := strconv.Atoi(limitParam)
+	if limit <= 0 {
+		limit = 10
+	}
+	offset := (page - 1) * limit
+
+	log.Printf("User: %s, Filter - Brand: '%s', Status: '%s', Page: %d, Limit: %d", userAddress, brandAddressFilter, statusFilter, page, limit)
+
+	// --- 2. Bangun Query Ent ---
+
+	query := entClient.Event.Query()
+
+	// Terapkan filter opsional
+	if brandAddressFilter != "" {
+		query = query.Where(event.HasPartnerWith())
+	}
+	if statusFilter != "" {
+		statusFilterInt, err := strconv.Atoi(statusFilter)
+		if err == nil { // Abaikan jika format status salah
+			query = query.Where(event.StatusEQ(statusFilterInt))
+		} else {
+			log.Printf("Format status filter tidak valid: %s", statusFilter)
+			// Anda bisa return error 400 di sini jika mau
+		}
+	}
+
+	// Hitung total sebelum pagination
+	totalCount, err := query.Clone().Count(ctx) // Clone() penting agar filter tidak hilang
+	if err != nil {
+		log.Printf("Error menghitung total event: %v", err)
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Database query error (count)"})
+	}
+
+	// Terapkan pagination dan ordering
+	eventsOnPage, err := query.
+		Limit(limit).
+		Offset(offset).
+		Order(ent.Desc(event.FieldEventId)).
+		// --- BARU: Eager Load partisipan HANYA untuk user ini ---
+		WithParticipants(func(q *ent.EventParticipantQuery) {
+			q.Limit(5).
+				Order(ent.Asc(eventparticipant.FieldID))
+		}).
+		All(ctx)
+
+	if err != nil {
+		log.Printf("Error querying events with participants: %v", err)
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Database query error"})
+	}
+
+	// Ini lebih efisien daripada memuat semua partisipan hanya untuk cek 1 user
+	eventIDsOnPage := make([]int, len(eventsOnPage))
+	for i, ev := range eventsOnPage {
+		eventIDsOnPage[i] = ev.EventId // Kumpulkan ID event di halaman ini
+		log.Println(ev.Edges)
+	}
+
+	// Query tabel UserParticipant untuk user ini DAN event di halaman ini
+	userParticipationsMap := make(map[int]*ent.EventParticipant) // Map eventID -> partisipasi user
+	if len(eventIDsOnPage) > 0 {                                 // Hanya query jika ada event
+		userParticipations, err := entClient.EventParticipant.
+			Query().
+			Where(
+				eventparticipant.UserAddressEQ(userAddress),
+				eventparticipant.HasEventWith(event.EventIdIn(eventIDsOnPage...)), // Cek relasi ke event di halaman ini
+			).
+			// Perlu query event ID juga agar bisa dimasukkan ke map
+			WithEvent(func(q *ent.EventQuery) {
+				q.Select(event.FieldEventId)
+			}).
+			All(ctx)
+
+		if err != nil {
+			log.Printf("Error querying user participations: %v", err)
+			// Lanjutkan saja, userStatus akan default ke 'Available'/'Ended'
+		} else {
+			// Masukkan hasil ke map untuk lookup cepat
+			for _, p := range userParticipations {
+				if p.Edges.Event != nil {
+					// Akses EventID langsung dari pointer
+					userParticipationsMap[p.Edges.Event.EventId] = p
+				} else {
+					// Ini seharusnya tidak terjadi jika query WithEvent() berhasil,
+					// tapi bagus untuk debugging
+					log.Println("Peringatan: UserParticipant ditemukan tanpa relasi Event yang dimuat.")
+				}
+			}
+		}
+	}
+
+	// --- 3. Transformasi Hasil ke UserEventView ---
+	userEventViews := make([]UserEventView, 0, len(eventsOnPage))
+	for _, ev := range eventsOnPage {
+		userStatus := StatusAvailable // Default
+
+		// Cek apakah data partisipan user ini ada (hasil dari WithParticipants)
+		var userParticipation *ent.EventParticipant = nil
+		if len(ev.Edges.Participants) > 0 {
+			userParticipation = ev.Edges.Participants[0] // Hanya akan ada 0 atau 1
+		}
+
+		// Tentukan status user berdasarkan status event dan partisipasi
+		// Asumsi status event: 0=Pending, 1=Active, 2=Ended
+		switch ev.Status {
+		case 0: // Pending
+			userStatus = StatusAvailable
+			if userParticipation != nil {
+				userStatus = StatusRegistered // Jika sudah terdaftar sebelum aktif
+			}
+		case 1: // Active
+			if userParticipation != nil {
+				if userParticipation.IsCheckedIn {
+					userStatus = StatusAttended
+				} else {
+					userStatus = StatusRegistered
+				}
+			} else {
+				userStatus = StatusAvailable
+			}
+		case 2: // Ended
+			if userParticipation != nil {
+				if userParticipation.IsCheckedIn {
+					userStatus = StatusAttended
+				} else {
+					userStatus = StatusNotAttended
+				}
+			} else {
+				userStatus = StatusEnded
+			}
+		default:
+			userStatus = "Unknown" // Seharusnya tidak terjadi
+		}
+		log.Println(ev.Edges.Participants)
+		userEventViews = append(userEventViews, UserEventView{
+			Event:        ev,
+			UserStatus:   userStatus,
+			Participants: ev.Edges.Participants, // Sertakan 5 partisipan yang di-load
+		})
+	}
+
+	// --- 4. Siapkan Respons ---
+	totalPages := 0
+	if totalCount > 0 {
+		totalPages = (totalCount + limit - 1) / limit
+	}
+
+	response := map[string]interface{}{
+		"data": userEventViews, // Gunakan hasil transformasi
+		"pagination": map[string]interface{}{
+			"totalItems":  totalCount,
+			"currentPage": page,
+			"pageSize":    limit,
+			"totalPages":  totalPages,
+		},
+	}
+
+	log.Printf("Ditemukan %d event(s) untuk user %s halaman ini (Total: %d)", len(userEventViews), userAddress, totalCount)
+	return c.JSON(http.StatusOK, response)
 }

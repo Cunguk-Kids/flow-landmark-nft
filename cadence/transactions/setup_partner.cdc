@@ -1,30 +1,32 @@
-import "NFTMoment"
+// Transaksi: add_nft_partner.cdc
+// Dijalankan oleh: Akun Deployer NFTMoment (Backend Anda)
 
-// Setup partner capability (admin creates and gives to partner)
-transaction(partnerAddress: Address) {
-    let admin: &NFTMoment.Admin
+import "NFTMoment" // Pastikan alamat deploy benar
 
-    prepare(acct: auth(Storage) &Account) {
-        self.admin = acct.storage.borrow<&NFTMoment.Admin>(from: NFTMoment.AdminStoragePath)
-            ?? panic("Could not borrow admin reference")
+// Argumen didapatkan backend dari database Brand
+transaction(
+    partnerAddress: Address, // Alamat Brand A
+    partnerName: String,
+    partnerDescription: String,
+    partnerEmail: String, // Dari PartnerInfo baru
+    partnerImage: String  // Dari PartnerInfo baru
+) {
+    let adminRef: &NFTMoment.Admin
+
+    prepare(deployer: auth(Storage) &Account) {
+        self.adminRef = deployer.storage.borrow<&NFTMoment.Admin>(from: NFTMoment.AdminStoragePath)
+            ?? panic("Resource @NFTMoment.Admin tidak ditemukan.")
     }
 
     execute {
-        // Create Partner resource
-        let partner <- self.admin.createPartner()
-
-        // Get the partner's account
-        let partnerAccount = getAccount(partnerAddress)
-
-        // Note: In production, you would use an Inbox or another mechanism
-        // to transfer the Partner resource to the partner account
-        // For now, this shows the pattern
-
-        // Save to admin's storage with a unique path for this partner
-        let partnerPath = StoragePath(identifier: "NFTMomentPartner_".concat(partnerAddress.toString()))!
-        acct.storage.save(<-partner, to: partnerPath)
-
-        log("Partner resource created for: ".concat(partnerAddress.toString()))
-        log("Admin should transfer this resource to the partner account")
+        // Panggil fungsi addPartner dengan data Brand
+        self.adminRef.addPartner(
+            address: partnerAddress,
+            name: partnerName,
+            description: partnerDescription,
+            email: partnerEmail,
+            image: partnerImage
+        )
+        log("Partner ".concat(partnerName).concat(" berhasil ditambahkan ke NFTMoment."))
     }
 }

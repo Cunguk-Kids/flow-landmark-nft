@@ -5,6 +5,8 @@ package ent
 import (
 	"backend/ent/event"
 	"backend/ent/eventparticipant"
+	"backend/ent/nft"
+	"backend/ent/partner"
 	"context"
 	"errors"
 	"fmt"
@@ -76,6 +78,8 @@ func checkColumn(t, c string) error {
 		columnCheck = sql.NewColumnCheck(map[string]func(string) bool{
 			event.Table:            event.ValidColumn,
 			eventparticipant.Table: eventparticipant.ValidColumn,
+			nft.Table:              nft.ValidColumn,
+			partner.Table:          partner.ValidColumn,
 		})
 	})
 	return columnCheck(t, c)

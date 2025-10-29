@@ -15,8 +15,6 @@ type Event struct {
 func (Event) Fields() []ent.Field {
 	return []ent.Field{
 		field.Int("eventId").Unique(),
-		field.String("brandAddress").
-			Default("Unknown"),
 		field.String("eventName"),
 		field.Int("quota"),
 		field.Int("counter"),
@@ -35,6 +33,11 @@ func (Event) Fields() []ent.Field {
 // Edges of the User.
 func (Event) Edges() []ent.Edge {
 	return []ent.Edge{
-		edge.To("event_id", EventParticipant.Type),
+		edge.To("participants", EventParticipant.Type),
+		edge.From("partner", Partner.Type).
+			Ref("partner_address").
+			Unique().
+			Required(),
+		edge.To("nfts", Nft.Type),
 	}
 }

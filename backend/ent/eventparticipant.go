@@ -23,9 +23,9 @@ type EventParticipant struct {
 	IsCheckedIn bool `json:"isCheckedIn,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the EventParticipantQuery when eager-loading is set.
-	Edges          EventParticipantEdges `json:"edges"`
-	event_event_id *int
-	selectValues   sql.SelectValues
+	Edges              EventParticipantEdges `json:"edges"`
+	event_participants *int
+	selectValues       sql.SelectValues
 }
 
 // EventParticipantEdges holds the relations/edges for other nodes in the graph.
@@ -59,7 +59,7 @@ func (*EventParticipant) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullInt64)
 		case eventparticipant.FieldUserAddress:
 			values[i] = new(sql.NullString)
-		case eventparticipant.ForeignKeys[0]: // event_event_id
+		case eventparticipant.ForeignKeys[0]: // event_participants
 			values[i] = new(sql.NullInt64)
 		default:
 			values[i] = new(sql.UnknownType)
@@ -96,10 +96,10 @@ func (_m *EventParticipant) assignValues(columns []string, values []any) error {
 			}
 		case eventparticipant.ForeignKeys[0]:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
-				return fmt.Errorf("unexpected type %T for edge-field event_event_id", value)
+				return fmt.Errorf("unexpected type %T for edge-field event_participants", value)
 			} else if value.Valid {
-				_m.event_event_id = new(int)
-				*_m.event_event_id = int(value.Int64)
+				_m.event_participants = new(int)
+				*_m.event_participants = int(value.Int64)
 			}
 		default:
 			_m.selectValues.Set(columns[i], values[i])

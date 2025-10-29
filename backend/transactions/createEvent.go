@@ -113,6 +113,7 @@ func CreateEvent(
 
 	// 1. SIAPKAN SIGNER (ADMIN PLATFORM)
 	privateKey := os.Getenv("PRIVATE_KEY")
+	log.Println(privateKey)
 	if privateKey == "" {
 		return fmt.Errorf("PRIVATE_KEY tidak ditemukan di environment variables")
 	}

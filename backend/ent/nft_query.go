@@ -4,7 +4,7 @@ package ent
 
 import (
 	"backend/ent/event"
-	"backend/ent/eventparticipant"
+	"backend/ent/nft"
 	"backend/ent/predicate"
 	"context"
 	"fmt"
@@ -16,13 +16,13 @@ import (
 	"entgo.io/ent/schema/field"
 )
 
-// EventParticipantQuery is the builder for querying EventParticipant entities.
-type EventParticipantQuery struct {
+// NftQuery is the builder for querying Nft entities.
+type NftQuery struct {
 	config
 	ctx        *QueryContext
-	order      []eventparticipant.OrderOption
+	order      []nft.OrderOption
 	inters     []Interceptor
-	predicates []predicate.EventParticipant
+	predicates []predicate.Nft
 	withEvent  *EventQuery
 	withFKs    bool
 	// intermediate query (i.e. traversal path).
@@ -30,39 +30,39 @@ type EventParticipantQuery struct {
 	path func(context.Context) (*sql.Selector, error)
 }
 
-// Where adds a new predicate for the EventParticipantQuery builder.
-func (_q *EventParticipantQuery) Where(ps ...predicate.EventParticipant) *EventParticipantQuery {
+// Where adds a new predicate for the NftQuery builder.
+func (_q *NftQuery) Where(ps ...predicate.Nft) *NftQuery {
 	_q.predicates = append(_q.predicates, ps...)
 	return _q
 }
 
 // Limit the number of records to be returned by this query.
-func (_q *EventParticipantQuery) Limit(limit int) *EventParticipantQuery {
+func (_q *NftQuery) Limit(limit int) *NftQuery {
 	_q.ctx.Limit = &limit
 	return _q
 }
 
 // Offset to start from.
-func (_q *EventParticipantQuery) Offset(offset int) *EventParticipantQuery {
+func (_q *NftQuery) Offset(offset int) *NftQuery {
 	_q.ctx.Offset = &offset
 	return _q
 }
 
 // Unique configures the query builder to filter duplicate records on query.
 // By default, unique is set to true, and can be disabled using this method.
-func (_q *EventParticipantQuery) Unique(unique bool) *EventParticipantQuery {
+func (_q *NftQuery) Unique(unique bool) *NftQuery {
 	_q.ctx.Unique = &unique
 	return _q
 }
 
 // Order specifies how the records should be ordered.
-func (_q *EventParticipantQuery) Order(o ...eventparticipant.OrderOption) *EventParticipantQuery {
+func (_q *NftQuery) Order(o ...nft.OrderOption) *NftQuery {
 	_q.order = append(_q.order, o...)
 	return _q
 }
 
 // QueryEvent chains the current query on the "event" edge.
-func (_q *EventParticipantQuery) QueryEvent() *EventQuery {
+func (_q *NftQuery) QueryEvent() *EventQuery {
 	query := (&EventClient{config: _q.config}).Query()
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
 		if err := _q.prepareQuery(ctx); err != nil {
@@ -73,9 +73,9 @@ func (_q *EventParticipantQuery) QueryEvent() *EventQuery {
 			return nil, err
 		}
 		step := sqlgraph.NewStep(
-			sqlgraph.From(eventparticipant.Table, eventparticipant.FieldID, selector),
+			sqlgraph.From(nft.Table, nft.FieldID, selector),
 			sqlgraph.To(event.Table, event.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, eventparticipant.EventTable, eventparticipant.EventColumn),
+			sqlgraph.Edge(sqlgraph.M2O, true, nft.EventTable, nft.EventColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
@@ -83,21 +83,21 @@ func (_q *EventParticipantQuery) QueryEvent() *EventQuery {
 	return query
 }
 
-// First returns the first EventParticipant entity from the query.
-// Returns a *NotFoundError when no EventParticipant was found.
-func (_q *EventParticipantQuery) First(ctx context.Context) (*EventParticipant, error) {
+// First returns the first Nft entity from the query.
+// Returns a *NotFoundError when no Nft was found.
+func (_q *NftQuery) First(ctx context.Context) (*Nft, error) {
 	nodes, err := _q.Limit(1).All(setContextOp(ctx, _q.ctx, ent.OpQueryFirst))
 	if err != nil {
 		return nil, err
 	}
 	if len(nodes) == 0 {
-		return nil, &NotFoundError{eventparticipant.Label}
+		return nil, &NotFoundError{nft.Label}
 	}
 	return nodes[0], nil
 }
 
 // FirstX is like First, but panics if an error occurs.
-func (_q *EventParticipantQuery) FirstX(ctx context.Context) *EventParticipant {
+func (_q *NftQuery) FirstX(ctx context.Context) *Nft {
 	node, err := _q.First(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
@@ -105,22 +105,22 @@ func (_q *EventParticipantQuery) FirstX(ctx context.Context) *EventParticipant {
 	return node
 }
 
-// FirstID returns the first EventParticipant ID from the query.
-// Returns a *NotFoundError when no EventParticipant ID was found.
-func (_q *EventParticipantQuery) FirstID(ctx context.Context) (id int, err error) {
+// FirstID returns the first Nft ID from the query.
+// Returns a *NotFoundError when no Nft ID was found.
+func (_q *NftQuery) FirstID(ctx context.Context) (id int, err error) {
 	var ids []int
 	if ids, err = _q.Limit(1).IDs(setContextOp(ctx, _q.ctx, ent.OpQueryFirstID)); err != nil {
 		return
 	}
 	if len(ids) == 0 {
-		err = &NotFoundError{eventparticipant.Label}
+		err = &NotFoundError{nft.Label}
 		return
 	}
 	return ids[0], nil
 }
 
 // FirstIDX is like FirstID, but panics if an error occurs.
-func (_q *EventParticipantQuery) FirstIDX(ctx context.Context) int {
+func (_q *NftQuery) FirstIDX(ctx context.Context) int {
 	id, err := _q.FirstID(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
@@ -128,10 +128,10 @@ func (_q *EventParticipantQuery) FirstIDX(ctx context.Context) int {
 	return id
 }
 
-// Only returns a single EventParticipant entity found by the query, ensuring it only returns one.
-// Returns a *NotSingularError when more than one EventParticipant entity is found.
-// Returns a *NotFoundError when no EventParticipant entities are found.
-func (_q *EventParticipantQuery) Only(ctx context.Context) (*EventParticipant, error) {
+// Only returns a single Nft entity found by the query, ensuring it only returns one.
+// Returns a *NotSingularError when more than one Nft entity is found.
+// Returns a *NotFoundError when no Nft entities are found.
+func (_q *NftQuery) Only(ctx context.Context) (*Nft, error) {
 	nodes, err := _q.Limit(2).All(setContextOp(ctx, _q.ctx, ent.OpQueryOnly))
 	if err != nil {
 		return nil, err
@@ -140,14 +140,14 @@ func (_q *EventParticipantQuery) Only(ctx context.Context) (*EventParticipant, e
 	case 1:
 		return nodes[0], nil
 	case 0:
-		return nil, &NotFoundError{eventparticipant.Label}
+		return nil, &NotFoundError{nft.Label}
 	default:
-		return nil, &NotSingularError{eventparticipant.Label}
+		return nil, &NotSingularError{nft.Label}
 	}
 }
 
 // OnlyX is like Only, but panics if an error occurs.
-func (_q *EventParticipantQuery) OnlyX(ctx context.Context) *EventParticipant {
+func (_q *NftQuery) OnlyX(ctx context.Context) *Nft {
 	node, err := _q.Only(ctx)
 	if err != nil {
 		panic(err)
@@ -155,10 +155,10 @@ func (_q *EventParticipantQuery) OnlyX(ctx context.Context) *EventParticipant {
 	return node
 }
 
-// OnlyID is like Only, but returns the only EventParticipant ID in the query.
-// Returns a *NotSingularError when more than one EventParticipant ID is found.
+// OnlyID is like Only, but returns the only Nft ID in the query.
+// Returns a *NotSingularError when more than one Nft ID is found.
 // Returns a *NotFoundError when no entities are found.
-func (_q *EventParticipantQuery) OnlyID(ctx context.Context) (id int, err error) {
+func (_q *NftQuery) OnlyID(ctx context.Context) (id int, err error) {
 	var ids []int
 	if ids, err = _q.Limit(2).IDs(setContextOp(ctx, _q.ctx, ent.OpQueryOnlyID)); err != nil {
 		return
@@ -167,15 +167,15 @@ func (_q *EventParticipantQuery) OnlyID(ctx context.Context) (id int, err error)
 	case 1:
 		id = ids[0]
 	case 0:
-		err = &NotFoundError{eventparticipant.Label}
+		err = &NotFoundError{nft.Label}
 	default:
-		err = &NotSingularError{eventparticipant.Label}
+		err = &NotSingularError{nft.Label}
 	}
 	return
 }
 
 // OnlyIDX is like OnlyID, but panics if an error occurs.
-func (_q *EventParticipantQuery) OnlyIDX(ctx context.Context) int {
+func (_q *NftQuery) OnlyIDX(ctx context.Context) int {
 	id, err := _q.OnlyID(ctx)
 	if err != nil {
 		panic(err)
@@ -183,18 +183,18 @@ func (_q *EventParticipantQuery) OnlyIDX(ctx context.Context) int {
 	return id
 }
 
-// All executes the query and returns a list of EventParticipants.
-func (_q *EventParticipantQuery) All(ctx context.Context) ([]*EventParticipant, error) {
+// All executes the query and returns a list of Nfts.
+func (_q *NftQuery) All(ctx context.Context) ([]*Nft, error) {
 	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryAll)
 	if err := _q.prepareQuery(ctx); err != nil {
 		return nil, err
 	}
-	qr := querierAll[[]*EventParticipant, *EventParticipantQuery]()
-	return withInterceptors[[]*EventParticipant](ctx, _q, qr, _q.inters)
+	qr := querierAll[[]*Nft, *NftQuery]()
+	return withInterceptors[[]*Nft](ctx, _q, qr, _q.inters)
 }
 
 // AllX is like All, but panics if an error occurs.
-func (_q *EventParticipantQuery) AllX(ctx context.Context) []*EventParticipant {
+func (_q *NftQuery) AllX(ctx context.Context) []*Nft {
 	nodes, err := _q.All(ctx)
 	if err != nil {
 		panic(err)
@@ -202,20 +202,20 @@ func (_q *EventParticipantQuery) AllX(ctx context.Context) []*EventParticipant {
 	return nodes
 }
 
-// IDs executes the query and returns a list of EventParticipant IDs.
-func (_q *EventParticipantQuery) IDs(ctx context.Context) (ids []int, err error) {
+// IDs executes the query and returns a list of Nft IDs.
+func (_q *NftQuery) IDs(ctx context.Context) (ids []int, err error) {
 	if _q.ctx.Unique == nil && _q.path != nil {
 		_q.Unique(true)
 	}
 	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryIDs)
-	if err = _q.Select(eventparticipant.FieldID).Scan(ctx, &ids); err != nil {
+	if err = _q.Select(nft.FieldID).Scan(ctx, &ids); err != nil {
 		return nil, err
 	}
 	return ids, nil
 }
 
 // IDsX is like IDs, but panics if an error occurs.
-func (_q *EventParticipantQuery) IDsX(ctx context.Context) []int {
+func (_q *NftQuery) IDsX(ctx context.Context) []int {
 	ids, err := _q.IDs(ctx)
 	if err != nil {
 		panic(err)
@@ -224,16 +224,16 @@ func (_q *EventParticipantQuery) IDsX(ctx context.Context) []int {
 }
 
 // Count returns the count of the given query.
-func (_q *EventParticipantQuery) Count(ctx context.Context) (int, error) {
+func (_q *NftQuery) Count(ctx context.Context) (int, error) {
 	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryCount)
 	if err := _q.prepareQuery(ctx); err != nil {
 		return 0, err
 	}
-	return withInterceptors[int](ctx, _q, querierCount[*EventParticipantQuery](), _q.inters)
+	return withInterceptors[int](ctx, _q, querierCount[*NftQuery](), _q.inters)
 }
 
 // CountX is like Count, but panics if an error occurs.
-func (_q *EventParticipantQuery) CountX(ctx context.Context) int {
+func (_q *NftQuery) CountX(ctx context.Context) int {
 	count, err := _q.Count(ctx)
 	if err != nil {
 		panic(err)
@@ -242,7 +242,7 @@ func (_q *EventParticipantQuery) CountX(ctx context.Context) int {
 }
 
 // Exist returns true if the query has elements in the graph.
-func (_q *EventParticipantQuery) Exist(ctx context.Context) (bool, error) {
+func (_q *NftQuery) Exist(ctx context.Context) (bool, error) {
 	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryExist)
 	switch _, err := _q.FirstID(ctx); {
 	case IsNotFound(err):
@@ -255,7 +255,7 @@ func (_q *EventParticipantQuery) Exist(ctx context.Context) (bool, error) {
 }
 
 // ExistX is like Exist, but panics if an error occurs.
-func (_q *EventParticipantQuery) ExistX(ctx context.Context) bool {
+func (_q *NftQuery) ExistX(ctx context.Context) bool {
 	exist, err := _q.Exist(ctx)
 	if err != nil {
 		panic(err)
@@ -263,18 +263,18 @@ func (_q *EventParticipantQuery) ExistX(ctx context.Context) bool {
 	return exist
 }
 
-// Clone returns a duplicate of the EventParticipantQuery builder, including all associated steps. It can be
+// Clone returns a duplicate of the NftQuery builder, including all associated steps. It can be
 // used to prepare common query builders and use them differently after the clone is made.
-func (_q *EventParticipantQuery) Clone() *EventParticipantQuery {
+func (_q *NftQuery) Clone() *NftQuery {
 	if _q == nil {
 		return nil
 	}
-	return &EventParticipantQuery{
+	return &NftQuery{
 		config:     _q.config,
 		ctx:        _q.ctx.Clone(),
-		order:      append([]eventparticipant.OrderOption{}, _q.order...),
+		order:      append([]nft.OrderOption{}, _q.order...),
 		inters:     append([]Interceptor{}, _q.inters...),
-		predicates: append([]predicate.EventParticipant{}, _q.predicates...),
+		predicates: append([]predicate.Nft{}, _q.predicates...),
 		withEvent:  _q.withEvent.Clone(),
 		// clone intermediate query.
 		sql:  _q.sql.Clone(),
@@ -284,7 +284,7 @@ func (_q *EventParticipantQuery) Clone() *EventParticipantQuery {
 
 // WithEvent tells the query-builder to eager-load the nodes that are connected to
 // the "event" edge. The optional arguments are used to configure the query builder of the edge.
-func (_q *EventParticipantQuery) WithEvent(opts ...func(*EventQuery)) *EventParticipantQuery {
+func (_q *NftQuery) WithEvent(opts ...func(*EventQuery)) *NftQuery {
 	query := (&EventClient{config: _q.config}).Query()
 	for _, opt := range opts {
 		opt(query)
@@ -299,19 +299,19 @@ func (_q *EventParticipantQuery) WithEvent(opts ...func(*EventQuery)) *EventPart
 // Example:
 //
 //	var v []struct {
-//		UserAddress string `json:"userAddress,omitempty"`
+//		NftID int64 `json:"nft_id,omitempty"`
 //		Count int `json:"count,omitempty"`
 //	}
 //
-//	client.EventParticipant.Query().
-//		GroupBy(eventparticipant.FieldUserAddress).
+//	client.Nft.Query().
+//		GroupBy(nft.FieldNftID).
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
-func (_q *EventParticipantQuery) GroupBy(field string, fields ...string) *EventParticipantGroupBy {
+func (_q *NftQuery) GroupBy(field string, fields ...string) *NftGroupBy {
 	_q.ctx.Fields = append([]string{field}, fields...)
-	grbuild := &EventParticipantGroupBy{build: _q}
+	grbuild := &NftGroupBy{build: _q}
 	grbuild.flds = &_q.ctx.Fields
-	grbuild.label = eventparticipant.Label
+	grbuild.label = nft.Label
 	grbuild.scan = grbuild.Scan
 	return grbuild
 }
@@ -322,26 +322,26 @@ func (_q *EventParticipantQuery) GroupBy(field string, fields ...string) *EventP
 // Example:
 //
 //	var v []struct {
-//		UserAddress string `json:"userAddress,omitempty"`
+//		NftID int64 `json:"nft_id,omitempty"`
 //	}
 //
-//	client.EventParticipant.Query().
-//		Select(eventparticipant.FieldUserAddress).
+//	client.Nft.Query().
+//		Select(nft.FieldNftID).
 //		Scan(ctx, &v)
-func (_q *EventParticipantQuery) Select(fields ...string) *EventParticipantSelect {
+func (_q *NftQuery) Select(fields ...string) *NftSelect {
 	_q.ctx.Fields = append(_q.ctx.Fields, fields...)
-	sbuild := &EventParticipantSelect{EventParticipantQuery: _q}
-	sbuild.label = eventparticipant.Label
+	sbuild := &NftSelect{NftQuery: _q}
+	sbuild.label = nft.Label
 	sbuild.flds, sbuild.scan = &_q.ctx.Fields, sbuild.Scan
 	return sbuild
 }
 
-// Aggregate returns a EventParticipantSelect configured with the given aggregations.
-func (_q *EventParticipantQuery) Aggregate(fns ...AggregateFunc) *EventParticipantSelect {
+// Aggregate returns a NftSelect configured with the given aggregations.
+func (_q *NftQuery) Aggregate(fns ...AggregateFunc) *NftSelect {
 	return _q.Select().Aggregate(fns...)
 }
 
-func (_q *EventParticipantQuery) prepareQuery(ctx context.Context) error {
+func (_q *NftQuery) prepareQuery(ctx context.Context) error {
 	for _, inter := range _q.inters {
 		if inter == nil {
 			return fmt.Errorf("ent: uninitialized interceptor (forgotten import ent/runtime?)")
@@ -353,7 +353,7 @@ func (_q *EventParticipantQuery) prepareQuery(ctx context.Context) error {
 		}
 	}
 	for _, f := range _q.ctx.Fields {
-		if !eventparticipant.ValidColumn(f) {
+		if !nft.ValidColumn(f) {
 			return &ValidationError{Name: f, err: fmt.Errorf("ent: invalid field %q for query", f)}
 		}
 	}
@@ -367,9 +367,9 @@ func (_q *EventParticipantQuery) prepareQuery(ctx context.Context) error {
 	return nil
 }
 
-func (_q *EventParticipantQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*EventParticipant, error) {
+func (_q *NftQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Nft, error) {
 	var (
-		nodes       = []*EventParticipant{}
+		nodes       = []*Nft{}
 		withFKs     = _q.withFKs
 		_spec       = _q.querySpec()
 		loadedTypes = [1]bool{
@@ -380,13 +380,13 @@ func (_q *EventParticipantQuery) sqlAll(ctx context.Context, hooks ...queryHook)
 		withFKs = true
 	}
 	if withFKs {
-		_spec.Node.Columns = append(_spec.Node.Columns, eventparticipant.ForeignKeys...)
+		_spec.Node.Columns = append(_spec.Node.Columns, nft.ForeignKeys...)
 	}
 	_spec.ScanValues = func(columns []string) ([]any, error) {
-		return (*EventParticipant).scanValues(nil, columns)
+		return (*Nft).scanValues(nil, columns)
 	}
 	_spec.Assign = func(columns []string, values []any) error {
-		node := &EventParticipant{config: _q.config}
+		node := &Nft{config: _q.config}
 		nodes = append(nodes, node)
 		node.Edges.loadedTypes = loadedTypes
 		return node.assignValues(columns, values)
@@ -402,21 +402,21 @@ func (_q *EventParticipantQuery) sqlAll(ctx context.Context, hooks ...queryHook)
 	}
 	if query := _q.withEvent; query != nil {
 		if err := _q.loadEvent(ctx, query, nodes, nil,
-			func(n *EventParticipant, e *Event) { n.Edges.Event = e }); err != nil {
+			func(n *Nft, e *Event) { n.Edges.Event = e }); err != nil {
 			return nil, err
 		}
 	}
 	return nodes, nil
 }
 
-func (_q *EventParticipantQuery) loadEvent(ctx context.Context, query *EventQuery, nodes []*EventParticipant, init func(*EventParticipant), assign func(*EventParticipant, *Event)) error {
+func (_q *NftQuery) loadEvent(ctx context.Context, query *EventQuery, nodes []*Nft, init func(*Nft), assign func(*Nft, *Event)) error {
 	ids := make([]int, 0, len(nodes))
-	nodeids := make(map[int][]*EventParticipant)
+	nodeids := make(map[int][]*Nft)
 	for i := range nodes {
-		if nodes[i].event_participants == nil {
+		if nodes[i].event_nfts == nil {
 			continue
 		}
-		fk := *nodes[i].event_participants
+		fk := *nodes[i].event_nfts
 		if _, ok := nodeids[fk]; !ok {
 			ids = append(ids, fk)
 		}
@@ -433,7 +433,7 @@ func (_q *EventParticipantQuery) loadEvent(ctx context.Context, query *EventQuer
 	for _, n := range neighbors {
 		nodes, ok := nodeids[n.ID]
 		if !ok {
-			return fmt.Errorf(`unexpected foreign-key "event_participants" returned %v`, n.ID)
+			return fmt.Errorf(`unexpected foreign-key "event_nfts" returned %v`, n.ID)
 		}
 		for i := range nodes {
 			assign(nodes[i], n)
@@ -442,7 +442,7 @@ func (_q *EventParticipantQuery) loadEvent(ctx context.Context, query *EventQuer
 	return nil
 }
 
-func (_q *EventParticipantQuery) sqlCount(ctx context.Context) (int, error) {
+func (_q *NftQuery) sqlCount(ctx context.Context) (int, error) {
 	_spec := _q.querySpec()
 	_spec.Node.Columns = _q.ctx.Fields
 	if len(_q.ctx.Fields) > 0 {
@@ -451,8 +451,8 @@ func (_q *EventParticipantQuery) sqlCount(ctx context.Context) (int, error) {
 	return sqlgraph.CountNodes(ctx, _q.driver, _spec)
 }
 
-func (_q *EventParticipantQuery) querySpec() *sqlgraph.QuerySpec {
-	_spec := sqlgraph.NewQuerySpec(eventparticipant.Table, eventparticipant.Columns, sqlgraph.NewFieldSpec(eventparticipant.FieldID, field.TypeInt))
+func (_q *NftQuery) querySpec() *sqlgraph.QuerySpec {
+	_spec := sqlgraph.NewQuerySpec(nft.Table, nft.Columns, sqlgraph.NewFieldSpec(nft.FieldID, field.TypeInt))
 	_spec.From = _q.sql
 	if unique := _q.ctx.Unique; unique != nil {
 		_spec.Unique = *unique
@@ -461,9 +461,9 @@ func (_q *EventParticipantQuery) querySpec() *sqlgraph.QuerySpec {
 	}
 	if fields := _q.ctx.Fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
-		_spec.Node.Columns = append(_spec.Node.Columns, eventparticipant.FieldID)
+		_spec.Node.Columns = append(_spec.Node.Columns, nft.FieldID)
 		for i := range fields {
-			if fields[i] != eventparticipant.FieldID {
+			if fields[i] != nft.FieldID {
 				_spec.Node.Columns = append(_spec.Node.Columns, fields[i])
 			}
 		}
@@ -491,12 +491,12 @@ func (_q *EventParticipantQuery) querySpec() *sqlgraph.QuerySpec {
 	return _spec
 }
 
-func (_q *EventParticipantQuery) sqlQuery(ctx context.Context) *sql.Selector {
+func (_q *NftQuery) sqlQuery(ctx context.Context) *sql.Selector {
 	builder := sql.Dialect(_q.driver.Dialect())
-	t1 := builder.Table(eventparticipant.Table)
+	t1 := builder.Table(nft.Table)
 	columns := _q.ctx.Fields
 	if len(columns) == 0 {
-		columns = eventparticipant.Columns
+		columns = nft.Columns
 	}
 	selector := builder.Select(t1.Columns(columns...)...).From(t1)
 	if _q.sql != nil {
@@ -523,28 +523,28 @@ func (_q *EventParticipantQuery) sqlQuery(ctx context.Context) *sql.Selector {
 	return selector
 }
 
-// EventParticipantGroupBy is the group-by builder for EventParticipant entities.
-type EventParticipantGroupBy struct {
+// NftGroupBy is the group-by builder for Nft entities.
+type NftGroupBy struct {
 	selector
-	build *EventParticipantQuery
+	build *NftQuery
 }
 
 // Aggregate adds the given aggregation functions to the group-by query.
-func (_g *EventParticipantGroupBy) Aggregate(fns ...AggregateFunc) *EventParticipantGroupBy {
+func (_g *NftGroupBy) Aggregate(fns ...AggregateFunc) *NftGroupBy {
 	_g.fns = append(_g.fns, fns...)
 	return _g
 }
 
 // Scan applies the selector query and scans the result into the given value.
-func (_g *EventParticipantGroupBy) Scan(ctx context.Context, v any) error {
+func (_g *NftGroupBy) Scan(ctx context.Context, v any) error {
 	ctx = setContextOp(ctx, _g.build.ctx, ent.OpQueryGroupBy)
 	if err := _g.build.prepareQuery(ctx); err != nil {
 		return err
 	}
-	return scanWithInterceptors[*EventParticipantQuery, *EventParticipantGroupBy](ctx, _g.build, _g, _g.build.inters, v)
+	return scanWithInterceptors[*NftQuery, *NftGroupBy](ctx, _g.build, _g, _g.build.inters, v)
 }
 
-func (_g *EventParticipantGroupBy) sqlScan(ctx context.Context, root *EventParticipantQuery, v any) error {
+func (_g *NftGroupBy) sqlScan(ctx context.Context, root *NftQuery, v any) error {
 	selector := root.sqlQuery(ctx).Select()
 	aggregation := make([]string, 0, len(_g.fns))
 	for _, fn := range _g.fns {
@@ -571,28 +571,28 @@ func (_g *EventParticipantGroupBy) sqlScan(ctx context.Context, root *EventParti
 	return sql.ScanSlice(rows, v)
 }
 
-// EventParticipantSelect is the builder for selecting fields of EventParticipant entities.
-type EventParticipantSelect struct {
-	*EventParticipantQuery
+// NftSelect is the builder for selecting fields of Nft entities.
+type NftSelect struct {
+	*NftQuery
 	selector
 }
 
 // Aggregate adds the given aggregation functions to the selector query.
-func (_s *EventParticipantSelect) Aggregate(fns ...AggregateFunc) *EventParticipantSelect {
+func (_s *NftSelect) Aggregate(fns ...AggregateFunc) *NftSelect {
 	_s.fns = append(_s.fns, fns...)
 	return _s
 }
 
 // Scan applies the selector query and scans the result into the given value.
-func (_s *EventParticipantSelect) Scan(ctx context.Context, v any) error {
+func (_s *NftSelect) Scan(ctx context.Context, v any) error {
 	ctx = setContextOp(ctx, _s.ctx, ent.OpQuerySelect)
 	if err := _s.prepareQuery(ctx); err != nil {
 		return err
 	}
-	return scanWithInterceptors[*EventParticipantQuery, *EventParticipantSelect](ctx, _s.EventParticipantQuery, _s, _s.inters, v)
+	return scanWithInterceptors[*NftQuery, *NftSelect](ctx, _s.NftQuery, _s, _s.inters, v)
 }
 
-func (_s *EventParticipantSelect) sqlScan(ctx context.Context, root *EventParticipantQuery, v any) error {
+func (_s *NftSelect) sqlScan(ctx context.Context, root *NftQuery, v any) error {
 	selector := root.sqlQuery(ctx)
 	aggregation := make([]string, 0, len(_s.fns))
 	for _, fn := range _s.fns {

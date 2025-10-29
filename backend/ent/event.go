@@ -4,6 +4,7 @@ package ent
 
 import (
 	"backend/ent/event"
+	"backend/ent/partner"
 	"fmt"
 	"strings"
 
@@ -18,8 +19,6 @@ type Event struct {
 	ID int `json:"id,omitempty"`
 	// EventId holds the value of the "eventId" field.
 	EventId int `json:"eventId,omitempty"`
-	// BrandAddress holds the value of the "brandAddress" field.
-	BrandAddress string `json:"brandAddress,omitempty"`
 	// EventName holds the value of the "eventName" field.
 	EventName string `json:"eventName,omitempty"`
 	// Quota holds the value of the "quota" field.
@@ -46,26 +45,51 @@ type Event struct {
 	TotalRareNFT int `json:"totalRareNFT,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the EventQuery when eager-loading is set.
-	Edges        EventEdges `json:"edges"`
-	selectValues sql.SelectValues
+	Edges                   EventEdges `json:"edges"`
+	partner_partner_address *int
+	selectValues            sql.SelectValues
 }
 
 // EventEdges holds the relations/edges for other nodes in the graph.
 type EventEdges struct {
-	// EventID holds the value of the event_id edge.
-	EventID []*EventParticipant `json:"event_id,omitempty"`
+	// Participants holds the value of the participants edge.
+	Participants []*EventParticipant `json:"participants,omitempty"`
+	// Partner holds the value of the partner edge.
+	Partner *Partner `json:"partner,omitempty"`
+	// Nfts holds the value of the nfts edge.
+	Nfts []*Nft `json:"nfts,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [1]bool
+	loadedTypes [3]bool
 }
 
-// EventIDOrErr returns the EventID value or an error if the edge
+// ParticipantsOrErr returns the Participants value or an error if the edge
 // was not loaded in eager-loading.
-func (e EventEdges) EventIDOrErr() ([]*EventParticipant, error) {
+func (e EventEdges) ParticipantsOrErr() ([]*EventParticipant, error) {
 	if e.loadedTypes[0] {
-		return e.EventID, nil
+		return e.Participants, nil
 	}
-	return nil, &NotLoadedError{edge: "event_id"}
+	return nil, &NotLoadedError{edge: "participants"}
+}
+
+// PartnerOrErr returns the Partner value or an error if the edge
+// was not loaded in eager-loading, or loaded but was not found.
+func (e EventEdges) PartnerOrErr() (*Partner, error) {
+	if e.Partner != nil {
+		return e.Partner, nil
+	} else if e.loadedTypes[1] {
+		return nil, &NotFoundError{label: partner.Label}
+	}
+	return nil, &NotLoadedError{edge: "partner"}
+}
+
+// NftsOrErr returns the Nfts value or an error if the edge
+// was not loaded in eager-loading.
+func (e EventEdges) NftsOrErr() ([]*Nft, error) {
+	if e.loadedTypes[2] {
+		return e.Nfts, nil
+	}
+	return nil, &NotLoadedError{edge: "nfts"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -77,8 +101,10 @@ func (*Event) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullFloat64)
 		case event.FieldID, event.FieldEventId, event.FieldQuota, event.FieldCounter, event.FieldStatus, event.FieldTotalRareNFT:
 			values[i] = new(sql.NullInt64)
-		case event.FieldBrandAddress, event.FieldEventName, event.FieldDescription, event.FieldImage:
+		case event.FieldEventName, event.FieldDescription, event.FieldImage:
 			values[i] = new(sql.NullString)
+		case event.ForeignKeys[0]: // partner_partner_address
+			values[i] = new(sql.NullInt64)
 		default:
 			values[i] = new(sql.UnknownType)
 		}
@@ -105,12 +131,6 @@ func (_m *Event) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field eventId", values[i])
 			} else if value.Valid {
 				_m.EventId = int(value.Int64)
-			}
-		case event.FieldBrandAddress:
-			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field brandAddress", values[i])
-			} else if value.Valid {
-				_m.BrandAddress = value.String
 			}
 		case event.FieldEventName:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -184,6 +204,13 @@ func (_m *Event) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				_m.TotalRareNFT = int(value.Int64)
 			}
+		case event.ForeignKeys[0]:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for edge-field partner_partner_address", value)
+			} else if value.Valid {
+				_m.partner_partner_address = new(int)
+				*_m.partner_partner_address = int(value.Int64)
+			}
 		default:
 			_m.selectValues.Set(columns[i], values[i])
 		}
@@ -197,9 +224,19 @@ func (_m *Event) Value(name string) (ent.Value, error) {
 	return _m.selectValues.Get(name)
 }
 
-// QueryEventID queries the "event_id" edge of the Event entity.
-func (_m *Event) QueryEventID() *EventParticipantQuery {
-	return NewEventClient(_m.config).QueryEventID(_m)
+// QueryParticipants queries the "participants" edge of the Event entity.
+func (_m *Event) QueryParticipants() *EventParticipantQuery {
+	return NewEventClient(_m.config).QueryParticipants(_m)
+}
+
+// QueryPartner queries the "partner" edge of the Event entity.
+func (_m *Event) QueryPartner() *PartnerQuery {
+	return NewEventClient(_m.config).QueryPartner(_m)
+}
+
+// QueryNfts queries the "nfts" edge of the Event entity.
+func (_m *Event) QueryNfts() *NftQuery {
+	return NewEventClient(_m.config).QueryNfts(_m)
 }
 
 // Update returns a builder for updating this Event.
@@ -227,9 +264,6 @@ func (_m *Event) String() string {
 	builder.WriteString(fmt.Sprintf("id=%v, ", _m.ID))
 	builder.WriteString("eventId=")
 	builder.WriteString(fmt.Sprintf("%v", _m.EventId))
-	builder.WriteString(", ")
-	builder.WriteString("brandAddress=")
-	builder.WriteString(_m.BrandAddress)
 	builder.WriteString(", ")
 	builder.WriteString("eventName=")
 	builder.WriteString(_m.EventName)

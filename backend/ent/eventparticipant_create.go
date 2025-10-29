@@ -163,7 +163,7 @@ func (_c *EventParticipantCreate) createSpec() (*EventParticipant, *sqlgraph.Cre
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
-		_node.event_event_id = &nodes[0]
+		_node.event_participants = &nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec
