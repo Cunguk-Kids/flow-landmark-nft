@@ -5,6 +5,8 @@ package ent
 import (
 	"backend/ent/event"
 	"backend/ent/eventparticipant"
+	"backend/ent/nft"
+	"backend/ent/partner"
 	"context"
 	"errors"
 	"fmt"
@@ -23,20 +25,6 @@ type EventCreate struct {
 // SetEventId sets the "eventId" field.
 func (_c *EventCreate) SetEventId(v int) *EventCreate {
 	_c.mutation.SetEventId(v)
-	return _c
-}
-
-// SetBrandAddress sets the "brandAddress" field.
-func (_c *EventCreate) SetBrandAddress(v string) *EventCreate {
-	_c.mutation.SetBrandAddress(v)
-	return _c
-}
-
-// SetNillableBrandAddress sets the "brandAddress" field if the given value is not nil.
-func (_c *EventCreate) SetNillableBrandAddress(v *string) *EventCreate {
-	if v != nil {
-		_c.SetBrandAddress(*v)
-	}
 	return _c
 }
 
@@ -112,19 +100,45 @@ func (_c *EventCreate) SetTotalRareNFT(v int) *EventCreate {
 	return _c
 }
 
-// AddEventIDIDs adds the "event_id" edge to the EventParticipant entity by IDs.
-func (_c *EventCreate) AddEventIDIDs(ids ...int) *EventCreate {
-	_c.mutation.AddEventIDIDs(ids...)
+// AddParticipantIDs adds the "participants" edge to the EventParticipant entity by IDs.
+func (_c *EventCreate) AddParticipantIDs(ids ...int) *EventCreate {
+	_c.mutation.AddParticipantIDs(ids...)
 	return _c
 }
 
-// AddEventID adds the "event_id" edges to the EventParticipant entity.
-func (_c *EventCreate) AddEventID(v ...*EventParticipant) *EventCreate {
+// AddParticipants adds the "participants" edges to the EventParticipant entity.
+func (_c *EventCreate) AddParticipants(v ...*EventParticipant) *EventCreate {
 	ids := make([]int, len(v))
 	for i := range v {
 		ids[i] = v[i].ID
 	}
-	return _c.AddEventIDIDs(ids...)
+	return _c.AddParticipantIDs(ids...)
+}
+
+// SetPartnerID sets the "partner" edge to the Partner entity by ID.
+func (_c *EventCreate) SetPartnerID(id int) *EventCreate {
+	_c.mutation.SetPartnerID(id)
+	return _c
+}
+
+// SetPartner sets the "partner" edge to the Partner entity.
+func (_c *EventCreate) SetPartner(v *Partner) *EventCreate {
+	return _c.SetPartnerID(v.ID)
+}
+
+// AddNftIDs adds the "nfts" edge to the Nft entity by IDs.
+func (_c *EventCreate) AddNftIDs(ids ...int) *EventCreate {
+	_c.mutation.AddNftIDs(ids...)
+	return _c
+}
+
+// AddNfts adds the "nfts" edges to the Nft entity.
+func (_c *EventCreate) AddNfts(v ...*Nft) *EventCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddNftIDs(ids...)
 }
 
 // Mutation returns the EventMutation object of the builder.
@@ -134,7 +148,6 @@ func (_c *EventCreate) Mutation() *EventMutation {
 
 // Save creates the Event in the database.
 func (_c *EventCreate) Save(ctx context.Context) (*Event, error) {
-	_c.defaults()
 	return withHooks(ctx, _c.sqlSave, _c.mutation, _c.hooks)
 }
 
@@ -160,21 +173,10 @@ func (_c *EventCreate) ExecX(ctx context.Context) {
 	}
 }
 
-// defaults sets the default values of the builder before save.
-func (_c *EventCreate) defaults() {
-	if _, ok := _c.mutation.BrandAddress(); !ok {
-		v := event.DefaultBrandAddress
-		_c.mutation.SetBrandAddress(v)
-	}
-}
-
 // check runs all checks and user-defined validators on the builder.
 func (_c *EventCreate) check() error {
 	if _, ok := _c.mutation.EventId(); !ok {
 		return &ValidationError{Name: "eventId", err: errors.New(`ent: missing required field "Event.eventId"`)}
-	}
-	if _, ok := _c.mutation.BrandAddress(); !ok {
-		return &ValidationError{Name: "brandAddress", err: errors.New(`ent: missing required field "Event.brandAddress"`)}
 	}
 	if _, ok := _c.mutation.EventName(); !ok {
 		return &ValidationError{Name: "eventName", err: errors.New(`ent: missing required field "Event.eventName"`)}
@@ -212,6 +214,9 @@ func (_c *EventCreate) check() error {
 	if _, ok := _c.mutation.TotalRareNFT(); !ok {
 		return &ValidationError{Name: "totalRareNFT", err: errors.New(`ent: missing required field "Event.totalRareNFT"`)}
 	}
+	if len(_c.mutation.PartnerIDs()) == 0 {
+		return &ValidationError{Name: "partner", err: errors.New(`ent: missing required edge "Event.partner"`)}
+	}
 	return nil
 }
 
@@ -241,10 +246,6 @@ func (_c *EventCreate) createSpec() (*Event, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.EventId(); ok {
 		_spec.SetField(event.FieldEventId, field.TypeInt, value)
 		_node.EventId = value
-	}
-	if value, ok := _c.mutation.BrandAddress(); ok {
-		_spec.SetField(event.FieldBrandAddress, field.TypeString, value)
-		_node.BrandAddress = value
 	}
 	if value, ok := _c.mutation.EventName(); ok {
 		_spec.SetField(event.FieldEventName, field.TypeString, value)
@@ -294,15 +295,48 @@ func (_c *EventCreate) createSpec() (*Event, *sqlgraph.CreateSpec) {
 		_spec.SetField(event.FieldTotalRareNFT, field.TypeInt, value)
 		_node.TotalRareNFT = value
 	}
-	if nodes := _c.mutation.EventIDIDs(); len(nodes) > 0 {
+	if nodes := _c.mutation.ParticipantsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   event.EventIDTable,
-			Columns: []string{event.EventIDColumn},
+			Table:   event.ParticipantsTable,
+			Columns: []string{event.ParticipantsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(eventparticipant.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.PartnerIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   event.PartnerTable,
+			Columns: []string{event.PartnerColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(partner.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_node.partner_partner_address = &nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.NftsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   event.NftsTable,
+			Columns: []string{event.NftsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(nft.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -331,7 +365,6 @@ func (_c *EventCreateBulk) Save(ctx context.Context) ([]*Event, error) {
 	for i := range _c.builders {
 		func(i int, root context.Context) {
 			builder := _c.builders[i]
-			builder.defaults()
 			var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
 				mutation, ok := m.(*EventMutation)
 				if !ok {

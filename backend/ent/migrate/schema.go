@@ -12,7 +12,6 @@ var (
 	EventsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
 		{Name: "event_id", Type: field.TypeInt, Unique: true},
-		{Name: "brand_address", Type: field.TypeString, Default: "Unknown"},
 		{Name: "event_name", Type: field.TypeString},
 		{Name: "quota", Type: field.TypeInt},
 		{Name: "counter", Type: field.TypeInt},
@@ -25,19 +24,28 @@ var (
 		{Name: "start_date", Type: field.TypeFloat64},
 		{Name: "end_date", Type: field.TypeFloat64},
 		{Name: "total_rare_nft", Type: field.TypeInt},
+		{Name: "partner_partner_address", Type: field.TypeInt},
 	}
 	// EventsTable holds the schema information for the "events" table.
 	EventsTable = &schema.Table{
 		Name:       "events",
 		Columns:    EventsColumns,
 		PrimaryKey: []*schema.Column{EventsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "events_partners_partner_address",
+				Columns:    []*schema.Column{EventsColumns[14]},
+				RefColumns: []*schema.Column{PartnersColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
 	}
 	// EventParticipantsColumns holds the columns for the "event_participants" table.
 	EventParticipantsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
 		{Name: "user_address", Type: field.TypeString, Default: ""},
 		{Name: "is_checked_in", Type: field.TypeBool, Default: false},
-		{Name: "event_event_id", Type: field.TypeInt},
+		{Name: "event_participants", Type: field.TypeInt},
 	}
 	// EventParticipantsTable holds the schema information for the "event_participants" table.
 	EventParticipantsTable = &schema.Table{
@@ -46,20 +54,63 @@ var (
 		PrimaryKey: []*schema.Column{EventParticipantsColumns[0]},
 		ForeignKeys: []*schema.ForeignKey{
 			{
-				Symbol:     "event_participants_events_event_id",
+				Symbol:     "event_participants_events_participants",
 				Columns:    []*schema.Column{EventParticipantsColumns[3]},
 				RefColumns: []*schema.Column{EventsColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
 		},
 	}
+	// NftsColumns holds the columns for the "nfts" table.
+	NftsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "nft_id", Type: field.TypeInt64, Unique: true},
+		{Name: "metadata", Type: field.TypeJSON},
+		{Name: "owner_address", Type: field.TypeString},
+		{Name: "mint_time", Type: field.TypeTime},
+		{Name: "rarity", Type: field.TypeString},
+		{Name: "event_nfts", Type: field.TypeInt},
+	}
+	// NftsTable holds the schema information for the "nfts" table.
+	NftsTable = &schema.Table{
+		Name:       "nfts",
+		Columns:    NftsColumns,
+		PrimaryKey: []*schema.Column{NftsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "nfts_events_nfts",
+				Columns:    []*schema.Column{NftsColumns[6]},
+				RefColumns: []*schema.Column{EventsColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+	}
+	// PartnersColumns holds the columns for the "partners" table.
+	PartnersColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "address", Type: field.TypeString, Unique: true},
+		{Name: "name", Type: field.TypeString, Default: ""},
+		{Name: "description", Type: field.TypeString, Default: ""},
+		{Name: "email", Type: field.TypeString, Default: ""},
+		{Name: "image", Type: field.TypeString, Default: ""},
+	}
+	// PartnersTable holds the schema information for the "partners" table.
+	PartnersTable = &schema.Table{
+		Name:       "partners",
+		Columns:    PartnersColumns,
+		PrimaryKey: []*schema.Column{PartnersColumns[0]},
+	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
 		EventsTable,
 		EventParticipantsTable,
+		NftsTable,
+		PartnersTable,
 	}
 )
 
 func init() {
+	EventsTable.ForeignKeys[0].RefTable = PartnersTable
 	EventParticipantsTable.ForeignKeys[0].RefTable = EventsTable
+	NftsTable.ForeignKeys[0].RefTable = EventsTable
 }

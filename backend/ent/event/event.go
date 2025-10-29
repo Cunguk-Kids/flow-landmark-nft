@@ -14,8 +14,6 @@ const (
 	FieldID = "id"
 	// FieldEventId holds the string denoting the eventid field in the database.
 	FieldEventId = "event_id"
-	// FieldBrandAddress holds the string denoting the brandaddress field in the database.
-	FieldBrandAddress = "brand_address"
 	// FieldEventName holds the string denoting the eventname field in the database.
 	FieldEventName = "event_name"
 	// FieldQuota holds the string denoting the quota field in the database.
@@ -40,24 +38,41 @@ const (
 	FieldEndDate = "end_date"
 	// FieldTotalRareNFT holds the string denoting the totalrarenft field in the database.
 	FieldTotalRareNFT = "total_rare_nft"
-	// EdgeEventID holds the string denoting the event_id edge name in mutations.
-	EdgeEventID = "event_id"
+	// EdgeParticipants holds the string denoting the participants edge name in mutations.
+	EdgeParticipants = "participants"
+	// EdgePartner holds the string denoting the partner edge name in mutations.
+	EdgePartner = "partner"
+	// EdgeNfts holds the string denoting the nfts edge name in mutations.
+	EdgeNfts = "nfts"
 	// Table holds the table name of the event in the database.
 	Table = "events"
-	// EventIDTable is the table that holds the event_id relation/edge.
-	EventIDTable = "event_participants"
-	// EventIDInverseTable is the table name for the EventParticipant entity.
+	// ParticipantsTable is the table that holds the participants relation/edge.
+	ParticipantsTable = "event_participants"
+	// ParticipantsInverseTable is the table name for the EventParticipant entity.
 	// It exists in this package in order to avoid circular dependency with the "eventparticipant" package.
-	EventIDInverseTable = "event_participants"
-	// EventIDColumn is the table column denoting the event_id relation/edge.
-	EventIDColumn = "event_event_id"
+	ParticipantsInverseTable = "event_participants"
+	// ParticipantsColumn is the table column denoting the participants relation/edge.
+	ParticipantsColumn = "event_participants"
+	// PartnerTable is the table that holds the partner relation/edge.
+	PartnerTable = "events"
+	// PartnerInverseTable is the table name for the Partner entity.
+	// It exists in this package in order to avoid circular dependency with the "partner" package.
+	PartnerInverseTable = "partners"
+	// PartnerColumn is the table column denoting the partner relation/edge.
+	PartnerColumn = "partner_partner_address"
+	// NftsTable is the table that holds the nfts relation/edge.
+	NftsTable = "nfts"
+	// NftsInverseTable is the table name for the Nft entity.
+	// It exists in this package in order to avoid circular dependency with the "nft" package.
+	NftsInverseTable = "nfts"
+	// NftsColumn is the table column denoting the nfts relation/edge.
+	NftsColumn = "event_nfts"
 )
 
 // Columns holds all SQL columns for event fields.
 var Columns = []string{
 	FieldID,
 	FieldEventId,
-	FieldBrandAddress,
 	FieldEventName,
 	FieldQuota,
 	FieldCounter,
@@ -72,6 +87,12 @@ var Columns = []string{
 	FieldTotalRareNFT,
 }
 
+// ForeignKeys holds the SQL foreign-keys that are owned by the "events"
+// table and are not defined as standalone fields in the schema.
+var ForeignKeys = []string{
+	"partner_partner_address",
+}
+
 // ValidColumn reports if the column name is valid (part of the table columns).
 func ValidColumn(column string) bool {
 	for i := range Columns {
@@ -79,13 +100,13 @@ func ValidColumn(column string) bool {
 			return true
 		}
 	}
+	for i := range ForeignKeys {
+		if column == ForeignKeys[i] {
+			return true
+		}
+	}
 	return false
 }
-
-var (
-	// DefaultBrandAddress holds the default value on creation for the "brandAddress" field.
-	DefaultBrandAddress string
-)
 
 // OrderOption defines the ordering options for the Event queries.
 type OrderOption func(*sql.Selector)
@@ -98,11 +119,6 @@ func ByID(opts ...sql.OrderTermOption) OrderOption {
 // ByEventId orders the results by the eventId field.
 func ByEventId(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldEventId, opts...).ToFunc()
-}
-
-// ByBrandAddress orders the results by the brandAddress field.
-func ByBrandAddress(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldBrandAddress, opts...).ToFunc()
 }
 
 // ByEventName orders the results by the eventName field.
@@ -165,23 +181,58 @@ func ByTotalRareNFT(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldTotalRareNFT, opts...).ToFunc()
 }
 
-// ByEventIDCount orders the results by event_id count.
-func ByEventIDCount(opts ...sql.OrderTermOption) OrderOption {
+// ByParticipantsCount orders the results by participants count.
+func ByParticipantsCount(opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborsCount(s, newEventIDStep(), opts...)
+		sqlgraph.OrderByNeighborsCount(s, newParticipantsStep(), opts...)
 	}
 }
 
-// ByEventID orders the results by event_id terms.
-func ByEventID(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+// ByParticipants orders the results by participants terms.
+func ByParticipants(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newEventIDStep(), append([]sql.OrderTerm{term}, terms...)...)
+		sqlgraph.OrderByNeighborTerms(s, newParticipantsStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
-func newEventIDStep() *sqlgraph.Step {
+
+// ByPartnerField orders the results by partner field.
+func ByPartnerField(field string, opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newPartnerStep(), sql.OrderByField(field, opts...))
+	}
+}
+
+// ByNftsCount orders the results by nfts count.
+func ByNftsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newNftsStep(), opts...)
+	}
+}
+
+// ByNfts orders the results by nfts terms.
+func ByNfts(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newNftsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+func newParticipantsStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(EventIDInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.O2M, false, EventIDTable, EventIDColumn),
+		sqlgraph.To(ParticipantsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, ParticipantsTable, ParticipantsColumn),
+	)
+}
+func newPartnerStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(PartnerInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2O, true, PartnerTable, PartnerColumn),
+	)
+}
+func newNftsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(NftsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, NftsTable, NftsColumn),
 	)
 }

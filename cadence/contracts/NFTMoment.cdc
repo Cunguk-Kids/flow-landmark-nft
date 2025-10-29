@@ -10,7 +10,7 @@ access(all) contract NFTMoment {
     access(all) event MomentMinted(id: UInt64, owner: Address, category: String, rarity: String, eventId: UInt64)
     access(all) event MomentUpgraded(id: UInt64, newRarity: String)
     access(all) event MomentsMerged(id1: UInt64, id2: UInt64, newId: UInt64)
-    access(all) event PartnerAdded(address: Address, name: String)
+    access(all) event PartnerAdded(address: Address, name: String, description: String, email: String, image: String)
     access(all) event AchievementUnlocked(address: Address, achievement: String)
 
     // ========================================
@@ -363,7 +363,7 @@ access(all) contract NFTMoment {
                 image: image
             )
             NFTMoment.partners[address] = partnerInfo
-            emit PartnerAdded(address: address, name: name)
+            emit PartnerAdded(address: address, name: name, description: description, email: email, image: image)
         }
 
         access(all) fun removePartner(address: Address) {

@@ -16,6 +16,10 @@ type Tx struct {
 	Event *EventClient
 	// EventParticipant is the client for interacting with the EventParticipant builders.
 	EventParticipant *EventParticipantClient
+	// Nft is the client for interacting with the Nft builders.
+	Nft *NftClient
+	// Partner is the client for interacting with the Partner builders.
+	Partner *PartnerClient
 
 	// lazily loaded.
 	client     *Client
@@ -149,6 +153,8 @@ func (tx *Tx) Client() *Client {
 func (tx *Tx) init() {
 	tx.Event = NewEventClient(tx.config)
 	tx.EventParticipant = NewEventParticipantClient(tx.config)
+	tx.Nft = NewNftClient(tx.config)
+	tx.Partner = NewPartnerClient(tx.config)
 }
 
 // txDriver wraps the given dialect.Tx with a nop dialect.Driver implementation.

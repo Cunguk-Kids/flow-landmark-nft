@@ -33,9 +33,11 @@ func getEmulatorHost() string {
 
 var (
 	EventCreated     = fmt.Sprintf("A.%s.EventPlatform.EventCreated", ContractAddress)
+	PartnerAdded     = fmt.Sprintf("A.%s.NFTMoment.PartnerAdded", ContractAddress)
 	UserRegistered   = fmt.Sprintf("A.%s.EventPlatform.UserRegistered", ContractAddress)
 	UserUnregistered = fmt.Sprintf("A.%s.EventPlatform.UserUnregistered", ContractAddress)
-	EventStatus      = fmt.Sprintf("A.%s.EventPlatform.EventStatus", ContractAddress)
+	EventStatus      = fmt.Sprintf("A.%s.EventPlatform.EventStatusUpdated", ContractAddress)
+	EventNFTMinted   = fmt.Sprintf("A.%s.EventPlatform.EventNFTMinted", ContractAddress)
 )
 
 func main() {
@@ -79,7 +81,7 @@ func main() {
 		ctx,
 		0,
 		flow.EventFilter{
-			EventTypes: []string{EventCreated, UserRegistered, UserUnregistered, EventStatus},
+			EventTypes: []string{EventCreated, UserRegistered, UserUnregistered, EventStatus, PartnerAdded, EventNFTMinted},
 		},
 	)
 	if initErr != nil {
@@ -108,6 +110,10 @@ func main() {
 					utils.ProcessEventUnregistered(ctx, ev, client)
 				case EventStatus:
 					utils.ProcessEventStatus(ctx, ev, client)
+				case PartnerAdded:
+					utils.HandlePartnerAdded(ctx, client, ev)
+				case EventNFTMinted:
+					utils.HandleEventNFTMinted(ctx, grpcClient, client, ev)
 				}
 			}
 		case err := <-errCh:

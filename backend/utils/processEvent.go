@@ -4,11 +4,13 @@ import (
 	"backend/ent"
 	"backend/ent/event"
 	"backend/ent/eventparticipant"
+	"backend/ent/partner"
 	"backend/script"
 	"context" // Dibutuhkan jika Anda akan melakukan operasi DB
 	"fmt"
 	"log"
 	"strconv"
+	"time"
 
 	"github.com/onflow/cadence"
 	"github.com/onflow/flow-go-sdk"
@@ -122,9 +124,23 @@ func ProcessEventCreated(ctx context.Context, flowClient *grpc.BaseClient, ev fl
 	endDate, _ := strconv.ParseFloat(endDateCadence.String(), 64)
 	totalRareNFT, _ := strconv.Atoi(totalRareNFTCadence.String())
 
+	partnerEntity, err := client.Partner.
+		Query().
+		Where(partner.AddressEQ(brandAddress)). // Find partner by address
+		Only(ctx)                               // Expect exactly one partner for this address
+
+	if err != nil {
+		log.Printf("[ProcessEventCreated] Gagal menemukan Partner dengan alamat %s di DB: %v", brandAddress, err)
+		// Putuskan apa yang harus dilakukan jika partner tidak ada:
+		// - return? (Batalkan penyimpanan event)
+		// - Lanjutkan tanpa set partner?
+		// Untuk sekarang, kita return:
+		return
+	}
+
 	event, err := client.Event.Create().
 		SetEventId(num).
-		SetBrandAddress(brandAddress).
+		SetPartner(partnerEntity).
 		SetEventName(eventName).
 		SetQuota(quota).
 		SetCounter(0).
@@ -307,4 +323,175 @@ func ProcessEventStatus(ctx context.Context, ev flow.Event, client *ent.Client) 
 	} else {
 		log.Printf("[DB] Status event %d berhasil diupdate menjadi %d.", eventID, status)
 	}
+}
+
+func HandlePartnerAdded(ctx context.Context, entClient *ent.Client, ev flow.Event) {
+	var Fields = ev.Value.FieldsMappedByName()
+
+	// --- 1. Parse Event Data ---
+	cadenceAddr, err := getCadenceField[cadence.Address](Fields, "address")
+	if err != nil {
+		log.Printf("[HandlePartnerAdded] Gagal parsing address: %v", err)
+		return
+	}
+	cadenceName, err := getCadenceField[cadence.String](Fields, "name")
+	if err != nil {
+		log.Printf("[HandlePartnerAdded] Gagal parsing name: %v", err)
+		return
+	}
+	cadenceDesc, _ := getCadenceField[cadence.String](Fields, "description")
+	cadenceEmail, _ := getCadenceField[cadence.String](Fields, "email")
+	cadenceImage, _ := getCadenceField[cadence.String](Fields, "image")
+
+	partnerAddress := cadenceAddr.String()
+	partnerName := cadenceName.String()   // Convert cadence.String to Go string
+	partnerDesc := cadenceDesc.String()   // Convert cadence.String to Go string
+	partnerEmail := cadenceEmail.String() // Convert cadence.String to Go string
+	partnerImage := cadenceImage.String() // Convert cadence.String to Go string
+
+	log.Printf("[HandlePartnerAdded] Diterima: Address %s, Name %s", partnerAddress, partnerName)
+
+	// --- 2. Create or Update Partner using Ent (Upsert) ---
+	// Ent's Upsert is ideal here. It tries to create, and if the unique constraint
+	// (on the 'address' field) fails, it updates instead.
+
+	err = entClient.Partner.
+		Create().
+		SetAddress(partnerAddress). // Set the unique field
+		SetName(partnerName).
+		SetDescription(partnerDesc).
+		SetEmail(partnerEmail).
+		SetImage(partnerImage). // Update all fields (except Address) with the values from Create()
+		// Or use specific updates: UpdateName()...
+		Exec(ctx) // Execute the upsert operation
+
+	// --- 3. Handle Result ---
+	if err != nil {
+		log.Printf("[HandlePartnerAdded] Gagal upsert partner %s: %v", partnerAddress, err)
+		return
+	}
+
+	log.Printf("[DB] Partner %s (%s) berhasil disimpan/diupdate.", partnerAddress, partnerName)
+}
+
+func HandleEventNFTMinted(ctx context.Context, flowClient *grpc.BaseClient, entClient *ent.Client, ev flow.Event) {
+	var Fields = ev.Value.FieldsMappedByName()
+
+	// --- 1. Parse Basic Event Data ---
+	cadenceEventID, err := getCadenceField[cadence.UInt64](Fields, "eventID")
+	if err != nil {
+		log.Printf("[HandleEventNFTMinted] Gagal parsing eventID: %v", err)
+		return
+	}
+	cadenceNftID, err := getCadenceField[cadence.UInt64](Fields, "nftID")
+	if err != nil {
+		log.Printf("[HandleEventNFTMinted] Gagal parsing nftID: %v", err)
+		return
+	}
+	cadenceUser, err := getCadenceField[cadence.Address](Fields, "user")
+	if err != nil {
+		log.Printf("[HandleEventNFTMinted] Gagal parsing user: %v", err)
+		return
+	}
+	cadenceRarity, err := getCadenceField[cadence.String](Fields, "rarity") // Rarity in event is String
+	if err != nil {
+		log.Printf("[HandleEventNFTMinted] Gagal parsing rarity: %v", err)
+		return
+	}
+
+	eventID := cadenceEventID.String()
+	nftID := cadenceNftID.String()
+	userAddress := cadenceUser.String()
+	rarityString := cadenceRarity.String() // Get string value directly
+
+	eventIDInt, _ := strconv.Atoi(eventID)
+	nftIDInt64, _ := strconv.ParseInt(nftID, 10, 64) // Convert nftID for Ent
+
+	log.Printf("[HandleEventNFTMinted] Diterima: Event %d, NFT %d, User %s, Rarity %s",
+		eventIDInt, nftIDInt64, userAddress, rarityString)
+
+	// --- 2. Fetch Full NFT Details via Script ---
+	script := []byte(script.GetNFTDetailScriptTemplate)
+	// log.Println(cadenceUser)
+	// log.Println(cadenceNftID)
+	scriptArgs := []cadence.Value{
+		cadenceUser,  // ownerAddress
+		cadenceNftID, // nftID
+	}
+
+	scriptResult, err := flowClient.ExecuteScriptAtLatestBlock(ctx, script, scriptArgs)
+	if err != nil {
+		log.Printf("[HandleEventNFTMinted] Gagal execute get_nft_details script for NFT %d: %v", nftIDInt64, err)
+		return
+	}
+	optionalResult, ok := scriptResult.(cadence.Optional)
+	if !ok || optionalResult.Value == nil {
+		log.Printf("[HandleEventNFTMinted] Script get_nft_details mengembalikan nil untuk NFT %d (mungkin sudah dibakar?)", nftIDInt64)
+		return // Cannot proceed without details
+	}
+	nftDetailsStruct, ok := optionalResult.Value.(cadence.Struct)
+	if !ok {
+		log.Printf("[HandleEventNFTMinted] Gagal parsing hasil script menjadi cadence.Struct untuk NFT %d", nftIDInt64)
+		return
+	}
+
+	// --- 3. Parse Metadata Struct from Script Result ---
+	outerMap := nftDetailsStruct.FieldsMappedByName()
+	log.Printf("[DEBUG] Outer NFTDetails Map: %+v", outerMap) // Log this map
+
+	// 2. Ambil nilai 'metadata' dari map luar (ini adalah cadence.Struct)
+	metadataValue, ok := outerMap["metadata"]
+	if !ok {
+		log.Printf("[HandleEventNFTMinted] Field 'metadata' not found in NFTDetails struct result for NFT %d", nftIDInt64)
+		return
+	}
+	metadataStruct, ok := metadataValue.(cadence.Struct)
+	if !ok {
+		log.Printf("[HandleEventNFTMinted] Field 'metadata' is not a cadence.Struct (type: %T) for NFT %d", metadataValue, nftIDInt64)
+		return
+	}
+
+	// 3. Dapatkan map DARI struct metadata (inner struct)
+	metadataMap := metadataStruct.FieldsMappedByName()         // <-- Panggil FieldsMappedByName() di sini!
+	log.Printf("[DEBUG] Inner Metadata Map: %+v", metadataMap) // Log this map
+
+	// 4. Parse map metadata yang benar
+	metadata, err := parseNFTDetailsStruct(metadataMap) // <-- Kirim map yang benar
+	if err != nil {
+		log.Printf("[HandleEventNFTMinted] Gagal parsing inner metadata map from script for NFT %d: %v", nftIDInt64, err)
+		return
+	}
+	if metadata == nil {
+		log.Printf("[HandleEventNFTMinted] Parsing inner metadata map resulted in nil for NFT %d", nftIDInt64)
+		return
+	}
+	// --- 4. Save NFT to Database using Ent ---
+	// Consider wrapping in a DB transaction if you also update Event counter here
+	_, err = entClient.Nft.
+		Create().
+		SetNftID(nftIDInt64).         // Set primary/unique key
+		SetMetadata(*metadata).       // Set the parsed metadata struct
+		SetOwnerAddress(userAddress). // Set owner
+		SetRarity(rarityString).      // Set rarity from event data
+		SetMintTime(time.Now()).      // Record indexing time
+		SetEventID(eventIDInt).       // Set foreign key to link to Event
+		// Use SetEventX if Event entity is guaranteed to exist:
+		// SetEvent(entClient.Event.GetX(ctx, eventIDInt64))
+		Save(ctx)
+
+	if err != nil {
+		// Handle potential unique constraint violation (NFT already indexed)
+		// if ent.IsConstraintError(err) {
+		//  log.Printf("[HandleEventNFTMinted] NFT %d sudah ada di DB.", nftIDInt64)
+		//  return // Or update if necessary
+		// }
+		log.Printf("[HandleEventNFTMinted] Gagal menyimpan NFT %d ke DB: %v", nftIDInt64, err)
+		return
+	}
+
+	log.Printf("[DB] NFT %d (dari Event %d) berhasil disimpan.", nftIDInt64, eventIDInt)
+
+	// Optional: Update Event counter (if not handled by EventRegistered/Unregistered)
+	// err = entClient.Event.UpdateOneID(eventIDInt64).AddCounter(1).Exec(ctx)
+	// if err != nil { log.Printf("[HandleEventNFTMinted] Gagal update counter event %d: %v", eventIDInt64, err) }
 }

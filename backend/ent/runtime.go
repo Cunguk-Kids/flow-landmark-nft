@@ -3,21 +3,17 @@
 package ent
 
 import (
-	"backend/ent/event"
 	"backend/ent/eventparticipant"
+	"backend/ent/nft"
+	"backend/ent/partner"
 	"backend/ent/schema"
+	"time"
 )
 
 // The init function reads all schema descriptors with runtime code
 // (default values, validators, hooks and policies) and stitches it
 // to their package variables.
 func init() {
-	eventFields := schema.Event{}.Fields()
-	_ = eventFields
-	// eventDescBrandAddress is the schema descriptor for brandAddress field.
-	eventDescBrandAddress := eventFields[1].Descriptor()
-	// event.DefaultBrandAddress holds the default value on creation for the brandAddress field.
-	event.DefaultBrandAddress = eventDescBrandAddress.Default.(string)
 	eventparticipantFields := schema.EventParticipant{}.Fields()
 	_ = eventparticipantFields
 	// eventparticipantDescUserAddress is the schema descriptor for userAddress field.
@@ -28,4 +24,28 @@ func init() {
 	eventparticipantDescIsCheckedIn := eventparticipantFields[1].Descriptor()
 	// eventparticipant.DefaultIsCheckedIn holds the default value on creation for the isCheckedIn field.
 	eventparticipant.DefaultIsCheckedIn = eventparticipantDescIsCheckedIn.Default.(bool)
+	nftFields := schema.Nft{}.Fields()
+	_ = nftFields
+	// nftDescMintTime is the schema descriptor for mint_time field.
+	nftDescMintTime := nftFields[3].Descriptor()
+	// nft.DefaultMintTime holds the default value on creation for the mint_time field.
+	nft.DefaultMintTime = nftDescMintTime.Default.(func() time.Time)
+	partnerFields := schema.Partner{}.Fields()
+	_ = partnerFields
+	// partnerDescName is the schema descriptor for name field.
+	partnerDescName := partnerFields[1].Descriptor()
+	// partner.DefaultName holds the default value on creation for the name field.
+	partner.DefaultName = partnerDescName.Default.(string)
+	// partnerDescDescription is the schema descriptor for description field.
+	partnerDescDescription := partnerFields[2].Descriptor()
+	// partner.DefaultDescription holds the default value on creation for the description field.
+	partner.DefaultDescription = partnerDescDescription.Default.(string)
+	// partnerDescEmail is the schema descriptor for email field.
+	partnerDescEmail := partnerFields[3].Descriptor()
+	// partner.DefaultEmail holds the default value on creation for the email field.
+	partner.DefaultEmail = partnerDescEmail.Default.(string)
+	// partnerDescImage is the schema descriptor for image field.
+	partnerDescImage := partnerFields[4].Descriptor()
+	// partner.DefaultImage holds the default value on creation for the image field.
+	partner.DefaultImage = partnerDescImage.Default.(string)
 }

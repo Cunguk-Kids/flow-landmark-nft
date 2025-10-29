@@ -5,6 +5,8 @@ package ent
 import (
 	"backend/ent/event"
 	"backend/ent/eventparticipant"
+	"backend/ent/nft"
+	"backend/ent/partner"
 	"backend/ent/predicate"
 	"context"
 	"database/sql/driver"
@@ -20,11 +22,14 @@ import (
 // EventQuery is the builder for querying Event entities.
 type EventQuery struct {
 	config
-	ctx         *QueryContext
-	order       []event.OrderOption
-	inters      []Interceptor
-	predicates  []predicate.Event
-	withEventID *EventParticipantQuery
+	ctx              *QueryContext
+	order            []event.OrderOption
+	inters           []Interceptor
+	predicates       []predicate.Event
+	withParticipants *EventParticipantQuery
+	withPartner      *PartnerQuery
+	withNfts         *NftQuery
+	withFKs          bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -61,8 +66,8 @@ func (_q *EventQuery) Order(o ...event.OrderOption) *EventQuery {
 	return _q
 }
 
-// QueryEventID chains the current query on the "event_id" edge.
-func (_q *EventQuery) QueryEventID() *EventParticipantQuery {
+// QueryParticipants chains the current query on the "participants" edge.
+func (_q *EventQuery) QueryParticipants() *EventParticipantQuery {
 	query := (&EventParticipantClient{config: _q.config}).Query()
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
 		if err := _q.prepareQuery(ctx); err != nil {
@@ -75,7 +80,51 @@ func (_q *EventQuery) QueryEventID() *EventParticipantQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(event.Table, event.FieldID, selector),
 			sqlgraph.To(eventparticipant.Table, eventparticipant.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, event.EventIDTable, event.EventIDColumn),
+			sqlgraph.Edge(sqlgraph.O2M, false, event.ParticipantsTable, event.ParticipantsColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryPartner chains the current query on the "partner" edge.
+func (_q *EventQuery) QueryPartner() *PartnerQuery {
+	query := (&PartnerClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(event.Table, event.FieldID, selector),
+			sqlgraph.To(partner.Table, partner.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, event.PartnerTable, event.PartnerColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryNfts chains the current query on the "nfts" edge.
+func (_q *EventQuery) QueryNfts() *NftQuery {
+	query := (&NftClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(event.Table, event.FieldID, selector),
+			sqlgraph.To(nft.Table, nft.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, event.NftsTable, event.NftsColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
@@ -270,26 +319,50 @@ func (_q *EventQuery) Clone() *EventQuery {
 		return nil
 	}
 	return &EventQuery{
-		config:      _q.config,
-		ctx:         _q.ctx.Clone(),
-		order:       append([]event.OrderOption{}, _q.order...),
-		inters:      append([]Interceptor{}, _q.inters...),
-		predicates:  append([]predicate.Event{}, _q.predicates...),
-		withEventID: _q.withEventID.Clone(),
+		config:           _q.config,
+		ctx:              _q.ctx.Clone(),
+		order:            append([]event.OrderOption{}, _q.order...),
+		inters:           append([]Interceptor{}, _q.inters...),
+		predicates:       append([]predicate.Event{}, _q.predicates...),
+		withParticipants: _q.withParticipants.Clone(),
+		withPartner:      _q.withPartner.Clone(),
+		withNfts:         _q.withNfts.Clone(),
 		// clone intermediate query.
 		sql:  _q.sql.Clone(),
 		path: _q.path,
 	}
 }
 
-// WithEventID tells the query-builder to eager-load the nodes that are connected to
-// the "event_id" edge. The optional arguments are used to configure the query builder of the edge.
-func (_q *EventQuery) WithEventID(opts ...func(*EventParticipantQuery)) *EventQuery {
+// WithParticipants tells the query-builder to eager-load the nodes that are connected to
+// the "participants" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *EventQuery) WithParticipants(opts ...func(*EventParticipantQuery)) *EventQuery {
 	query := (&EventParticipantClient{config: _q.config}).Query()
 	for _, opt := range opts {
 		opt(query)
 	}
-	_q.withEventID = query
+	_q.withParticipants = query
+	return _q
+}
+
+// WithPartner tells the query-builder to eager-load the nodes that are connected to
+// the "partner" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *EventQuery) WithPartner(opts ...func(*PartnerQuery)) *EventQuery {
+	query := (&PartnerClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withPartner = query
+	return _q
+}
+
+// WithNfts tells the query-builder to eager-load the nodes that are connected to
+// the "nfts" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *EventQuery) WithNfts(opts ...func(*NftQuery)) *EventQuery {
+	query := (&NftClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withNfts = query
 	return _q
 }
 
@@ -370,11 +443,20 @@ func (_q *EventQuery) prepareQuery(ctx context.Context) error {
 func (_q *EventQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Event, error) {
 	var (
 		nodes       = []*Event{}
+		withFKs     = _q.withFKs
 		_spec       = _q.querySpec()
-		loadedTypes = [1]bool{
-			_q.withEventID != nil,
+		loadedTypes = [3]bool{
+			_q.withParticipants != nil,
+			_q.withPartner != nil,
+			_q.withNfts != nil,
 		}
 	)
+	if _q.withPartner != nil {
+		withFKs = true
+	}
+	if withFKs {
+		_spec.Node.Columns = append(_spec.Node.Columns, event.ForeignKeys...)
+	}
 	_spec.ScanValues = func(columns []string) ([]any, error) {
 		return (*Event).scanValues(nil, columns)
 	}
@@ -393,17 +475,30 @@ func (_q *EventQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Event,
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
-	if query := _q.withEventID; query != nil {
-		if err := _q.loadEventID(ctx, query, nodes,
-			func(n *Event) { n.Edges.EventID = []*EventParticipant{} },
-			func(n *Event, e *EventParticipant) { n.Edges.EventID = append(n.Edges.EventID, e) }); err != nil {
+	if query := _q.withParticipants; query != nil {
+		if err := _q.loadParticipants(ctx, query, nodes,
+			func(n *Event) { n.Edges.Participants = []*EventParticipant{} },
+			func(n *Event, e *EventParticipant) { n.Edges.Participants = append(n.Edges.Participants, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := _q.withPartner; query != nil {
+		if err := _q.loadPartner(ctx, query, nodes, nil,
+			func(n *Event, e *Partner) { n.Edges.Partner = e }); err != nil {
+			return nil, err
+		}
+	}
+	if query := _q.withNfts; query != nil {
+		if err := _q.loadNfts(ctx, query, nodes,
+			func(n *Event) { n.Edges.Nfts = []*Nft{} },
+			func(n *Event, e *Nft) { n.Edges.Nfts = append(n.Edges.Nfts, e) }); err != nil {
 			return nil, err
 		}
 	}
 	return nodes, nil
 }
 
-func (_q *EventQuery) loadEventID(ctx context.Context, query *EventParticipantQuery, nodes []*Event, init func(*Event), assign func(*Event, *EventParticipant)) error {
+func (_q *EventQuery) loadParticipants(ctx context.Context, query *EventParticipantQuery, nodes []*Event, init func(*Event), assign func(*Event, *EventParticipant)) error {
 	fks := make([]driver.Value, 0, len(nodes))
 	nodeids := make(map[int]*Event)
 	for i := range nodes {
@@ -415,20 +510,83 @@ func (_q *EventQuery) loadEventID(ctx context.Context, query *EventParticipantQu
 	}
 	query.withFKs = true
 	query.Where(predicate.EventParticipant(func(s *sql.Selector) {
-		s.Where(sql.InValues(s.C(event.EventIDColumn), fks...))
+		s.Where(sql.InValues(s.C(event.ParticipantsColumn), fks...))
 	}))
 	neighbors, err := query.All(ctx)
 	if err != nil {
 		return err
 	}
 	for _, n := range neighbors {
-		fk := n.event_event_id
+		fk := n.event_participants
 		if fk == nil {
-			return fmt.Errorf(`foreign-key "event_event_id" is nil for node %v`, n.ID)
+			return fmt.Errorf(`foreign-key "event_participants" is nil for node %v`, n.ID)
 		}
 		node, ok := nodeids[*fk]
 		if !ok {
-			return fmt.Errorf(`unexpected referenced foreign-key "event_event_id" returned %v for node %v`, *fk, n.ID)
+			return fmt.Errorf(`unexpected referenced foreign-key "event_participants" returned %v for node %v`, *fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (_q *EventQuery) loadPartner(ctx context.Context, query *PartnerQuery, nodes []*Event, init func(*Event), assign func(*Event, *Partner)) error {
+	ids := make([]int, 0, len(nodes))
+	nodeids := make(map[int][]*Event)
+	for i := range nodes {
+		if nodes[i].partner_partner_address == nil {
+			continue
+		}
+		fk := *nodes[i].partner_partner_address
+		if _, ok := nodeids[fk]; !ok {
+			ids = append(ids, fk)
+		}
+		nodeids[fk] = append(nodeids[fk], nodes[i])
+	}
+	if len(ids) == 0 {
+		return nil
+	}
+	query.Where(partner.IDIn(ids...))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		nodes, ok := nodeids[n.ID]
+		if !ok {
+			return fmt.Errorf(`unexpected foreign-key "partner_partner_address" returned %v`, n.ID)
+		}
+		for i := range nodes {
+			assign(nodes[i], n)
+		}
+	}
+	return nil
+}
+func (_q *EventQuery) loadNfts(ctx context.Context, query *NftQuery, nodes []*Event, init func(*Event), assign func(*Event, *Nft)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*Event)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	query.withFKs = true
+	query.Where(predicate.Nft(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(event.NftsColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.event_nfts
+		if fk == nil {
+			return fmt.Errorf(`foreign-key "event_nfts" is nil for node %v`, n.ID)
+		}
+		node, ok := nodeids[*fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "event_nfts" returned %v for node %v`, *fk, n.ID)
 		}
 		assign(node, n)
 	}

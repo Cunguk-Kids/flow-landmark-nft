@@ -5,11 +5,15 @@ package ent
 import (
 	"backend/ent/event"
 	"backend/ent/eventparticipant"
+	"backend/ent/nft"
+	"backend/ent/partner"
 	"backend/ent/predicate"
+	"backend/ent/schema"
 	"context"
 	"errors"
 	"fmt"
 	"sync"
+	"time"
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
@@ -26,45 +30,51 @@ const (
 	// Node types.
 	TypeEvent            = "Event"
 	TypeEventParticipant = "EventParticipant"
+	TypeNft              = "Nft"
+	TypePartner          = "Partner"
 )
 
 // EventMutation represents an operation that mutates the Event nodes in the graph.
 type EventMutation struct {
 	config
-	op              Op
-	typ             string
-	id              *int
-	eventId         *int
-	addeventId      *int
-	brandAddress    *string
-	eventName       *string
-	quota           *int
-	addquota        *int
-	counter         *int
-	addcounter      *int
-	description     *string
-	image           *string
-	lat             *float64
-	addlat          *float64
-	long            *float64
-	addlong         *float64
-	radius          *float64
-	addradius       *float64
-	status          *int
-	addstatus       *int
-	startDate       *float64
-	addstartDate    *float64
-	endDate         *float64
-	addendDate      *float64
-	totalRareNFT    *int
-	addtotalRareNFT *int
-	clearedFields   map[string]struct{}
-	event_id        map[int]struct{}
-	removedevent_id map[int]struct{}
-	clearedevent_id bool
-	done            bool
-	oldValue        func(context.Context) (*Event, error)
-	predicates      []predicate.Event
+	op                  Op
+	typ                 string
+	id                  *int
+	eventId             *int
+	addeventId          *int
+	eventName           *string
+	quota               *int
+	addquota            *int
+	counter             *int
+	addcounter          *int
+	description         *string
+	image               *string
+	lat                 *float64
+	addlat              *float64
+	long                *float64
+	addlong             *float64
+	radius              *float64
+	addradius           *float64
+	status              *int
+	addstatus           *int
+	startDate           *float64
+	addstartDate        *float64
+	endDate             *float64
+	addendDate          *float64
+	totalRareNFT        *int
+	addtotalRareNFT     *int
+	clearedFields       map[string]struct{}
+	participants        map[int]struct{}
+	removedparticipants map[int]struct{}
+	clearedparticipants bool
+	partner             *int
+	clearedpartner      bool
+	nfts                map[int]struct{}
+	removednfts         map[int]struct{}
+	clearednfts         bool
+	done                bool
+	oldValue            func(context.Context) (*Event, error)
+	predicates          []predicate.Event
 }
 
 var _ ent.Mutation = (*EventMutation)(nil)
@@ -219,42 +229,6 @@ func (m *EventMutation) AddedEventId() (r int, exists bool) {
 func (m *EventMutation) ResetEventId() {
 	m.eventId = nil
 	m.addeventId = nil
-}
-
-// SetBrandAddress sets the "brandAddress" field.
-func (m *EventMutation) SetBrandAddress(s string) {
-	m.brandAddress = &s
-}
-
-// BrandAddress returns the value of the "brandAddress" field in the mutation.
-func (m *EventMutation) BrandAddress() (r string, exists bool) {
-	v := m.brandAddress
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldBrandAddress returns the old "brandAddress" field's value of the Event entity.
-// If the Event object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *EventMutation) OldBrandAddress(ctx context.Context) (v string, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldBrandAddress is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldBrandAddress requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldBrandAddress: %w", err)
-	}
-	return oldValue.BrandAddress, nil
-}
-
-// ResetBrandAddress resets all changes to the "brandAddress" field.
-func (m *EventMutation) ResetBrandAddress() {
-	m.brandAddress = nil
 }
 
 // SetEventName sets the "eventName" field.
@@ -869,58 +843,151 @@ func (m *EventMutation) ResetTotalRareNFT() {
 	m.addtotalRareNFT = nil
 }
 
-// AddEventIDIDs adds the "event_id" edge to the EventParticipant entity by ids.
-func (m *EventMutation) AddEventIDIDs(ids ...int) {
-	if m.event_id == nil {
-		m.event_id = make(map[int]struct{})
+// AddParticipantIDs adds the "participants" edge to the EventParticipant entity by ids.
+func (m *EventMutation) AddParticipantIDs(ids ...int) {
+	if m.participants == nil {
+		m.participants = make(map[int]struct{})
 	}
 	for i := range ids {
-		m.event_id[ids[i]] = struct{}{}
+		m.participants[ids[i]] = struct{}{}
 	}
 }
 
-// ClearEventID clears the "event_id" edge to the EventParticipant entity.
-func (m *EventMutation) ClearEventID() {
-	m.clearedevent_id = true
+// ClearParticipants clears the "participants" edge to the EventParticipant entity.
+func (m *EventMutation) ClearParticipants() {
+	m.clearedparticipants = true
 }
 
-// EventIDCleared reports if the "event_id" edge to the EventParticipant entity was cleared.
-func (m *EventMutation) EventIDCleared() bool {
-	return m.clearedevent_id
+// ParticipantsCleared reports if the "participants" edge to the EventParticipant entity was cleared.
+func (m *EventMutation) ParticipantsCleared() bool {
+	return m.clearedparticipants
 }
 
-// RemoveEventIDIDs removes the "event_id" edge to the EventParticipant entity by IDs.
-func (m *EventMutation) RemoveEventIDIDs(ids ...int) {
-	if m.removedevent_id == nil {
-		m.removedevent_id = make(map[int]struct{})
+// RemoveParticipantIDs removes the "participants" edge to the EventParticipant entity by IDs.
+func (m *EventMutation) RemoveParticipantIDs(ids ...int) {
+	if m.removedparticipants == nil {
+		m.removedparticipants = make(map[int]struct{})
 	}
 	for i := range ids {
-		delete(m.event_id, ids[i])
-		m.removedevent_id[ids[i]] = struct{}{}
+		delete(m.participants, ids[i])
+		m.removedparticipants[ids[i]] = struct{}{}
 	}
 }
 
-// RemovedEventID returns the removed IDs of the "event_id" edge to the EventParticipant entity.
-func (m *EventMutation) RemovedEventIDIDs() (ids []int) {
-	for id := range m.removedevent_id {
+// RemovedParticipants returns the removed IDs of the "participants" edge to the EventParticipant entity.
+func (m *EventMutation) RemovedParticipantsIDs() (ids []int) {
+	for id := range m.removedparticipants {
 		ids = append(ids, id)
 	}
 	return
 }
 
-// EventIDIDs returns the "event_id" edge IDs in the mutation.
-func (m *EventMutation) EventIDIDs() (ids []int) {
-	for id := range m.event_id {
+// ParticipantsIDs returns the "participants" edge IDs in the mutation.
+func (m *EventMutation) ParticipantsIDs() (ids []int) {
+	for id := range m.participants {
 		ids = append(ids, id)
 	}
 	return
 }
 
-// ResetEventID resets all changes to the "event_id" edge.
-func (m *EventMutation) ResetEventID() {
-	m.event_id = nil
-	m.clearedevent_id = false
-	m.removedevent_id = nil
+// ResetParticipants resets all changes to the "participants" edge.
+func (m *EventMutation) ResetParticipants() {
+	m.participants = nil
+	m.clearedparticipants = false
+	m.removedparticipants = nil
+}
+
+// SetPartnerID sets the "partner" edge to the Partner entity by id.
+func (m *EventMutation) SetPartnerID(id int) {
+	m.partner = &id
+}
+
+// ClearPartner clears the "partner" edge to the Partner entity.
+func (m *EventMutation) ClearPartner() {
+	m.clearedpartner = true
+}
+
+// PartnerCleared reports if the "partner" edge to the Partner entity was cleared.
+func (m *EventMutation) PartnerCleared() bool {
+	return m.clearedpartner
+}
+
+// PartnerID returns the "partner" edge ID in the mutation.
+func (m *EventMutation) PartnerID() (id int, exists bool) {
+	if m.partner != nil {
+		return *m.partner, true
+	}
+	return
+}
+
+// PartnerIDs returns the "partner" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// PartnerID instead. It exists only for internal usage by the builders.
+func (m *EventMutation) PartnerIDs() (ids []int) {
+	if id := m.partner; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetPartner resets all changes to the "partner" edge.
+func (m *EventMutation) ResetPartner() {
+	m.partner = nil
+	m.clearedpartner = false
+}
+
+// AddNftIDs adds the "nfts" edge to the Nft entity by ids.
+func (m *EventMutation) AddNftIDs(ids ...int) {
+	if m.nfts == nil {
+		m.nfts = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.nfts[ids[i]] = struct{}{}
+	}
+}
+
+// ClearNfts clears the "nfts" edge to the Nft entity.
+func (m *EventMutation) ClearNfts() {
+	m.clearednfts = true
+}
+
+// NftsCleared reports if the "nfts" edge to the Nft entity was cleared.
+func (m *EventMutation) NftsCleared() bool {
+	return m.clearednfts
+}
+
+// RemoveNftIDs removes the "nfts" edge to the Nft entity by IDs.
+func (m *EventMutation) RemoveNftIDs(ids ...int) {
+	if m.removednfts == nil {
+		m.removednfts = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.nfts, ids[i])
+		m.removednfts[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedNfts returns the removed IDs of the "nfts" edge to the Nft entity.
+func (m *EventMutation) RemovedNftsIDs() (ids []int) {
+	for id := range m.removednfts {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// NftsIDs returns the "nfts" edge IDs in the mutation.
+func (m *EventMutation) NftsIDs() (ids []int) {
+	for id := range m.nfts {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetNfts resets all changes to the "nfts" edge.
+func (m *EventMutation) ResetNfts() {
+	m.nfts = nil
+	m.clearednfts = false
+	m.removednfts = nil
 }
 
 // Where appends a list predicates to the EventMutation builder.
@@ -957,12 +1024,9 @@ func (m *EventMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *EventMutation) Fields() []string {
-	fields := make([]string, 0, 14)
+	fields := make([]string, 0, 13)
 	if m.eventId != nil {
 		fields = append(fields, event.FieldEventId)
-	}
-	if m.brandAddress != nil {
-		fields = append(fields, event.FieldBrandAddress)
 	}
 	if m.eventName != nil {
 		fields = append(fields, event.FieldEventName)
@@ -1010,8 +1074,6 @@ func (m *EventMutation) Field(name string) (ent.Value, bool) {
 	switch name {
 	case event.FieldEventId:
 		return m.EventId()
-	case event.FieldBrandAddress:
-		return m.BrandAddress()
 	case event.FieldEventName:
 		return m.EventName()
 	case event.FieldQuota:
@@ -1047,8 +1109,6 @@ func (m *EventMutation) OldField(ctx context.Context, name string) (ent.Value, e
 	switch name {
 	case event.FieldEventId:
 		return m.OldEventId(ctx)
-	case event.FieldBrandAddress:
-		return m.OldBrandAddress(ctx)
 	case event.FieldEventName:
 		return m.OldEventName(ctx)
 	case event.FieldQuota:
@@ -1088,13 +1148,6 @@ func (m *EventMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetEventId(v)
-		return nil
-	case event.FieldBrandAddress:
-		v, ok := value.(string)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetBrandAddress(v)
 		return nil
 	case event.FieldEventName:
 		v, ok := value.(string)
@@ -1355,9 +1408,6 @@ func (m *EventMutation) ResetField(name string) error {
 	case event.FieldEventId:
 		m.ResetEventId()
 		return nil
-	case event.FieldBrandAddress:
-		m.ResetBrandAddress()
-		return nil
 	case event.FieldEventName:
 		m.ResetEventName()
 		return nil
@@ -1400,9 +1450,15 @@ func (m *EventMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *EventMutation) AddedEdges() []string {
-	edges := make([]string, 0, 1)
-	if m.event_id != nil {
-		edges = append(edges, event.EdgeEventID)
+	edges := make([]string, 0, 3)
+	if m.participants != nil {
+		edges = append(edges, event.EdgeParticipants)
+	}
+	if m.partner != nil {
+		edges = append(edges, event.EdgePartner)
+	}
+	if m.nfts != nil {
+		edges = append(edges, event.EdgeNfts)
 	}
 	return edges
 }
@@ -1411,9 +1467,19 @@ func (m *EventMutation) AddedEdges() []string {
 // name in this mutation.
 func (m *EventMutation) AddedIDs(name string) []ent.Value {
 	switch name {
-	case event.EdgeEventID:
-		ids := make([]ent.Value, 0, len(m.event_id))
-		for id := range m.event_id {
+	case event.EdgeParticipants:
+		ids := make([]ent.Value, 0, len(m.participants))
+		for id := range m.participants {
+			ids = append(ids, id)
+		}
+		return ids
+	case event.EdgePartner:
+		if id := m.partner; id != nil {
+			return []ent.Value{*id}
+		}
+	case event.EdgeNfts:
+		ids := make([]ent.Value, 0, len(m.nfts))
+		for id := range m.nfts {
 			ids = append(ids, id)
 		}
 		return ids
@@ -1423,9 +1489,12 @@ func (m *EventMutation) AddedIDs(name string) []ent.Value {
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *EventMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 1)
-	if m.removedevent_id != nil {
-		edges = append(edges, event.EdgeEventID)
+	edges := make([]string, 0, 3)
+	if m.removedparticipants != nil {
+		edges = append(edges, event.EdgeParticipants)
+	}
+	if m.removednfts != nil {
+		edges = append(edges, event.EdgeNfts)
 	}
 	return edges
 }
@@ -1434,9 +1503,15 @@ func (m *EventMutation) RemovedEdges() []string {
 // the given name in this mutation.
 func (m *EventMutation) RemovedIDs(name string) []ent.Value {
 	switch name {
-	case event.EdgeEventID:
-		ids := make([]ent.Value, 0, len(m.removedevent_id))
-		for id := range m.removedevent_id {
+	case event.EdgeParticipants:
+		ids := make([]ent.Value, 0, len(m.removedparticipants))
+		for id := range m.removedparticipants {
+			ids = append(ids, id)
+		}
+		return ids
+	case event.EdgeNfts:
+		ids := make([]ent.Value, 0, len(m.removednfts))
+		for id := range m.removednfts {
 			ids = append(ids, id)
 		}
 		return ids
@@ -1446,9 +1521,15 @@ func (m *EventMutation) RemovedIDs(name string) []ent.Value {
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *EventMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 1)
-	if m.clearedevent_id {
-		edges = append(edges, event.EdgeEventID)
+	edges := make([]string, 0, 3)
+	if m.clearedparticipants {
+		edges = append(edges, event.EdgeParticipants)
+	}
+	if m.clearedpartner {
+		edges = append(edges, event.EdgePartner)
+	}
+	if m.clearednfts {
+		edges = append(edges, event.EdgeNfts)
 	}
 	return edges
 }
@@ -1457,8 +1538,12 @@ func (m *EventMutation) ClearedEdges() []string {
 // was cleared in this mutation.
 func (m *EventMutation) EdgeCleared(name string) bool {
 	switch name {
-	case event.EdgeEventID:
-		return m.clearedevent_id
+	case event.EdgeParticipants:
+		return m.clearedparticipants
+	case event.EdgePartner:
+		return m.clearedpartner
+	case event.EdgeNfts:
+		return m.clearednfts
 	}
 	return false
 }
@@ -1467,6 +1552,9 @@ func (m *EventMutation) EdgeCleared(name string) bool {
 // if that edge is not defined in the schema.
 func (m *EventMutation) ClearEdge(name string) error {
 	switch name {
+	case event.EdgePartner:
+		m.ClearPartner()
+		return nil
 	}
 	return fmt.Errorf("unknown Event unique edge %s", name)
 }
@@ -1475,8 +1563,14 @@ func (m *EventMutation) ClearEdge(name string) error {
 // It returns an error if the edge is not defined in the schema.
 func (m *EventMutation) ResetEdge(name string) error {
 	switch name {
-	case event.EdgeEventID:
-		m.ResetEventID()
+	case event.EdgeParticipants:
+		m.ResetParticipants()
+		return nil
+	case event.EdgePartner:
+		m.ResetPartner()
+		return nil
+	case event.EdgeNfts:
+		m.ResetNfts()
 		return nil
 	}
 	return fmt.Errorf("unknown Event edge %s", name)
@@ -1927,4 +2021,1284 @@ func (m *EventParticipantMutation) ResetEdge(name string) error {
 		return nil
 	}
 	return fmt.Errorf("unknown EventParticipant edge %s", name)
+}
+
+// NftMutation represents an operation that mutates the Nft nodes in the graph.
+type NftMutation struct {
+	config
+	op            Op
+	typ           string
+	id            *int
+	nft_id        *int64
+	addnft_id     *int64
+	metadata      *schema.Metadata
+	owner_address *string
+	mint_time     *time.Time
+	rarity        *string
+	clearedFields map[string]struct{}
+	event         *int
+	clearedevent  bool
+	done          bool
+	oldValue      func(context.Context) (*Nft, error)
+	predicates    []predicate.Nft
+}
+
+var _ ent.Mutation = (*NftMutation)(nil)
+
+// nftOption allows management of the mutation configuration using functional options.
+type nftOption func(*NftMutation)
+
+// newNftMutation creates new mutation for the Nft entity.
+func newNftMutation(c config, op Op, opts ...nftOption) *NftMutation {
+	m := &NftMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeNft,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withNftID sets the ID field of the mutation.
+func withNftID(id int) nftOption {
+	return func(m *NftMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *Nft
+		)
+		m.oldValue = func(ctx context.Context) (*Nft, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().Nft.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withNft sets the old Nft of the mutation.
+func withNft(node *Nft) nftOption {
+	return func(m *NftMutation) {
+		m.oldValue = func(context.Context) (*Nft, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m NftMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m NftMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *NftMutation) ID() (id int, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *NftMutation) IDs(ctx context.Context) ([]int, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []int{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().Nft.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetNftID sets the "nft_id" field.
+func (m *NftMutation) SetNftID(i int64) {
+	m.nft_id = &i
+	m.addnft_id = nil
+}
+
+// NftID returns the value of the "nft_id" field in the mutation.
+func (m *NftMutation) NftID() (r int64, exists bool) {
+	v := m.nft_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldNftID returns the old "nft_id" field's value of the Nft entity.
+// If the Nft object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *NftMutation) OldNftID(ctx context.Context) (v int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldNftID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldNftID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldNftID: %w", err)
+	}
+	return oldValue.NftID, nil
+}
+
+// AddNftID adds i to the "nft_id" field.
+func (m *NftMutation) AddNftID(i int64) {
+	if m.addnft_id != nil {
+		*m.addnft_id += i
+	} else {
+		m.addnft_id = &i
+	}
+}
+
+// AddedNftID returns the value that was added to the "nft_id" field in this mutation.
+func (m *NftMutation) AddedNftID() (r int64, exists bool) {
+	v := m.addnft_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetNftID resets all changes to the "nft_id" field.
+func (m *NftMutation) ResetNftID() {
+	m.nft_id = nil
+	m.addnft_id = nil
+}
+
+// SetMetadata sets the "metadata" field.
+func (m *NftMutation) SetMetadata(s schema.Metadata) {
+	m.metadata = &s
+}
+
+// Metadata returns the value of the "metadata" field in the mutation.
+func (m *NftMutation) Metadata() (r schema.Metadata, exists bool) {
+	v := m.metadata
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldMetadata returns the old "metadata" field's value of the Nft entity.
+// If the Nft object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *NftMutation) OldMetadata(ctx context.Context) (v schema.Metadata, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldMetadata is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldMetadata requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldMetadata: %w", err)
+	}
+	return oldValue.Metadata, nil
+}
+
+// ResetMetadata resets all changes to the "metadata" field.
+func (m *NftMutation) ResetMetadata() {
+	m.metadata = nil
+}
+
+// SetOwnerAddress sets the "owner_address" field.
+func (m *NftMutation) SetOwnerAddress(s string) {
+	m.owner_address = &s
+}
+
+// OwnerAddress returns the value of the "owner_address" field in the mutation.
+func (m *NftMutation) OwnerAddress() (r string, exists bool) {
+	v := m.owner_address
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldOwnerAddress returns the old "owner_address" field's value of the Nft entity.
+// If the Nft object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *NftMutation) OldOwnerAddress(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldOwnerAddress is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldOwnerAddress requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldOwnerAddress: %w", err)
+	}
+	return oldValue.OwnerAddress, nil
+}
+
+// ResetOwnerAddress resets all changes to the "owner_address" field.
+func (m *NftMutation) ResetOwnerAddress() {
+	m.owner_address = nil
+}
+
+// SetMintTime sets the "mint_time" field.
+func (m *NftMutation) SetMintTime(t time.Time) {
+	m.mint_time = &t
+}
+
+// MintTime returns the value of the "mint_time" field in the mutation.
+func (m *NftMutation) MintTime() (r time.Time, exists bool) {
+	v := m.mint_time
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldMintTime returns the old "mint_time" field's value of the Nft entity.
+// If the Nft object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *NftMutation) OldMintTime(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldMintTime is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldMintTime requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldMintTime: %w", err)
+	}
+	return oldValue.MintTime, nil
+}
+
+// ResetMintTime resets all changes to the "mint_time" field.
+func (m *NftMutation) ResetMintTime() {
+	m.mint_time = nil
+}
+
+// SetRarity sets the "rarity" field.
+func (m *NftMutation) SetRarity(s string) {
+	m.rarity = &s
+}
+
+// Rarity returns the value of the "rarity" field in the mutation.
+func (m *NftMutation) Rarity() (r string, exists bool) {
+	v := m.rarity
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldRarity returns the old "rarity" field's value of the Nft entity.
+// If the Nft object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *NftMutation) OldRarity(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldRarity is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldRarity requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldRarity: %w", err)
+	}
+	return oldValue.Rarity, nil
+}
+
+// ResetRarity resets all changes to the "rarity" field.
+func (m *NftMutation) ResetRarity() {
+	m.rarity = nil
+}
+
+// SetEventID sets the "event" edge to the Event entity by id.
+func (m *NftMutation) SetEventID(id int) {
+	m.event = &id
+}
+
+// ClearEvent clears the "event" edge to the Event entity.
+func (m *NftMutation) ClearEvent() {
+	m.clearedevent = true
+}
+
+// EventCleared reports if the "event" edge to the Event entity was cleared.
+func (m *NftMutation) EventCleared() bool {
+	return m.clearedevent
+}
+
+// EventID returns the "event" edge ID in the mutation.
+func (m *NftMutation) EventID() (id int, exists bool) {
+	if m.event != nil {
+		return *m.event, true
+	}
+	return
+}
+
+// EventIDs returns the "event" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// EventID instead. It exists only for internal usage by the builders.
+func (m *NftMutation) EventIDs() (ids []int) {
+	if id := m.event; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetEvent resets all changes to the "event" edge.
+func (m *NftMutation) ResetEvent() {
+	m.event = nil
+	m.clearedevent = false
+}
+
+// Where appends a list predicates to the NftMutation builder.
+func (m *NftMutation) Where(ps ...predicate.Nft) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the NftMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *NftMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.Nft, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *NftMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *NftMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (Nft).
+func (m *NftMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *NftMutation) Fields() []string {
+	fields := make([]string, 0, 5)
+	if m.nft_id != nil {
+		fields = append(fields, nft.FieldNftID)
+	}
+	if m.metadata != nil {
+		fields = append(fields, nft.FieldMetadata)
+	}
+	if m.owner_address != nil {
+		fields = append(fields, nft.FieldOwnerAddress)
+	}
+	if m.mint_time != nil {
+		fields = append(fields, nft.FieldMintTime)
+	}
+	if m.rarity != nil {
+		fields = append(fields, nft.FieldRarity)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *NftMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case nft.FieldNftID:
+		return m.NftID()
+	case nft.FieldMetadata:
+		return m.Metadata()
+	case nft.FieldOwnerAddress:
+		return m.OwnerAddress()
+	case nft.FieldMintTime:
+		return m.MintTime()
+	case nft.FieldRarity:
+		return m.Rarity()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *NftMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case nft.FieldNftID:
+		return m.OldNftID(ctx)
+	case nft.FieldMetadata:
+		return m.OldMetadata(ctx)
+	case nft.FieldOwnerAddress:
+		return m.OldOwnerAddress(ctx)
+	case nft.FieldMintTime:
+		return m.OldMintTime(ctx)
+	case nft.FieldRarity:
+		return m.OldRarity(ctx)
+	}
+	return nil, fmt.Errorf("unknown Nft field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *NftMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case nft.FieldNftID:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetNftID(v)
+		return nil
+	case nft.FieldMetadata:
+		v, ok := value.(schema.Metadata)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetMetadata(v)
+		return nil
+	case nft.FieldOwnerAddress:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetOwnerAddress(v)
+		return nil
+	case nft.FieldMintTime:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetMintTime(v)
+		return nil
+	case nft.FieldRarity:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetRarity(v)
+		return nil
+	}
+	return fmt.Errorf("unknown Nft field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *NftMutation) AddedFields() []string {
+	var fields []string
+	if m.addnft_id != nil {
+		fields = append(fields, nft.FieldNftID)
+	}
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *NftMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case nft.FieldNftID:
+		return m.AddedNftID()
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *NftMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case nft.FieldNftID:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddNftID(v)
+		return nil
+	}
+	return fmt.Errorf("unknown Nft numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *NftMutation) ClearedFields() []string {
+	return nil
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *NftMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *NftMutation) ClearField(name string) error {
+	return fmt.Errorf("unknown Nft nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *NftMutation) ResetField(name string) error {
+	switch name {
+	case nft.FieldNftID:
+		m.ResetNftID()
+		return nil
+	case nft.FieldMetadata:
+		m.ResetMetadata()
+		return nil
+	case nft.FieldOwnerAddress:
+		m.ResetOwnerAddress()
+		return nil
+	case nft.FieldMintTime:
+		m.ResetMintTime()
+		return nil
+	case nft.FieldRarity:
+		m.ResetRarity()
+		return nil
+	}
+	return fmt.Errorf("unknown Nft field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *NftMutation) AddedEdges() []string {
+	edges := make([]string, 0, 1)
+	if m.event != nil {
+		edges = append(edges, nft.EdgeEvent)
+	}
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *NftMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case nft.EdgeEvent:
+		if id := m.event; id != nil {
+			return []ent.Value{*id}
+		}
+	}
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *NftMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 1)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *NftMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *NftMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 1)
+	if m.clearedevent {
+		edges = append(edges, nft.EdgeEvent)
+	}
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *NftMutation) EdgeCleared(name string) bool {
+	switch name {
+	case nft.EdgeEvent:
+		return m.clearedevent
+	}
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *NftMutation) ClearEdge(name string) error {
+	switch name {
+	case nft.EdgeEvent:
+		m.ClearEvent()
+		return nil
+	}
+	return fmt.Errorf("unknown Nft unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *NftMutation) ResetEdge(name string) error {
+	switch name {
+	case nft.EdgeEvent:
+		m.ResetEvent()
+		return nil
+	}
+	return fmt.Errorf("unknown Nft edge %s", name)
+}
+
+// PartnerMutation represents an operation that mutates the Partner nodes in the graph.
+type PartnerMutation struct {
+	config
+	op                     Op
+	typ                    string
+	id                     *int
+	address                *string
+	name                   *string
+	description            *string
+	email                  *string
+	image                  *string
+	clearedFields          map[string]struct{}
+	partner_address        map[int]struct{}
+	removedpartner_address map[int]struct{}
+	clearedpartner_address bool
+	done                   bool
+	oldValue               func(context.Context) (*Partner, error)
+	predicates             []predicate.Partner
+}
+
+var _ ent.Mutation = (*PartnerMutation)(nil)
+
+// partnerOption allows management of the mutation configuration using functional options.
+type partnerOption func(*PartnerMutation)
+
+// newPartnerMutation creates new mutation for the Partner entity.
+func newPartnerMutation(c config, op Op, opts ...partnerOption) *PartnerMutation {
+	m := &PartnerMutation{
+		config:        c,
+		op:            op,
+		typ:           TypePartner,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withPartnerID sets the ID field of the mutation.
+func withPartnerID(id int) partnerOption {
+	return func(m *PartnerMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *Partner
+		)
+		m.oldValue = func(ctx context.Context) (*Partner, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().Partner.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withPartner sets the old Partner of the mutation.
+func withPartner(node *Partner) partnerOption {
+	return func(m *PartnerMutation) {
+		m.oldValue = func(context.Context) (*Partner, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m PartnerMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m PartnerMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *PartnerMutation) ID() (id int, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *PartnerMutation) IDs(ctx context.Context) ([]int, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []int{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().Partner.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetAddress sets the "address" field.
+func (m *PartnerMutation) SetAddress(s string) {
+	m.address = &s
+}
+
+// Address returns the value of the "address" field in the mutation.
+func (m *PartnerMutation) Address() (r string, exists bool) {
+	v := m.address
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldAddress returns the old "address" field's value of the Partner entity.
+// If the Partner object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PartnerMutation) OldAddress(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldAddress is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldAddress requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldAddress: %w", err)
+	}
+	return oldValue.Address, nil
+}
+
+// ResetAddress resets all changes to the "address" field.
+func (m *PartnerMutation) ResetAddress() {
+	m.address = nil
+}
+
+// SetName sets the "name" field.
+func (m *PartnerMutation) SetName(s string) {
+	m.name = &s
+}
+
+// Name returns the value of the "name" field in the mutation.
+func (m *PartnerMutation) Name() (r string, exists bool) {
+	v := m.name
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldName returns the old "name" field's value of the Partner entity.
+// If the Partner object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PartnerMutation) OldName(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldName is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldName requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldName: %w", err)
+	}
+	return oldValue.Name, nil
+}
+
+// ResetName resets all changes to the "name" field.
+func (m *PartnerMutation) ResetName() {
+	m.name = nil
+}
+
+// SetDescription sets the "description" field.
+func (m *PartnerMutation) SetDescription(s string) {
+	m.description = &s
+}
+
+// Description returns the value of the "description" field in the mutation.
+func (m *PartnerMutation) Description() (r string, exists bool) {
+	v := m.description
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDescription returns the old "description" field's value of the Partner entity.
+// If the Partner object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PartnerMutation) OldDescription(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDescription is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDescription requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDescription: %w", err)
+	}
+	return oldValue.Description, nil
+}
+
+// ResetDescription resets all changes to the "description" field.
+func (m *PartnerMutation) ResetDescription() {
+	m.description = nil
+}
+
+// SetEmail sets the "email" field.
+func (m *PartnerMutation) SetEmail(s string) {
+	m.email = &s
+}
+
+// Email returns the value of the "email" field in the mutation.
+func (m *PartnerMutation) Email() (r string, exists bool) {
+	v := m.email
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldEmail returns the old "email" field's value of the Partner entity.
+// If the Partner object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PartnerMutation) OldEmail(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldEmail is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldEmail requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldEmail: %w", err)
+	}
+	return oldValue.Email, nil
+}
+
+// ResetEmail resets all changes to the "email" field.
+func (m *PartnerMutation) ResetEmail() {
+	m.email = nil
+}
+
+// SetImage sets the "image" field.
+func (m *PartnerMutation) SetImage(s string) {
+	m.image = &s
+}
+
+// Image returns the value of the "image" field in the mutation.
+func (m *PartnerMutation) Image() (r string, exists bool) {
+	v := m.image
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldImage returns the old "image" field's value of the Partner entity.
+// If the Partner object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PartnerMutation) OldImage(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldImage is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldImage requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldImage: %w", err)
+	}
+	return oldValue.Image, nil
+}
+
+// ResetImage resets all changes to the "image" field.
+func (m *PartnerMutation) ResetImage() {
+	m.image = nil
+}
+
+// AddPartnerAddresIDs adds the "partner_address" edge to the Event entity by ids.
+func (m *PartnerMutation) AddPartnerAddresIDs(ids ...int) {
+	if m.partner_address == nil {
+		m.partner_address = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.partner_address[ids[i]] = struct{}{}
+	}
+}
+
+// ClearPartnerAddress clears the "partner_address" edge to the Event entity.
+func (m *PartnerMutation) ClearPartnerAddress() {
+	m.clearedpartner_address = true
+}
+
+// PartnerAddressCleared reports if the "partner_address" edge to the Event entity was cleared.
+func (m *PartnerMutation) PartnerAddressCleared() bool {
+	return m.clearedpartner_address
+}
+
+// RemovePartnerAddresIDs removes the "partner_address" edge to the Event entity by IDs.
+func (m *PartnerMutation) RemovePartnerAddresIDs(ids ...int) {
+	if m.removedpartner_address == nil {
+		m.removedpartner_address = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.partner_address, ids[i])
+		m.removedpartner_address[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedPartnerAddress returns the removed IDs of the "partner_address" edge to the Event entity.
+func (m *PartnerMutation) RemovedPartnerAddressIDs() (ids []int) {
+	for id := range m.removedpartner_address {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// PartnerAddressIDs returns the "partner_address" edge IDs in the mutation.
+func (m *PartnerMutation) PartnerAddressIDs() (ids []int) {
+	for id := range m.partner_address {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetPartnerAddress resets all changes to the "partner_address" edge.
+func (m *PartnerMutation) ResetPartnerAddress() {
+	m.partner_address = nil
+	m.clearedpartner_address = false
+	m.removedpartner_address = nil
+}
+
+// Where appends a list predicates to the PartnerMutation builder.
+func (m *PartnerMutation) Where(ps ...predicate.Partner) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the PartnerMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *PartnerMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.Partner, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *PartnerMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *PartnerMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (Partner).
+func (m *PartnerMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *PartnerMutation) Fields() []string {
+	fields := make([]string, 0, 5)
+	if m.address != nil {
+		fields = append(fields, partner.FieldAddress)
+	}
+	if m.name != nil {
+		fields = append(fields, partner.FieldName)
+	}
+	if m.description != nil {
+		fields = append(fields, partner.FieldDescription)
+	}
+	if m.email != nil {
+		fields = append(fields, partner.FieldEmail)
+	}
+	if m.image != nil {
+		fields = append(fields, partner.FieldImage)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *PartnerMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case partner.FieldAddress:
+		return m.Address()
+	case partner.FieldName:
+		return m.Name()
+	case partner.FieldDescription:
+		return m.Description()
+	case partner.FieldEmail:
+		return m.Email()
+	case partner.FieldImage:
+		return m.Image()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *PartnerMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case partner.FieldAddress:
+		return m.OldAddress(ctx)
+	case partner.FieldName:
+		return m.OldName(ctx)
+	case partner.FieldDescription:
+		return m.OldDescription(ctx)
+	case partner.FieldEmail:
+		return m.OldEmail(ctx)
+	case partner.FieldImage:
+		return m.OldImage(ctx)
+	}
+	return nil, fmt.Errorf("unknown Partner field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *PartnerMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case partner.FieldAddress:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetAddress(v)
+		return nil
+	case partner.FieldName:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetName(v)
+		return nil
+	case partner.FieldDescription:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDescription(v)
+		return nil
+	case partner.FieldEmail:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetEmail(v)
+		return nil
+	case partner.FieldImage:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetImage(v)
+		return nil
+	}
+	return fmt.Errorf("unknown Partner field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *PartnerMutation) AddedFields() []string {
+	return nil
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *PartnerMutation) AddedField(name string) (ent.Value, bool) {
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *PartnerMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	}
+	return fmt.Errorf("unknown Partner numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *PartnerMutation) ClearedFields() []string {
+	return nil
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *PartnerMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *PartnerMutation) ClearField(name string) error {
+	return fmt.Errorf("unknown Partner nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *PartnerMutation) ResetField(name string) error {
+	switch name {
+	case partner.FieldAddress:
+		m.ResetAddress()
+		return nil
+	case partner.FieldName:
+		m.ResetName()
+		return nil
+	case partner.FieldDescription:
+		m.ResetDescription()
+		return nil
+	case partner.FieldEmail:
+		m.ResetEmail()
+		return nil
+	case partner.FieldImage:
+		m.ResetImage()
+		return nil
+	}
+	return fmt.Errorf("unknown Partner field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *PartnerMutation) AddedEdges() []string {
+	edges := make([]string, 0, 1)
+	if m.partner_address != nil {
+		edges = append(edges, partner.EdgePartnerAddress)
+	}
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *PartnerMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case partner.EdgePartnerAddress:
+		ids := make([]ent.Value, 0, len(m.partner_address))
+		for id := range m.partner_address {
+			ids = append(ids, id)
+		}
+		return ids
+	}
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *PartnerMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 1)
+	if m.removedpartner_address != nil {
+		edges = append(edges, partner.EdgePartnerAddress)
+	}
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *PartnerMutation) RemovedIDs(name string) []ent.Value {
+	switch name {
+	case partner.EdgePartnerAddress:
+		ids := make([]ent.Value, 0, len(m.removedpartner_address))
+		for id := range m.removedpartner_address {
+			ids = append(ids, id)
+		}
+		return ids
+	}
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *PartnerMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 1)
+	if m.clearedpartner_address {
+		edges = append(edges, partner.EdgePartnerAddress)
+	}
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *PartnerMutation) EdgeCleared(name string) bool {
+	switch name {
+	case partner.EdgePartnerAddress:
+		return m.clearedpartner_address
+	}
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *PartnerMutation) ClearEdge(name string) error {
+	switch name {
+	}
+	return fmt.Errorf("unknown Partner unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *PartnerMutation) ResetEdge(name string) error {
+	switch name {
+	case partner.EdgePartnerAddress:
+		m.ResetPartnerAddress()
+		return nil
+	}
+	return fmt.Errorf("unknown Partner edge %s", name)
 }

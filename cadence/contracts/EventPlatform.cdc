@@ -268,6 +268,7 @@ access(all) contract EventPlatform {
             emit EventNFTMinted(
                 eventID: eventID, 
                 nftID: nftID, 
+                metadata: metadata,
                 user: user, 
                 rarity: NFTMoment.rarityToString(r: rarity)
             ) 

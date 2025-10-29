@@ -22,6 +22,6 @@ func (EventParticipant) Fields() []ent.Field {
 // Edges of the User.
 func (EventParticipant) Edges() []ent.Edge {
 	return []ent.Edge{
-		edge.From("event", Event.Type).Ref("event_id").Unique().Required(),
+		edge.From("event", Event.Type).Ref("participants").Unique().Required(),
 	}
 }

@@ -11,3 +11,9 @@ type Event func(*sql.Selector)
 
 // EventParticipant is the predicate function for eventparticipant builders.
 type EventParticipant func(*sql.Selector)
+
+// Nft is the predicate function for nft builders.
+type Nft func(*sql.Selector)
+
+// Partner is the predicate function for partner builders.
+type Partner func(*sql.Selector)

@@ -1,7 +1,13 @@
 {
 	"contracts": {
-		"Counter": {
-			"source": "cadence/contracts/Counter.cdc",
+		"EventPlatform": {
+			"source": "cadence/contracts/EventPlatform.cdc",
+			"aliases": {
+				"testing": "0000000000000007"
+			}
+		},
+		"MomentUtility": {
+			"source": "cadence/contracts/MomentUtility.cdc",
 			"aliases": {
 				"testing": "0000000000000007"
 			}
@@ -20,26 +26,24 @@
 		"testnet": "access.devnet.nodes.onflow.org:9000"
 	},
 	"accounts": {
+		"a": {
+			"address": "179b6b1cb6755e31",
+			"key": "f31743f08003ea59e4c7196f08feda0ba744065ad079a067233c0e84987b6f55"
+		},
 		"emulator-account": {
 			"address": "f8d6e0586b0a20c7",
 			"key": {
 				"type": "file",
 				"location": "emulator-account.pkey"
 			}
-		},
-		"test-account": {
-			"address": "179b6b1cb6755e31",
-			"key": "f3fb12ce2f4bde6d2849a3d6741745a58d66146e96746f12400ec219e347f1b6"
 		}
 	},
 	"deployments": {
 		"emulator": {
 			"emulator-account": [
-				"Counter",
-				"NFTMoment"
-			],
-			"test-account": [
-				"NFTMoment"
+				"NFTMoment",
+				"EventPlatform",
+				"MomentUtility"
 			]
 		}
 	}
