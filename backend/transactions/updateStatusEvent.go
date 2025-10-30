@@ -41,7 +41,7 @@ transaction(brandAddress: Address, eventID: UInt64) {
 // UpdateEventStatus mengirimkan transaksi untuk memperbarui status event
 // Fungsi ini SINKRON dan mengembalikan error
 func UpdateEventStatus(brandAddressString string, eventID uint64) error {
-	log.Printf("[UpdateStatus] Memulai proses on-chain untuk Event: %d", eventID)
+	log.Println("[UpdateStatus] Memulai proses on-chain untuk Event: %d", eventID)
 
 	err := godotenv.Load()
 	if err != nil {
@@ -54,7 +54,7 @@ func UpdateEventStatus(brandAddressString string, eventID uint64) error {
 	// Menggunakan TestnetHost seperti di SendCheckinTransactionAsync
 	flowClient, err = http.NewClient(http.TestnetHost)
 	if err != nil {
-		log.Printf("[UpdateStatus] Connection Error: %v", err)
+		log.Println("[UpdateStatus] Connection Error: %v", err)
 		return fmt.Errorf("gagal membuat flow client: %w", err)
 	}
 
@@ -69,18 +69,18 @@ func UpdateEventStatus(brandAddressString string, eventID uint64) error {
 	platformAddress := flow.HexToAddress(deployerAddress) // Gunakan konstanta deployerAddress Anda
 	platformKey, err := crypto.DecodePrivateKeyHex(crypto.ECDSA_P256, privateKey)
 	if err != nil {
-		log.Printf("[UpdateStatus] Gagal decode key: %v", err)
+		log.Println("[UpdateStatus] Gagal decode key: %v", err)
 		return fmt.Errorf("gagal decode key: %w", err)
 	}
 	platformAccount, err := flowClient.GetAccount(ctx, platformAddress)
 	if err != nil {
-		log.Printf("[UpdateStatus] Gagal get account: %v", err)
+		log.Println("[UpdateStatus] Gagal get account: %v", err)
 		return fmt.Errorf("gagal get account: %w", err)
 	}
 	key := platformAccount.Keys[0]
 	signer, err := crypto.NewInMemorySigner(platformKey, key.HashAlgo)
 	if err != nil {
-		log.Printf("[UpdateStatus] Gagal load signer: %v", err)
+		log.Println("[UpdateStatus] Gagal load signer: %v", err)
 		return fmt.Errorf("gagal load signer: %w", err)
 	}
 
@@ -94,7 +94,7 @@ func UpdateEventStatus(brandAddressString string, eventID uint64) error {
 	// Buat Transaksi
 	latestBlock, err := flowClient.GetLatestBlock(ctx, true)
 	if err != nil {
-		log.Printf("[UpdateStatus] Gagal get block: %v", err)
+		log.Println("[UpdateStatus] Gagal get block: %v", err)
 		return fmt.Errorf("gagal get block: %w", err)
 	}
 	tx := flow.NewTransaction().
@@ -111,28 +111,28 @@ func UpdateEventStatus(brandAddressString string, eventID uint64) error {
 	// Tanda Tangani
 	err = tx.SignEnvelope(platformAddress, key.Index, signer)
 	if err != nil {
-		log.Printf("[UpdateStatus] Gagal sign tx: %v", err)
+		log.Println("[UpdateStatus] Gagal sign tx: %v", err)
 		return fmt.Errorf("gagal sign tx: %w", err)
 	}
 
 	// Kirim Transaksi
 	err = flowClient.SendTransaction(ctx, *tx)
 	if err != nil {
-		log.Printf("[UpdateStatus] Gagal kirim tx: %v", err)
+		log.Println("[UpdateStatus] Gagal kirim tx: %v", err)
 		return fmt.Errorf("gagal kirim tx: %w", err)
 	}
 
-	log.Printf("[UpdateStatus] Transaksi terkirim: %s. Menunggu seal...", tx.ID())
+	log.Println("[UpdateStatus] Transaksi terkirim: %s. Menunggu seal...", tx.ID())
 
 	// Tunggu Seal (Menggunakan WaitForSeal yang mengembalikan error)
 	result, err := utils.WaitForSeal(ctx, flowClient, tx.ID())
 	if err != nil {
 		// Termasuk error Cadence panic ("Brand ini tidak memiliki...")
-		log.Printf("[UpdateStatus] Transaksi %s GAGAL: %v", tx.ID(), err)
+		log.Println("[UpdateStatus] Transaksi %s GAGAL: %v", tx.ID(), err)
 		return fmt.Errorf("transaksi gagal: %w", err)
 	}
 
 	// Sukses
-	log.Printf("[UpdateStatus] Transaksi %s Berhasil di-seal! Status: %s", tx.ID(), result.Status)
+	log.Println("[UpdateStatus] Transaksi %s Berhasil di-seal! Status: %s", tx.ID(), result.Status)
 	return nil // Kembalikan nil error jika sukses
 }

@@ -37,11 +37,25 @@
 				"location": "a-brand.pkey"
 			}
 		},
+		"b-brand": {
+			"address": "1c2092e42a189207",
+			"key": {
+				"type": "file",
+				"location": "b-brand.pkey"
+			}
+		},
 		"dev-harkon": {
 			"address": "15728ff209769c63",
 			"key": {
 				"type": "file",
 				"location": "dev-harkon.pkey"
+			}
+		},
+		"dev-harkon2": {
+			"address": "1eea1e42593c56ab",
+			"key": {
+				"type": "file",
+				"location": "dev-harkon2.pkey"
 			}
 		},
 		"emulator-account": {
@@ -61,7 +75,7 @@
 			]
 		},
 		"testnet": {
-			"dev-harkon": [
+			"dev-harkon2": [
 				"NFTMoment",
 				"EventPlatform",
 				"MomentUtility"

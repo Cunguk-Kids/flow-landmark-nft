@@ -67,7 +67,7 @@ func HandleCreateEvent(c echo.Context) error {
 
 	var req CreateEventRequest
 	if err := c.Bind(&req); err != nil {
-		log.Printf("Error binding request body: %v", err)
+		log.Println("Error binding request body: %v", err)
 		// Kembalikan error jika JSON tidak valid
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid request body format"})
 	}
@@ -76,12 +76,12 @@ func HandleCreateEvent(c echo.Context) error {
 	log.Println(req.EventName)
 	log.Println("wkwkw")
 	if err != nil {
-		log.Printf("Error parsing startDate '%s': %v", req.StartDate, err)
+		log.Println("Error parsing startDate '%s': %v", req.StartDate, err)
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid startDate format. Use RFC3339Nano (e.g., YYYY-MM-DDTHH:MM:SSZ)"})
 	}
 	endDate, err := time.Parse(time.RFC3339Nano, req.EndDate)
 	if err != nil {
-		log.Printf("Error parsing endDate '%s': %v", req.EndDate, err)
+		log.Println("Error parsing endDate '%s': %v", req.EndDate, err)
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid endDate format. Use RFC3339Nano (e.g., YYYY-MM-DDTHH:MM:SSZ)"})
 	}
 
@@ -91,19 +91,19 @@ func HandleCreateEvent(c echo.Context) error {
 	// Validasi 1: StartDate tidak boleh di masa lalu
 	// Kita gunakan Toleransi 1 menit untuk menghindari masalah clock skew
 	if startDate.Before(now.Add(-1 * time.Minute)) {
-		log.Printf("Validation failed: StartDate (%s) is in the past.", startDate.String())
+		log.Println("Validation failed: StartDate (%s) is in the past.", startDate.String())
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Start date cannot be in the past"})
 	}
 
 	// Validasi 2: EndDate harus setelah StartDate
 	if !endDate.After(startDate) {
-		log.Printf("Validation failed: EndDate (%s) is not after StartDate (%s).", endDate.String(), startDate.String())
+		log.Println("Validation failed: EndDate (%s) is not after StartDate (%s).", endDate.String(), startDate.String())
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "End date must be after start date"})
 	}
 
 	// Validasi 3: TotalRareNFT tidak boleh melebihi Quota
 	if req.TotalRareNFT > req.Quota {
-		log.Printf("Validation failed: TotalRareNFT (%d) exceeds Quota (%d).", req.TotalRareNFT, req.Quota)
+		log.Println("Validation failed: TotalRareNFT (%d) exceeds Quota (%d).", req.TotalRareNFT, req.Quota)
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Total rare NFT cannot exceed the total quota"})
 	}
 	// --- AKHIR VALIDASI ---
@@ -165,7 +165,7 @@ func HandleGetEventByID(c echo.Context) error {
 	idParam := c.Param("id") // "id" harus cocok dengan definisi route Anda (misal: e.GET("/events/:id", ...))
 	eventIDInt64, err := strconv.Atoi(idParam)
 	if err != nil {
-		log.Printf("Error parsing event ID '%s': %v", idParam, err)
+		log.Println("Error parsing event ID '%s': %v", idParam, err)
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid Event ID format"})
 	}
 
@@ -185,16 +185,16 @@ func HandleGetEventByID(c echo.Context) error {
 	// 3. Handle Error (Termasuk 'Not Found')
 	if err != nil {
 		if ent.IsNotFound(err) {
-			log.Printf("Event dengan ID %d tidak ditemukan", eventIDInt64)
+			log.Println("Event dengan ID %d tidak ditemukan", eventIDInt64)
 			return c.JSON(http.StatusNotFound, map[string]string{"error": "Event not found"})
 		}
 		// Error database lainnya
-		log.Printf("Error querying database for event ID %d: %v", eventIDInt64, err)
+		log.Println("Error querying database for event ID %d: %v", eventIDInt64, err)
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Database query error"})
 	}
 
 	// 4. Kembalikan data event sebagai JSON
-	log.Printf("Event ditemukan: %v", eventRecord)
+	log.Println("Event ditemukan: %v", eventRecord)
 	return c.JSON(http.StatusOK, eventRecord)
 }
 
@@ -239,7 +239,7 @@ func HandleGetAllEvents(c echo.Context) error {
 	// Hitung offset
 	offset := (page - 1) * limit
 
-	log.Printf("Filter - Brand: '%s', Page: %d, Limit: %d, Offset: %d, status: %d", brandAddressFilter, page, limit, offset, statusFilter)
+	log.Println("Filter - Brand: '%s', Page: %d, Limit: %d, Offset: %d, status: %d", brandAddressFilter, page, limit, offset, statusFilter)
 
 	if entClient == nil {
 		// ... (handle client nil) ...
@@ -250,23 +250,23 @@ func HandleGetAllEvents(c echo.Context) error {
 
 	if brandAddressFilter != "" {
 		query = query.Where(event.HasPartnerWith(partner.AddressEQ(brandAddressFilter)))
-		log.Printf("Menerapkan filter BrandAddress: %s", brandAddressFilter)
+		log.Println("Menerapkan filter BrandAddress: %s", brandAddressFilter)
 	}
 
 	if statusFilter != "" {
 		statusFilterInt, err := strconv.Atoi(statusFilter)
 		if err != nil {
-			log.Printf("Error querying events: %v", err)
+			log.Println("Error querying events: %v", err)
 			return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid status format"})
 		}
 		query = query.Where(event.StatusEQ(statusFilterInt))
-		log.Printf("Menerapkan filter BrandAddress: %s", statusFilterInt)
+		log.Println("Menerapkan filter BrandAddress: %s", statusFilterInt)
 	}
 
 	// Hitung total item SEBELUM menerapkan limit/offset (untuk metadata pagination)
 	totalCount, err := query.Count(ctx)
 	if err != nil {
-		log.Printf("Error menghitung total event: %v", err)
+		log.Println("Error menghitung total event: %v", err)
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Database query error (count)"})
 	}
 
@@ -281,7 +281,7 @@ func HandleGetAllEvents(c echo.Context) error {
 
 	// --- 3. Handle Error Query Utama ---
 	if err != nil {
-		log.Printf("Error querying events: %v", err)
+		log.Println("Error querying events: %v", err)
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Database query error"})
 	}
 
@@ -301,7 +301,7 @@ func HandleGetAllEvents(c echo.Context) error {
 		},
 	}
 
-	log.Printf("Ditemukan %d event(s) untuk halaman ini (Total: %d)", len(eventsOnPage), totalCount)
+	log.Println("Ditemukan %d event(s) untuk halaman ini (Total: %d)", len(eventsOnPage), totalCount)
 	return c.JSON(http.StatusOK, response)
 }
 
@@ -323,7 +323,7 @@ func HandleCheckin(c echo.Context) error {
 	// 1. Bind Request
 	var req CheckinRequest
 	if err := c.Bind(&req); err != nil {
-		log.Printf("Error binding checkin request: %v", err)
+		log.Println("Error binding checkin request: %v", err)
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid request body"})
 	}
 
@@ -347,16 +347,16 @@ func HandleCheckin(c echo.Context) error {
 
 	if err != nil {
 		if ent.IsNotFound(err) {
-			log.Printf("Check-in Gagal: User %s tidak terdaftar di event %d", userAddress, eventIDInt)
+			log.Println("Check-in Gagal: User %s tidak terdaftar di event %d", userAddress, eventIDInt)
 			return c.JSON(http.StatusForbidden, map[string]string{"error": "User not registered for this event"})
 		}
-		log.Printf("Error DB saat validasi check-in: %v", err)
+		log.Println("Error DB saat validasi check-in: %v", err)
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Database error during validation"})
 	}
 
 	// Cek apakah sudah check-in (opsional, jika ingin mencegah double check-in)
 	if participant.IsCheckedIn {
-		log.Printf("Check-in Info: User %s sudah check-in sebelumnya di event %d", userAddress, eventIDInt)
+		log.Println("Check-in Info: User %s sudah check-in sebelumnya di event %d", userAddress, eventIDInt)
 		// Kembalikan OK saja agar scanner tidak error
 		return c.JSON(http.StatusOK, map[string]string{"status": "success", "message": "User already checked in"})
 	}
@@ -372,11 +372,11 @@ func HandleCheckin(c echo.Context) error {
 		Save(ctx)
 
 	if err != nil {
-		log.Printf("Error DB saat update isCheckedIn: %v", err)
+		log.Println("Error DB saat update isCheckedIn: %v", err)
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Database error during check-in"})
 	}
 
-	log.Printf("DB Check-in Berhasil: User %s di event %d", userAddress, eventIDInt)
+	log.Println("DB Check-in Berhasil: User %s di event %d", userAddress, eventIDInt)
 
 	// 4. JALANKAN GOROUTINE ASINKRON
 	// (Dapatkan brandAddress dari DB atau request jika perlu)
@@ -456,7 +456,7 @@ func HandleGetEventsForUser(c echo.Context) error {
 	}
 	offset := (page - 1) * limit
 
-	log.Printf("User: %s, Filter - Brand: '%s', Status: '%s', Page: %d, Limit: %d", userAddress, brandAddressFilter, statusFilter, page, limit)
+	log.Println("User: %s, Filter - Brand: '%s', Status: '%s', Page: %d, Limit: %d", userAddress, brandAddressFilter, statusFilter, page, limit)
 
 	// --- 2. Validasi Ent Client ---
 	entClient := utils.Open(os.Getenv("DATABASE_URL"))
@@ -521,7 +521,7 @@ func HandleGetEventsForUser(c echo.Context) error {
 			All(ctx)
 
 		if err != nil {
-			log.Printf("Gagal query status partisipasi user: %v", err)
+			log.Println("Gagal query status partisipasi user: %v", err)
 		} else {
 			for _, p := range userParticipations {
 				if p.Edges.Event != nil {
@@ -618,7 +618,7 @@ func HandleGetEventsForUser(c echo.Context) error {
 		},
 	}
 
-	log.Printf("Ditemukan %d event(s) untuk user %s halaman ini (Total: %d)", len(userEventViews), userAddress, totalCount)
+	log.Println("Ditemukan %d event(s) untuk user %s halaman ini (Total: %d)", len(userEventViews), userAddress, totalCount)
 	return c.JSON(http.StatusOK, response)
 }
 
@@ -644,7 +644,7 @@ func HandleUpdateEventStatus(c echo.Context) error {
 	// 1. Bind Request
 	var req UpdateStatusRequest
 	if err := c.Bind(&req); err != nil {
-		log.Printf("Error binding request body: %v", err)
+		log.Println("Error binding request body: %v", err)
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid request body format"})
 	}
 
@@ -659,7 +659,7 @@ func HandleUpdateEventStatus(c echo.Context) error {
 
 	// 4. Handle Error (jika ada)
 	if err != nil {
-		log.Printf("Gagal menjalankan UpdateEventStatus: %v", err)
+		log.Println("Gagal menjalankan UpdateEventStatus: %v", err)
 		// Kirim error Cadence ke client
 		return c.JSON(http.StatusInternalServerError, map[string]string{
 			"status":  "error",

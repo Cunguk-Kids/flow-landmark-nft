@@ -52,13 +52,13 @@ func ProcessEventCreated(ctx context.Context, flowClient *grpc.BaseClient, ev fl
 	var Fields = ev.Value.FieldsMappedByName()
 	cadenceAddr, err := getCadenceField[cadence.Address](Fields, "brandAddress")
 	if err != nil {
-		log.Printf("Gagal parsing brandAddress: %v", err)
+		log.Println("Gagal parsing brandAddress: %v", err)
 		return
 	}
 
 	cadenceEventID, err := getCadenceField[cadence.UInt64](Fields, "eventID")
 	if err != nil {
-		log.Printf("Gagal parsing eventID: %v", err)
+		log.Println("Gagal parsing eventID: %v", err)
 		return
 	}
 
@@ -67,7 +67,7 @@ func ProcessEventCreated(ctx context.Context, flowClient *grpc.BaseClient, ev fl
 	var eventID string = cadenceEventID.String()
 	num, err := strconv.Atoi(eventID) // Convert string to integer
 	if err != nil {
-		log.Fatalf("error failed to convert to integer")
+		log.Println("error failed to convert to integer")
 	}
 
 	script := []byte(script.GetEventDetailScriptTemplate)
@@ -78,19 +78,19 @@ func ProcessEventCreated(ctx context.Context, flowClient *grpc.BaseClient, ev fl
 
 	scriptResult, err := flowClient.ExecuteScriptAtLatestBlock(ctx, script, scriptArgs)
 	if err != nil {
-		log.Printf("[ProcessEventCreated] Gagal execute get_event_detail script for event %d: %v", num, err)
+		log.Println("[ProcessEventCreated] Gagal execute get_event_detail script for event %d: %v", num, err)
 		return
 	}
 
 	optionalResult, ok := scriptResult.(cadence.Optional)
 	if !ok || optionalResult.Value == nil {
-		log.Printf("[ProcessEventCreated] Script get_event_detail mengembalikan nil untuk event %d", num)
+		log.Println("[ProcessEventCreated] Script get_event_detail mengembalikan nil untuk event %d", num)
 		return
 	}
 
 	eventDetailsStruct, ok := optionalResult.Value.(cadence.Struct)
 	if !ok {
-		log.Printf("[ProcessEventCreated] Gagal parsing hasil script menjadi cadence.Struct untuk event %d", num)
+		log.Println("[ProcessEventCreated] Gagal parsing hasil script menjadi cadence.Struct untuk event %d", num)
 		return
 	}
 
@@ -130,7 +130,7 @@ func ProcessEventCreated(ctx context.Context, flowClient *grpc.BaseClient, ev fl
 		Only(ctx)                               // Expect exactly one partner for this address
 
 	if err != nil {
-		log.Printf("[ProcessEventCreated] Gagal menemukan Partner dengan alamat %s di DB: %v", brandAddress, err)
+		log.Println("[ProcessEventCreated] Gagal menemukan Partner dengan alamat %s di DB: %v", brandAddress, err)
 		// Putuskan apa yang harus dilakukan jika partner tidak ada:
 		// - return? (Batalkan penyimpanan event)
 		// - Lanjutkan tanpa set partner?
@@ -155,7 +155,7 @@ func ProcessEventCreated(ctx context.Context, flowClient *grpc.BaseClient, ev fl
 		SetTotalRareNFT(totalRareNFT).
 		Save(ctx)
 	if err != nil {
-		log.Fatalf("failed creating event")
+		log.Println("failed creating event", err)
 	}
 	log.Println("event telah dibuat: ", event)
 	log.Println("[ProcessEventCreated] (Placeholder) Simpan ke DB di sini...")
@@ -167,13 +167,13 @@ func ProcessEventRegistered(ctx context.Context, ev flow.Event, client *ent.Clie
 	var Fields = ev.Value.FieldsMappedByName()
 	cadenceAddr, err := getCadenceField[cadence.Address](Fields, "user")
 	if err != nil {
-		log.Printf("Gagal parsing brandAddress: %v", err)
+		log.Println("Gagal parsing brandAddress: %v", err)
 		return
 	}
 
 	cadenceEventID, err := getCadenceField[cadence.UInt64](Fields, "eventID")
 	if err != nil {
-		log.Fatalf("Gagal parsing eventID: %v", err)
+		log.Println("Gagal parsing eventID: %v", err)
 		return
 	}
 
@@ -184,7 +184,7 @@ func ProcessEventRegistered(ctx context.Context, ev flow.Event, client *ent.Clie
 
 	tx, err := client.Tx(ctx)
 	if err != nil {
-		log.Fatalf("[ProcessEventRegistered] Gagal memulai DB transaction: %v", err)
+		log.Println("[ProcessEventRegistered] Gagal memulai DB transaction: %v", err)
 	}
 
 	defer func() {
@@ -194,7 +194,7 @@ func ProcessEventRegistered(ctx context.Context, ev flow.Event, client *ent.Clie
 		}
 		if err != nil { // Handle normal errors
 			if rlbkErr := tx.Rollback(); rlbkErr != nil {
-				log.Printf("[ProcessEventRegistered] Gagal rollback transaction: %v", rlbkErr)
+				log.Println("[ProcessEventRegistered] Gagal rollback transaction: %v", rlbkErr)
 			}
 		}
 	}()
@@ -204,17 +204,17 @@ func ProcessEventRegistered(ctx context.Context, ev flow.Event, client *ent.Clie
 		AddCounter(1).
 		Exec(ctx)
 	if err != nil {
-		log.Printf("[ProcessEventRegistered] Gagal update counter event %d: %v", num, err)
+		log.Println("[ProcessEventRegistered] Gagal update counter event %d: %v", num, err)
 		return // Will trigger rollback
 	}
 
 	_, err = tx.EventParticipant.Create().SetEventID(num).SetUserAddress(userAddress).Save(ctx)
 	if err != nil {
-		log.Fatalf("failed creating event")
+		log.Println("failed creating event")
 	}
 	err = tx.Commit()
 	if err != nil {
-		log.Printf("[ProcessEventRegistered] Gagal commit transaction: %v", err)
+		log.Println("[ProcessEventRegistered] Gagal commit transaction: %v", err)
 		return
 	}
 	log.Println("[ProcessEventRegistered] (Placeholder) Implementasikan fungsi ini...")
@@ -226,13 +226,13 @@ func ProcessEventUnregistered(ctx context.Context, ev flow.Event, client *ent.Cl
 	var Fields = ev.Value.FieldsMappedByName()
 	cadenceAddr, err := getCadenceField[cadence.Address](Fields, "user")
 	if err != nil {
-		log.Printf("Gagal parsing brandAddress: %v", err)
+		log.Println("Gagal parsing brandAddress: %v", err)
 		return
 	}
 
 	cadenceEventID, err := getCadenceField[cadence.UInt64](Fields, "eventID")
 	if err != nil {
-		log.Printf("Gagal parsing eventID: %v", err)
+		log.Println("Gagal parsing eventID: %v", err)
 		return
 	}
 
@@ -247,7 +247,7 @@ func ProcessEventUnregistered(ctx context.Context, ev flow.Event, client *ent.Cl
 
 	tx, err := client.Tx(ctx)
 	if err != nil {
-		log.Fatalf("[ProcessEventRegistered] Gagal memulai DB transaction: %v", err)
+		log.Println("[ProcessEventRegistered] Gagal memulai DB transaction: %v", err)
 	}
 
 	defer func() {
@@ -257,7 +257,7 @@ func ProcessEventUnregistered(ctx context.Context, ev flow.Event, client *ent.Cl
 		}
 		if err != nil { // Handle normal errors
 			if rlbkErr := tx.Rollback(); rlbkErr != nil {
-				log.Printf("[ProcessEventUnregistered] Gagal rollback transaction: %v", rlbkErr)
+				log.Println("[ProcessEventUnregistered] Gagal rollback transaction: %v", rlbkErr)
 			}
 		}
 	}()
@@ -267,7 +267,7 @@ func ProcessEventUnregistered(ctx context.Context, ev flow.Event, client *ent.Cl
 		AddCounter(-1).
 		Exec(ctx)
 	if err != nil {
-		log.Printf("[ProcessEventUnregistered] Gagal update counter event %d: %v", eventIDInt, err)
+		log.Println("[ProcessEventUnregistered] Gagal update counter event %d: %v", eventIDInt, err)
 		return // Will trigger rollback
 	}
 
@@ -277,7 +277,7 @@ func ProcessEventUnregistered(ctx context.Context, ev flow.Event, client *ent.Cl
 	).Exec(ctx)
 	err = tx.Commit()
 	if err != nil {
-		log.Printf("[ProcessEventUnregistered] Gagal commit transaction: %v", err)
+		log.Println("[ProcessEventUnregistered] Gagal commit transaction: %v", err)
 		return
 	}
 }
@@ -288,14 +288,14 @@ func ProcessEventStatus(ctx context.Context, ev flow.Event, client *ent.Client) 
 	// Parse eventID
 	cadenceEventID, err := getCadenceField[cadence.UInt64](Fields, "eventID")
 	if err != nil {
-		log.Printf("[ProcessEventStatusUpdated] Gagal parsing eventID: %v", err)
+		log.Println("[ProcessEventStatusUpdated] Gagal parsing eventID: %v", err)
 		return
 	}
 
 	// Parse status (UInt8)
 	cadenceStatus, err := getCadenceField[cadence.UInt8](Fields, "status")
 	if err != nil {
-		log.Printf("[ProcessEventStatusUpdated] Gagal parsing status: %v", err)
+		log.Println("[ProcessEventStatusUpdated] Gagal parsing status: %v", err)
 		return
 	}
 
@@ -303,7 +303,7 @@ func ProcessEventStatus(ctx context.Context, ev flow.Event, client *ent.Client) 
 	status, _ := strconv.Atoi(cadenceStatus.String())
 
 	if err != nil {
-		log.Printf("err convert")
+		log.Println("err convert")
 		return
 	}
 
@@ -314,14 +314,14 @@ func ProcessEventStatus(ctx context.Context, ev flow.Event, client *ent.Client) 
 		Save(ctx)
 
 	if err != nil {
-		log.Printf("[ProcessEventStatusUpdated] Gagal update status event %d di DB: %v", eventID, err)
+		log.Println("[ProcessEventStatusUpdated] Gagal update status event %d di DB: %v", eventID, err)
 		return
 	}
 
 	if updatedCount == 0 {
-		log.Printf("[ProcessEventStatusUpdated] Event %d tidak ditemukan di DB untuk diupdate.", eventID)
+		log.Println("[ProcessEventStatusUpdated] Event %d tidak ditemukan di DB untuk diupdate.", eventID)
 	} else {
-		log.Printf("[DB] Status event %d berhasil diupdate menjadi %d.", eventID, status)
+		log.Println("[DB] Status event %d berhasil diupdate menjadi %d.", eventID, status)
 	}
 }
 
@@ -331,12 +331,12 @@ func HandlePartnerAdded(ctx context.Context, entClient *ent.Client, ev flow.Even
 	// --- 1. Parse Event Data ---
 	cadenceAddr, err := getCadenceField[cadence.Address](Fields, "address")
 	if err != nil {
-		log.Printf("[HandlePartnerAdded] Gagal parsing address: %v", err)
+		log.Println("[HandlePartnerAdded] Gagal parsing address: %v", err)
 		return
 	}
 	cadenceName, err := getCadenceField[cadence.String](Fields, "name")
 	if err != nil {
-		log.Printf("[HandlePartnerAdded] Gagal parsing name: %v", err)
+		log.Println("[HandlePartnerAdded] Gagal parsing name: %v", err)
 		return
 	}
 	cadenceDesc, _ := getCadenceField[cadence.String](Fields, "description")
@@ -349,7 +349,7 @@ func HandlePartnerAdded(ctx context.Context, entClient *ent.Client, ev flow.Even
 	partnerEmail := cadenceEmail.String() // Convert cadence.String to Go string
 	partnerImage := cadenceImage.String() // Convert cadence.String to Go string
 
-	log.Printf("[HandlePartnerAdded] Diterima: Address %s, Name %s", partnerAddress, partnerName)
+	log.Println("[HandlePartnerAdded] Diterima: Address %s, Name %s", partnerAddress, partnerName)
 
 	// --- 2. Create or Update Partner using Ent (Upsert) ---
 	// Ent's Upsert is ideal here. It tries to create, and if the unique constraint
@@ -367,11 +367,11 @@ func HandlePartnerAdded(ctx context.Context, entClient *ent.Client, ev flow.Even
 
 	// --- 3. Handle Result ---
 	if err != nil {
-		log.Printf("[HandlePartnerAdded] Gagal upsert partner %s: %v", partnerAddress, err)
+		log.Println("[HandlePartnerAdded] Gagal upsert partner %s: %v", partnerAddress, err)
 		return
 	}
 
-	log.Printf("[DB] Partner %s (%s) berhasil disimpan/diupdate.", partnerAddress, partnerName)
+	log.Println("[DB] Partner %s (%s) berhasil disimpan/diupdate.", partnerAddress, partnerName)
 }
 
 func HandleEventNFTMinted(ctx context.Context, flowClient *grpc.BaseClient, entClient *ent.Client, ev flow.Event) {
@@ -380,22 +380,22 @@ func HandleEventNFTMinted(ctx context.Context, flowClient *grpc.BaseClient, entC
 	// --- 1. Parse Basic Event Data ---
 	cadenceEventID, err := getCadenceField[cadence.UInt64](Fields, "eventID")
 	if err != nil {
-		log.Printf("[HandleEventNFTMinted] Gagal parsing eventID: %v", err)
+		log.Println("[HandleEventNFTMinted] Gagal parsing eventID: %v", err)
 		return
 	}
 	cadenceNftID, err := getCadenceField[cadence.UInt64](Fields, "nftID")
 	if err != nil {
-		log.Printf("[HandleEventNFTMinted] Gagal parsing nftID: %v", err)
+		log.Println("[HandleEventNFTMinted] Gagal parsing nftID: %v", err)
 		return
 	}
 	cadenceUser, err := getCadenceField[cadence.Address](Fields, "user")
 	if err != nil {
-		log.Printf("[HandleEventNFTMinted] Gagal parsing user: %v", err)
+		log.Println("[HandleEventNFTMinted] Gagal parsing user: %v", err)
 		return
 	}
 	cadenceRarity, err := getCadenceField[cadence.String](Fields, "rarity") // Rarity in event is String
 	if err != nil {
-		log.Printf("[HandleEventNFTMinted] Gagal parsing rarity: %v", err)
+		log.Println("[HandleEventNFTMinted] Gagal parsing rarity: %v", err)
 		return
 	}
 
@@ -407,7 +407,7 @@ func HandleEventNFTMinted(ctx context.Context, flowClient *grpc.BaseClient, entC
 	eventIDInt, _ := strconv.Atoi(eventID)
 	nftIDInt64, _ := strconv.ParseInt(nftID, 10, 64) // Convert nftID for Ent
 
-	log.Printf("[HandleEventNFTMinted] Diterima: Event %d, NFT %d, User %s, Rarity %s",
+	log.Println("[HandleEventNFTMinted] Diterima: Event %d, NFT %d, User %s, Rarity %s",
 		eventIDInt, nftIDInt64, userAddress, rarityString)
 
 	// --- 2. Fetch Full NFT Details via Script ---
@@ -421,48 +421,48 @@ func HandleEventNFTMinted(ctx context.Context, flowClient *grpc.BaseClient, entC
 
 	scriptResult, err := flowClient.ExecuteScriptAtLatestBlock(ctx, script, scriptArgs)
 	if err != nil {
-		log.Printf("[HandleEventNFTMinted] Gagal execute get_nft_details script for NFT %d: %v", nftIDInt64, err)
+		log.Println("[HandleEventNFTMinted] Gagal execute get_nft_details script for NFT %d: %v", nftIDInt64, err)
 		return
 	}
 	optionalResult, ok := scriptResult.(cadence.Optional)
 	if !ok || optionalResult.Value == nil {
-		log.Printf("[HandleEventNFTMinted] Script get_nft_details mengembalikan nil untuk NFT %d (mungkin sudah dibakar?)", nftIDInt64)
+		log.Println("[HandleEventNFTMinted] Script get_nft_details mengembalikan nil untuk NFT %d (mungkin sudah dibakar?)", nftIDInt64)
 		return // Cannot proceed without details
 	}
 	nftDetailsStruct, ok := optionalResult.Value.(cadence.Struct)
 	if !ok {
-		log.Printf("[HandleEventNFTMinted] Gagal parsing hasil script menjadi cadence.Struct untuk NFT %d", nftIDInt64)
+		log.Println("[HandleEventNFTMinted] Gagal parsing hasil script menjadi cadence.Struct untuk NFT %d", nftIDInt64)
 		return
 	}
 
 	// --- 3. Parse Metadata Struct from Script Result ---
 	outerMap := nftDetailsStruct.FieldsMappedByName()
-	log.Printf("[DEBUG] Outer NFTDetails Map: %+v", outerMap) // Log this map
+	log.Println("[DEBUG] Outer NFTDetails Map: %+v", outerMap) // Log this map
 
 	// 2. Ambil nilai 'metadata' dari map luar (ini adalah cadence.Struct)
 	metadataValue, ok := outerMap["metadata"]
 	if !ok {
-		log.Printf("[HandleEventNFTMinted] Field 'metadata' not found in NFTDetails struct result for NFT %d", nftIDInt64)
+		log.Println("[HandleEventNFTMinted] Field 'metadata' not found in NFTDetails struct result for NFT %d", nftIDInt64)
 		return
 	}
 	metadataStruct, ok := metadataValue.(cadence.Struct)
 	if !ok {
-		log.Printf("[HandleEventNFTMinted] Field 'metadata' is not a cadence.Struct (type: %T) for NFT %d", metadataValue, nftIDInt64)
+		log.Println("[HandleEventNFTMinted] Field 'metadata' is not a cadence.Struct (type: %T) for NFT %d", metadataValue, nftIDInt64)
 		return
 	}
 
 	// 3. Dapatkan map DARI struct metadata (inner struct)
-	metadataMap := metadataStruct.FieldsMappedByName()         // <-- Panggil FieldsMappedByName() di sini!
-	log.Printf("[DEBUG] Inner Metadata Map: %+v", metadataMap) // Log this map
+	metadataMap := metadataStruct.FieldsMappedByName()          // <-- Panggil FieldsMappedByName() di sini!
+	log.Println("[DEBUG] Inner Metadata Map: %+v", metadataMap) // Log this map
 
 	// 4. Parse map metadata yang benar
 	metadata, err := parseNFTDetailsStruct(metadataMap) // <-- Kirim map yang benar
 	if err != nil {
-		log.Printf("[HandleEventNFTMinted] Gagal parsing inner metadata map from script for NFT %d: %v", nftIDInt64, err)
+		log.Println("[HandleEventNFTMinted] Gagal parsing inner metadata map from script for NFT %d: %v", nftIDInt64, err)
 		return
 	}
 	if metadata == nil {
-		log.Printf("[HandleEventNFTMinted] Parsing inner metadata map resulted in nil for NFT %d", nftIDInt64)
+		log.Println("[HandleEventNFTMinted] Parsing inner metadata map resulted in nil for NFT %d", nftIDInt64)
 		return
 	}
 	// --- 4. Save NFT to Database using Ent ---
@@ -482,16 +482,16 @@ func HandleEventNFTMinted(ctx context.Context, flowClient *grpc.BaseClient, entC
 	if err != nil {
 		// Handle potential unique constraint violation (NFT already indexed)
 		// if ent.IsConstraintError(err) {
-		//  log.Printf("[HandleEventNFTMinted] NFT %d sudah ada di DB.", nftIDInt64)
+		//  log.Println("[HandleEventNFTMinted] NFT %d sudah ada di DB.", nftIDInt64)
 		//  return // Or update if necessary
 		// }
-		log.Printf("[HandleEventNFTMinted] Gagal menyimpan NFT %d ke DB: %v", nftIDInt64, err)
+		log.Println("[HandleEventNFTMinted] Gagal menyimpan NFT %d ke DB: %v", nftIDInt64, err)
 		return
 	}
 
-	log.Printf("[DB] NFT %d (dari Event %d) berhasil disimpan.", nftIDInt64, eventIDInt)
+	log.Println("[DB] NFT %d (dari Event %d) berhasil disimpan.", nftIDInt64, eventIDInt)
 
 	// Optional: Update Event counter (if not handled by EventRegistered/Unregistered)
 	// err = entClient.Event.UpdateOneID(eventIDInt64).AddCounter(1).Exec(ctx)
-	// if err != nil { log.Printf("[HandleEventNFTMinted] Gagal update counter event %d: %v", eventIDInt64, err) }
+	// if err != nil { log.Println("[HandleEventNFTMinted] Gagal update counter event %d: %v", eventIDInt64, err) }
 }
