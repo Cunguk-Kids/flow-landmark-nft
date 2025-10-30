@@ -195,7 +195,7 @@ const EventsFormPage: FC<{ id: string }> = ({ id }) => {
         initial={{ opacity: 0 }}
         className="min-h-screen bg-background relative isolate flex items-center justify-center p-4"
       >
-        <div className="absolute inset-0 -z-1">
+        <div className="fixed inset-0 -z-1">
           <Galaxy />
         </div>
 
