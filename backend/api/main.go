@@ -28,13 +28,16 @@ func main() {
 	// Kita gunakan e.POST karena ini adalah aksi "membuat" (create)
 	e.POST("/event/create", route.HandleCreateEvent)
 	e.GET("/event/:id", route.HandleGetEventByID)
-	e.GET("/event/", route.HandleGetAllEvents)
+	e.GET("/event", route.HandleGetAllEvents)
 	e.POST("/event/check-in", route.HandleCheckin)
 	e.GET("/event/user", route.HandleGetEventsForUser)
 
 	// partner
-	e.GET("/partner/", route.HandleGetAllPartner)
+	e.GET("/partner", route.HandleGetAllPartner)
 	e.GET("/partner/:address", route.HandleGetPartnerByAddress)
+
+	//nfts
+	e.GET("/nft", route.HandleGetNFTs)
 
 	// 4. Jalankan Server
 	log.Println("Server API Echo berjalan di http://localhost:6666")
