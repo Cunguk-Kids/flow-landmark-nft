@@ -4,6 +4,7 @@ import (
 	_ "backend/docs"
 	"backend/route"
 	"log"
+	"net/http"
 
 	"github.com/joho/godotenv"
 
@@ -29,7 +30,30 @@ func main() {
 	// Ini setara dengan 'logger' & 'recovery' di Gin
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
-	e.Use(middleware.CORS())
+	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
+		// Izinkan semua origin. '*' adalah default, tapi ini lebih eksplisit.
+		AllowOrigins: []string{"*"},
+
+		// Izinkan semua metode yang umum digunakan,
+		// middleware akan otomatis menangani preflight 'OPTIONS'.
+		AllowMethods: []string{
+			http.MethodGet,
+			http.MethodHead,
+			http.MethodPut,
+			http.MethodPatch,
+			http.MethodPost,
+			http.MethodDelete,
+		},
+
+		// INI BAGIAN PENTING:
+		// Izinkan header yang umum dikirim oleh frontend.
+		AllowHeaders: []string{
+			echo.HeaderOrigin,
+			echo.HeaderContentType,
+			echo.HeaderAccept,
+			echo.HeaderAuthorization, // Jika Anda berencana menggunakan token (JWT)
+		},
+	}))
 	e.GET("/", route.Welcome)
 	e.GET("/swagger/*", echoSwagger.WrapHandler)
 	// 3. Definisikan Rute (Routes)
