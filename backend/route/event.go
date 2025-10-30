@@ -157,9 +157,9 @@ func HandleGetEventByID(c echo.Context) error {
 	eventRecord, err := entClient.Event.
 		Query().
 		Where(event.EventIdEQ(eventIDInt64)).
-		WithParticipants(). // Cari berdasarkan eventID
-		// Load("participants"). // Opsional: Muat relasi jika perlu
-		Only(ctx) // Ambil satu record, error jika tidak ada atau > 1
+		WithParticipants().
+		WithPartner().
+		Only(ctx)
 
 	// 3. Handle Error (Termasuk 'Not Found')
 	if err != nil {
@@ -244,7 +244,7 @@ func HandleGetAllEvents(c echo.Context) error {
 	query = query.Order(ent.Desc(event.FieldEventId))
 
 	// Jalankan query untuk mendapatkan data halaman ini
-	eventsOnPage, err := query.WithParticipants().All(ctx)
+	eventsOnPage, err := query.WithParticipants().WithPartner().All(ctx)
 
 	// --- 3. Handle Error Query Utama ---
 	if err != nil {
@@ -353,9 +353,8 @@ func HandleCheckin(c echo.Context) error {
 }
 
 type UserEventView struct {
-	*ent.Event                           // Embed *ent.Event agar semua field-nya ada
-	UserStatus   string                  `json:"userStatus"` // Status user: "Available", "Registered", dll.
-	Participants []*ent.EventParticipant `json:"participants,omitempty"`
+	*ent.Event        // Embed *ent.Event agar semua field-nya ada
+	UserStatus string `json:"userStatus"`
 }
 
 const (
@@ -374,9 +373,6 @@ func HandleGetEventsForUser(c echo.Context) error {
 
 	// --- 1. Ambil Query Parameters (Termasuk userAddress WAJIB) ---
 	userAddress := c.QueryParam("userAddress")
-	if userAddress == "" {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Query parameter 'userAddress' is required"})
-	}
 
 	brandAddressFilter := c.QueryParam("brandAddress")
 	statusFilter := c.QueryParam("status") // Filter status event (pending, active, ended)
@@ -397,12 +393,17 @@ func HandleGetEventsForUser(c echo.Context) error {
 
 	// --- 2. Bangun Query Ent ---
 
-	query := entClient.Event.Query()
+	query := entClient.Event.Query().WithPartner()
 
 	// Terapkan filter opsional
 	if brandAddressFilter != "" {
-		query = query.Where(event.HasPartnerWith())
+		query = query.Where(event.HasPartnerWith(partner.AddressEQ(brandAddressFilter)))
 	}
+
+	if userAddress != "" {
+		query = query.Where(event.HasParticipantsWith(eventparticipant.UserAddressEQ(userAddress)))
+	}
+
 	if statusFilter != "" {
 		statusFilterInt, err := strconv.Atoi(statusFilter)
 		if err == nil { // Abaikan jika format status salah
@@ -442,39 +443,6 @@ func HandleGetEventsForUser(c echo.Context) error {
 	for i, ev := range eventsOnPage {
 		eventIDsOnPage[i] = ev.EventId // Kumpulkan ID event di halaman ini
 		log.Println(ev.Edges)
-	}
-
-	// Query tabel UserParticipant untuk user ini DAN event di halaman ini
-	userParticipationsMap := make(map[int]*ent.EventParticipant) // Map eventID -> partisipasi user
-	if len(eventIDsOnPage) > 0 {                                 // Hanya query jika ada event
-		userParticipations, err := entClient.EventParticipant.
-			Query().
-			Where(
-				eventparticipant.UserAddressEQ(userAddress),
-				eventparticipant.HasEventWith(event.EventIdIn(eventIDsOnPage...)), // Cek relasi ke event di halaman ini
-			).
-			// Perlu query event ID juga agar bisa dimasukkan ke map
-			WithEvent(func(q *ent.EventQuery) {
-				q.Select(event.FieldEventId)
-			}).
-			All(ctx)
-
-		if err != nil {
-			log.Printf("Error querying user participations: %v", err)
-			// Lanjutkan saja, userStatus akan default ke 'Available'/'Ended'
-		} else {
-			// Masukkan hasil ke map untuk lookup cepat
-			for _, p := range userParticipations {
-				if p.Edges.Event != nil {
-					// Akses EventID langsung dari pointer
-					userParticipationsMap[p.Edges.Event.EventId] = p
-				} else {
-					// Ini seharusnya tidak terjadi jika query WithEvent() berhasil,
-					// tapi bagus untuk debugging
-					log.Println("Peringatan: UserParticipant ditemukan tanpa relasi Event yang dimuat.")
-				}
-			}
-		}
 	}
 
 	// --- 3. Transformasi Hasil ke UserEventView ---
@@ -521,9 +489,8 @@ func HandleGetEventsForUser(c echo.Context) error {
 		}
 		log.Println(ev.Edges.Participants)
 		userEventViews = append(userEventViews, UserEventView{
-			Event:        ev,
-			UserStatus:   userStatus,
-			Participants: ev.Edges.Participants, // Sertakan 5 partisipan yang di-load
+			Event:      ev,
+			UserStatus: userStatus, // Sertakan 5 partisipan yang di-load
 		})
 	}
 
@@ -545,4 +512,48 @@ func HandleGetEventsForUser(c echo.Context) error {
 
 	log.Printf("Ditemukan %d event(s) untuk user %s halaman ini (Total: %d)", len(userEventViews), userAddress, totalCount)
 	return c.JSON(http.StatusOK, response)
+}
+
+type UpdateStatusRequest struct {
+	BrandAddress string `json:"brandAddress" form:"brandAddress" validate:"required"`
+	EventID      string `json:"eventId" form:"eventId" validate:"required"`
+}
+
+// HandleUpdateEventStatus memanggil transaksi update status
+func HandleUpdateEventStatus(c echo.Context) error {
+	log.Println("Menerima request /update-event-status...")
+
+	// 1. Bind Request
+	var req UpdateStatusRequest
+	if err := c.Bind(&req); err != nil {
+		log.Printf("Error binding request body: %v", err)
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid request body format"})
+	}
+
+	// 2. Konversi EventID
+	eventID, err := strconv.ParseUint(req.EventID, 10, 64)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid Event ID format"})
+	}
+
+	// 3. Panggil Fungsi Transaksi (Sinkron)
+	err = transactions.UpdateEventStatus(req.BrandAddress, eventID)
+
+	// 4. Handle Error (jika ada)
+	if err != nil {
+		log.Printf("Gagal menjalankan UpdateEventStatus: %v", err)
+		// Kirim error Cadence ke client
+		return c.JSON(http.StatusInternalServerError, map[string]string{
+			"status":  "error",
+			"message": "Gagal update status event.",
+			"details": err.Error(),
+		})
+	}
+
+	// 5. Kembalikan Sukses
+	return c.JSON(http.StatusOK, map[string]interface{}{
+		"status":  "success",
+		"message": "Transaksi update status berhasil dikirim dan di-seal.",
+		"eventId": req.EventID,
+	})
 }
