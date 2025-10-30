@@ -19,7 +19,6 @@ export interface EventParticipant {
 export interface Event {
   id: number;
   eventId: number;
-  brandAddress: string;
   eventName: string;
   quota: number;
   counter: number; // Number of registered participants
@@ -33,7 +32,17 @@ export interface Event {
   endDate: number; // Unix timestamp
   totalRareNFT: number;
   edges?: {
-    event_id?: EventParticipant[];
+    participants?: EventParticipant[];
+    partner?: {
+      id: number;
+      address: string;
+      name: string;
+      description: string;
+      email: string;
+      image: string;
+      edges?: Record<string, unknown>;
+    };
+    nfts?: NFT[];
   };
 }
 
@@ -141,11 +150,21 @@ export const formatEvent = (event: Event) => {
     // Get status label
     statusLabel: EventStatusLabels[event.status as keyof typeof EventStatusLabels] || "Unknown",
     // Get participants list
-    participants: event.edges?.event_id || [],
+    participants: event.edges?.participants || [],
     // Get participant count
     participantCount: event.counter,
     // Check if event is full
     isFull: event.counter >= event.quota,
+    // Extract partner/brand information
+    partner: event.edges?.partner ? {
+      ...event.edges.partner,
+      name: event.edges.partner.name.replace(/^"|"$/g, ""),
+      description: event.edges.partner.description.replace(/^"|"$/g, ""),
+      email: event.edges.partner.email.replace(/^"|"$/g, ""),
+      image: event.edges.partner.image.replace(/^"|"$/g, ""),
+    } : undefined,
+    // Extract brand address for easy access
+    brandAddress: event.edges?.partner?.address || "",
   };
 };
 
@@ -153,3 +172,84 @@ export const formatEvent = (event: Event) => {
  * Helper type for formatted event
  */
 export type FormattedEvent = ReturnType<typeof formatEvent>;
+
+/**
+ * Partner/Brand types
+ */
+export interface Partner {
+  address: string;
+  name: string;
+  email: string;
+  description: string;
+  image: string;
+}
+
+export interface PartnersListResponse {
+  data: Partner[];
+  pagination: PaginationMeta;
+}
+
+export interface PartnerDetailResponse extends Partner {}
+
+/**
+ * NFT types
+ */
+export interface NFTMetadata {
+  title: string;
+  description: string;
+  category: number;
+  imageUrl: string;
+  thumbnailUrl: string;
+  weather: string;
+  temperature: string;
+  latitude: string;
+  longitude: string;
+  placeName: string;
+  cityName: string;
+  countryName: string;
+  altitude: string;
+  windSpeed: string;
+  borderStyle: number;
+  stickerStyle: number;
+  filterStyle: number;
+  audioStyle: number;
+  javaneseText: string;
+  tags: string[];
+}
+
+export interface NFT {
+  nft_id: number;
+  owner_address: string;
+  rarity: number;
+  metadata: NFTMetadata;
+  mint_time: string;
+}
+
+export interface NFTsListResponse {
+  data: NFT[];
+  pagination: PaginationMeta;
+}
+
+/**
+ * User Event query params
+ */
+export interface UserEventQueryParams {
+  userAddress: string;
+  page?: number;
+  limit?: number;
+  status?: "Available" | "Registered" | "CheckedIn";
+}
+
+/**
+ * Update Event Status request
+ */
+export interface UpdateEventStatusRequest {
+  eventId: string;
+  brandAddress: string;
+}
+
+export interface UpdateEventStatusResponse {
+  status: string;
+  message: string;
+  disclaimer: string;
+}

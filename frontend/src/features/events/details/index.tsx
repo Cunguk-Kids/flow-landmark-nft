@@ -75,7 +75,9 @@ const EventsDetailsPage = () => {
           <Typhography variant="3xl" className="font-bold">
             {event.eventName}
           </Typhography>
-          <Typhography variant="lg">{event.brandAddress}</Typhography>
+          <Typhography variant="lg">
+            {event.partner?.name || event.brandAddress || "Unknown Partner"}
+          </Typhography>
         </div>
       </div>
 

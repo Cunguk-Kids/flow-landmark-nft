@@ -7,13 +7,27 @@ Complete integration of the Flow Event Platform backend API with React Query hoo
 ### Core Files
 - ✅ `src/lib/api.ts` - API client with fetch wrapper and error handling
 - ✅ `src/types/api.ts` - TypeScript types for all API requests/responses
-- ✅ `.env.example` - Environment variable template (includes VITE_API_BASE_URL)
+- ✅ `.env` - Production environment (testnet)
+- ✅ `.env.development` - Development environment (emulator)
+- ✅ `.env.example` - Environment variable template
 
-### Hooks
+### Event Hooks
 - ✅ `src/hooks/useEventList.ts` - Fetch paginated events list with filters
 - ✅ `src/hooks/useEventDetail.ts` - Fetch single event by ID
 - ✅ `src/hooks/useCreateEvent.ts` - Create new event (mutation)
 - ✅ `src/hooks/useCheckIn.ts` - Check-in to event (mutation)
+- ✅ `src/hooks/useUserEvents.ts` - Fetch events by user participation status
+- ✅ `src/hooks/useUpdateEventStatus.ts` - Update event status (triggers on-chain transaction)
+- ✅ `src/hooks/useRegisterEvent.ts` - Register user to event (Cadence on-chain transaction)
+
+### Partner Hooks
+- ✅ `src/hooks/usePartnerList.ts` - Fetch paginated partners list
+- ✅ `src/hooks/usePartnerDetail.ts` - Fetch single partner by address
+
+### NFT Hooks
+- ✅ `src/hooks/useNFTList.ts` - Fetch paginated NFTs with filters
+
+### Other
 - ✅ `src/hooks/index.ts` - Central exports
 - ✅ `src/hooks/README.md` - Comprehensive documentation
 
@@ -21,20 +35,31 @@ Complete integration of the Flow Event Platform backend API with React Query hoo
 
 ### 1. Configure Environment
 
-Create `.env.local` file in the frontend directory:
+**For local development:**
+- Use `.env.development` (already configured for emulator + localhost:6666)
 
-```bash
-# Copy from .env.example
-cp .env.example .env.local
-
-# Edit .env.local
-VITE_API_BASE_URL=http://localhost:6666
-```
+**For production (Netlify):**
+- Update `.env` with:
+  ```bash
+  VITE_API_BASE_URL=https://api.capt.today
+  VITE_APP_URL=https://your-custom-domain.com
+  ```
 
 ### 2. Import and Use Hooks
 
 ```tsx
-import { useEventList, useEventDetail, useCreateEvent, useCheckIn, formatEvent } from "@/hooks";
+import {
+  useEventList,
+  useEventDetail,
+  useCreateEvent,
+  useCheckIn,
+  useUserEvents,
+  useUpdateEventStatus,
+  usePartnerList,
+  usePartnerDetail,
+  useNFTList,
+  formatEvent
+} from "@/hooks";
 
 // Fetch events list
 function EventsList() {
@@ -90,16 +115,146 @@ function CheckIn({ eventId, userAddress }) {
     </button>
   );
 }
+
+// User Events (filter by participation status)
+function MyEvents({ userAddress }) {
+  const { data } = useUserEvents({
+    userAddress,
+    status: "Registered", // "Available", "Registered", or "CheckedIn"
+    page: 1,
+    limit: 10
+  });
+
+  return <div>{data?.data.map(event => <div key={event.id}>{event.eventName}</div>)}</div>;
+}
+
+// Update Event Status (triggers on-chain transaction)
+function EventStatusButton({ eventId, brandAddress }) {
+  const { mutate: updateStatus, isPending } = useUpdateEventStatus();
+
+  return (
+    <button
+      onClick={() => updateStatus({ eventId, brandAddress })}
+      disabled={isPending}
+    >
+      {isPending ? "Updating..." : "Update Status"}
+    </button>
+  );
+}
+
+// Partners List
+function PartnersList() {
+  const { data, isLoading } = usePartnerList({ page: 1, limit: 10 });
+
+  if (isLoading) return <div>Loading partners...</div>;
+
+  return (
+    <div>
+      {data?.data.map(partner => (
+        <div key={partner.address}>
+          <h3>{partner.name}</h3>
+          <p>{partner.email}</p>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// Partner Detail
+function PartnerProfile({ address }) {
+  const { data: partner } = usePartnerDetail(address);
+
+  return (
+    <div>
+      <h2>{partner?.name}</h2>
+      <p>{partner?.description}</p>
+      <img src={partner?.image} alt={partner?.name} />
+    </div>
+  );
+}
+
+// NFTs List (with filters)
+function UserNFTs({ userAddress }) {
+  const { data } = useNFTList({
+    userAddress,
+    page: 1,
+    limit: 20
+  });
+
+  return (
+    <div>
+      {data?.data.map(nft => (
+        <div key={nft.nft_id}>
+          <img src={nft.metadata.imageUrl} alt={nft.metadata.title} />
+          <h3>{nft.metadata.title}</h3>
+          <p>Rarity: {nft.rarity}</p>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// Register for Event (Cadence on-chain transaction)
+function EventRegistration({ eventId, brandAddress }) {
+  const { user } = useFlowCurrentUser();
+  const { registerEvent, isPending, txId } = useRegisterEvent();
+  const { transactionStatus } = useFlowTransactionStatus({ id: txId || "" });
+
+  const handleRegister = async () => {
+    if (!user?.loggedIn) {
+      alert("Please connect your wallet!");
+      return;
+    }
+
+    try {
+      await registerEvent({
+        brandAddress,
+        eventID: eventId,
+      });
+      // Transaction submitted - wait for status
+    } catch (error) {
+      console.error("Registration failed:", error);
+    }
+  };
+
+  // Watch transaction status
+  useEffect(() => {
+    if (txId && transactionStatus?.status === 4) {
+      // Status 4 = sealed (completed)
+      alert("Successfully registered!");
+    }
+  }, [transactionStatus, txId]);
+
+  return (
+    <button onClick={handleRegister} disabled={isPending || !user?.loggedIn}>
+      {isPending ? "Processing..." : "Register Now"}
+    </button>
+  );
+}
 ```
 
 ## 📡 API Endpoints Covered
 
+### Events
 | Endpoint | Method | Hook | Status |
 |----------|--------|------|--------|
-| `/event/` | GET | `useEventList` | ✅ |
+| `/event` | GET | `useEventList` | ✅ |
 | `/event/:id` | GET | `useEventDetail` | ✅ |
 | `/event/create` | POST | `useCreateEvent` | ✅ |
 | `/event/check-in` | POST | `useCheckIn` | ✅ |
+| `/event/user` | GET | `useUserEvents` | ✅ |
+| `/event/update-status` | POST | `useUpdateEventStatus` | ✅ |
+
+### Partners
+| Endpoint | Method | Hook | Status |
+|----------|--------|------|--------|
+| `/partner` | GET | `usePartnerList` | ✅ |
+| `/partner/:address` | GET | `usePartnerDetail` | ✅ |
+
+### NFTs
+| Endpoint | Method | Hook | Status |
+|----------|--------|------|--------|
+| `/nft` | GET | `useNFTList` | ✅ |
 
 ## 🔄 Data Flow
 

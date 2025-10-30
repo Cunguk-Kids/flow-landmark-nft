@@ -52,6 +52,46 @@ The Flow CLI resolves these imports based on `flow.json` configuration.
 - `/frontend/src/main.tsx` - App entry point with FlowProvider wrapper
 - `/frontend/src/docs/@onflow/react-sdk/` - Official React SDK documentation reference
 
+**Frontend Coding Conventions:**
+
+1. **Typography Component Variants**
+   - Always use the correct Typography variant naming (from smallest to largest):
+     - `t3` - Extra small (5px → xs) - Use for badges, tiny labels
+     - `t2` - Small (10px → sm) - Use for metadata, button text, captions
+     - `t1` - Base/Default (xs → base) - Use for body text, default content
+     - `lg` - Medium-large (sm → lg) - Use for emphasis text
+     - `2xl` - Large (base → 2xl) - Use for section titles
+     - `3xl` - Extra large (lg → 3xl) - Use for main headings
+
+   ```tsx
+   // ✅ Correct
+   <Typhography variant="t2">Small metadata text</Typhography>
+   <Typhography variant="t1">Normal body text</Typhography>
+   <Typhography variant="2xl">Section Title</Typhography>
+
+   // ❌ Wrong - Don't use sm, base, xs directly
+   <Typhography variant="sm">Text</Typhography>
+   ```
+
+2. **className with `cn` Utility**
+   - ALWAYS use the `cn()` utility function for className instead of template literal concatenation
+   - Import from `@/lib/utils`
+   - This ensures proper Tailwind class merging and better readability
+
+   ```tsx
+   import { cn } from "@/lib/utils";
+
+   // ✅ Correct
+   <div className={cn(
+     "base-classes here",
+     condition && "conditional-classes",
+     someVar ? "class-a" : "class-b"
+   )} />
+
+   // ❌ Wrong - Don't use template literals
+   <div className={`base-classes ${condition ? "class-a" : "class-b"}`} />
+   ```
+
 **React SDK Core Concepts:**
 
 **FlowProvider Configuration:**
