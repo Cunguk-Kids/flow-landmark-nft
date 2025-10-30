@@ -30,6 +30,20 @@
 			"address": "179b6b1cb6755e31",
 			"key": "f31743f08003ea59e4c7196f08feda0ba744065ad079a067233c0e84987b6f55"
 		},
+		"a-brand": {
+			"address": "fa3f04b6d409e295",
+			"key": {
+				"type": "file",
+				"location": "a-brand.pkey"
+			}
+		},
+		"dev-harkon": {
+			"address": "15728ff209769c63",
+			"key": {
+				"type": "file",
+				"location": "dev-harkon.pkey"
+			}
+		},
 		"emulator-account": {
 			"address": "f8d6e0586b0a20c7",
 			"key": {
@@ -41,6 +55,13 @@
 	"deployments": {
 		"emulator": {
 			"emulator-account": [
+				"NFTMoment",
+				"EventPlatform",
+				"MomentUtility"
+			]
+		},
+		"testnet": {
+			"dev-harkon": [
 				"NFTMoment",
 				"EventPlatform",
 				"MomentUtility"

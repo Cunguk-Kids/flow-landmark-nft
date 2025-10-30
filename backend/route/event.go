@@ -278,6 +278,10 @@ type CheckinRequest struct {
 	BrandAddress string `json:"brandAddress" form:"brandAddress" validate:"required"`
 }
 
+func Welcome(c echo.Context) error {
+	return c.JSON(http.StatusOK, map[string]string{"status": "success", "message": "Welconme"})
+}
+
 func HandleCheckin(c echo.Context) error {
 	log.Println("Menerima request /checkin...")
 	ctx := context.Background() // Gunakan context request jika perlu timeout

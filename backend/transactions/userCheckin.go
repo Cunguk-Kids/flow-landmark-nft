@@ -66,7 +66,7 @@ func SendCheckinTransactionAsync(brandAddressString string, eventID int, userAdd
 	ctx := context.Background() // Gunakan background context untuk goroutine
 	var flowClient access.Client
 
-	flowClient, err = http.NewClient(http.EmulatorHost) // Pola koneksi Anda
+	flowClient, err = http.NewClient(http.TestnetHost) // Pola koneksi Anda
 	if err != nil {
 		log.Printf("[Async Checkin] Connection Error: %v", err)
 		return // Keluar dari goroutine jika koneksi gagal

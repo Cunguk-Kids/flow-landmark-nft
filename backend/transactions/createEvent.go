@@ -70,7 +70,7 @@ transaction(
 `
 
 const (
-	deployerAddress = "f8d6e0586b0a20c7"
+	deployerAddress = "15728ff209769c63"
 	// Ingat konstanta EmulatorHost Anda (Anda mungkin punya ini di tempat lain)
 	EmulatorHost = "127.0.0.1:3569" // Atau port HTTP Anda jika tetap pakai http client
 )
@@ -103,8 +103,7 @@ func CreateEvent(
 	var flowClient access.Client
 
 	// Koneksi Flow
-	// PERHATIAN: http.EmulatorHost mungkin konstanta dari package http, sesuaikan jika perlu
-	flowClient, err = http.NewClient(http.EmulatorHost) // Menggunakan koneksi HTTP Anda
+	flowClient, err = http.NewClient(http.TestnetHost) // Menggunakan koneksi HTTP Anda
 	if err != nil {
 		log.Printf("Connection Error: %v\n", err)
 		// Jangan panic, return error

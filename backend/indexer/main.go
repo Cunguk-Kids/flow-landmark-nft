@@ -19,17 +19,8 @@ import (
 )
 
 const (
-	ContractAddress = "f8d6e0586b0a20c7" // Alamat tempat kontrak di-deploy
+	ContractAddress = "15728ff209769c63" // Alamat tempat kontrak di-deploy
 )
-
-func getEmulatorHost() string {
-	// Get emulator host from environment variable, default to localhost
-	host := os.Getenv("FLOW_EMULATOR_HOST")
-	if host == "" {
-		host = "127.0.0.1:3569"
-	}
-	return host
-}
 
 var (
 	EventCreated     = fmt.Sprintf("A.%s.EventPlatform.EventCreated", ContractAddress)
@@ -58,11 +49,8 @@ func main() {
 	}
 	log.Println(events)
 
-	emulatorHost := getEmulatorHost()
-	log.Printf("Connecting to Flow emulator at: %s", emulatorHost)
-
 	grpcClient, err := grpc.NewBaseClient(
-		emulatorHost,
+		grpc.TestnetHost,
 		grpcOpts.WithTransportCredentials(insecure.NewCredentials()),
 	)
 
@@ -79,7 +67,7 @@ func main() {
 
 	dataCh, errCh, initErr := grpcClient.SubscribeEventsByBlockHeight(
 		ctx,
-		0,
+		287546460,
 		flow.EventFilter{
 			EventTypes: []string{EventCreated, UserRegistered, UserUnregistered, EventStatus, PartnerAdded, EventNFTMinted},
 		},

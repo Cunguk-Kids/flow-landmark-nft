@@ -1,9 +1,9 @@
 package script
 
 const GetNFTDetailScriptTemplate = `
-import EventPlatform from 0xf8d6e0586b0a20c7
+import EventPlatform from 0x15728ff209769c63
 
-import NFTMoment from 0xf8d6e0586b0a20c7 // Replace 0x06 with your NFTMoment contract address
+import NFTMoment from 0x15728ff209769c63 // Replace 0x06 with your NFTMoment contract address
 
 // Struct to hold the NFT details (mirroring the NFT resource fields)
 access(all) struct NFTDetails {
