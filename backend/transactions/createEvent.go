@@ -229,7 +229,6 @@ func CreateEvent(
 
 	tx := flow.NewTransaction().
 		SetScript(script).
-		SetComputeLimit(1000).
 		SetReferenceBlockID(latestBlock.ID).
 		SetPayer(platformAddress).
 		SetProposalKey(platformAddress, key.Index, key.SequenceNumber).

@@ -1,0 +1,1058 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "title": "Event Platform API",
+        "contact": {},
+        "version": "1.0"
+    },
+    "host": "localhost:6060",
+    "basePath": "/",
+    "paths": {
+        "/event": {
+            "get": {
+                "description": "Mengambil daftar semua event dengan filter opsional (brandAddress, status) dan pagination.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Events"
+                ],
+                "summary": "Mendapatkan Daftar Event (Pagination)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "example": "\"0x179b6b1cb6755e31\"",
+                        "description": "Filter berdasarkan Brand Address (Partner)",
+                        "name": "brandAddress",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "example": 1,
+                        "description": "Filter berdasarkan Status Event (0=Pending, 1=Active, 2=Ended)",
+                        "name": "status",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "example": 1,
+                        "description": "Nomor halaman",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "example": 10,
+                        "description": "Jumlah item per halaman",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Daftar event yang dipaginasi",
+                        "schema": {
+                            "$ref": "#/definitions/swagresponse.PaginatedEventsResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Error: Format query param tidak valid",
+                        "schema": {
+                            "$ref": "#/definitions/swagresponse.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Error: Kesalahan server internal",
+                        "schema": {
+                            "$ref": "#/definitions/swagresponse.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/event/create": {
+            "post": {
+                "description": "Mendaftarkan event baru ke platform dan mengirim transaksi on-chain.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Events"
+                ],
+                "summary": "Membuat Event Baru",
+                "parameters": [
+                    {
+                        "description": "Data Event Baru",
+                        "name": "event",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/route.CreateEventRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Pesan sukses",
+                        "schema": {
+                            "$ref": "#/definitions/swagresponse.SuccessCreateResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Error: Invalid request",
+                        "schema": {
+                            "$ref": "#/definitions/swagresponse.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Error: Gagal kirim transaksi",
+                        "schema": {
+                            "$ref": "#/definitions/swagresponse.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/event/update-status": {
+            "post": {
+                "description": "Memicu transaksi on-chain untuk mengevaluasi ulang status event (Pending/Active/Ended) berdasarkan waktu blockchain saat ini.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Events"
+                ],
+                "summary": "Memperbarui Status Event (On-Chain)",
+                "parameters": [
+                    {
+                        "description": "Data Update Status (BrandAddress, EventID)",
+                        "name": "statusRequest",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/route.UpdateStatusRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Status event berhasil diupdate",
+                        "schema": {
+                            "$ref": "#/definitions/swagresponse.UpdateStatusResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Error: Request tidak valid (ID salah, body salah)",
+                        "schema": {
+                            "$ref": "#/definitions/swagresponse.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Error: Transaksi blockchain gagal",
+                        "schema": {
+                            "$ref": "#/definitions/swagresponse.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/event/user": {
+            "get": {
+                "description": "Mengambil daftar event, difilter, dengan status partisipasi user (Available, Registered, CheckedIn, dll.)",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Events"
+                ],
+                "summary": "Mendapatkan Daftar Event (View User)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "example": "\"0x179b6b1cb6755e31\"",
+                        "description": "Alamat user untuk mengecek status partisipasinya",
+                        "name": "userAddress",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "example": "\"0xf8d6e0a20c7\"",
+                        "description": "Filter berdasarkan Brand Address (Partner)",
+                        "name": "brandAddress",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "example": 1,
+                        "description": "Filter berdasarkan Status Event (0=Pending, 1=Active, 2=Ended)",
+                        "name": "status",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "example": 1,
+                        "description": "Nomor halaman",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "example": 10,
+                        "description": "Jumlah item per halaman",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Daftar event yang dipaginasi (user view)",
+                        "schema": {
+                            "$ref": "#/definitions/route.PaginatedUserEventsResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Error: Format query param tidak valid atau 'userAddress' hilang",
+                        "schema": {
+                            "$ref": "#/definitions/swagresponse.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Error: Kesalahan server internal",
+                        "schema": {
+                            "$ref": "#/definitions/swagresponse.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/event/{id}": {
+            "get": {
+                "description": "Mengambil detail lengkap dari satu event berdasarkan ID-nya, termasuk daftar partisipan dan info partner.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Events"
+                ],
+                "summary": "Mendapatkan Detail Event",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "example": 1,
+                        "description": "Event ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Detail Event (termasuk relasi Edges.Participants dan Edges.Partner)",
+                        "schema": {
+                            "$ref": "#/definitions/ent.Event"
+                        }
+                    },
+                    "400": {
+                        "description": "Error: Format ID tidak valid",
+                        "schema": {
+                            "$ref": "#/definitions/swagresponse.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Error: Event tidak ditemukan",
+                        "schema": {
+                            "$ref": "#/definitions/swagresponse.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Error: Kesalahan server internal",
+                        "schema": {
+                            "$ref": "#/definitions/swagresponse.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/nft": {
+            "get": {
+                "description": "Mengambil daftar semua NFT dengan filter opsional (eventId, userAddress) dan pagination.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "NFTs"
+                ],
+                "summary": "Mendapatkan Daftar NFT (Pagination \u0026 Filter)",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "example": 1,
+                        "description": "Filter berdasarkan Event ID",
+                        "name": "eventId",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "example": "\"0x179b6b1cb6755e31\"",
+                        "description": "Filter berdasarkan Alamat User (Owner)",
+                        "name": "userAddress",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "example": 1,
+                        "description": "Nomor halaman",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "example": 10,
+                        "description": "Jumlah item per halaman",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Daftar NFT yang dipaginasi",
+                        "schema": {
+                            "$ref": "#/definitions/swagresponse.PaginatedNFTsResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Error: Format query param tidak valid",
+                        "schema": {
+                            "$ref": "#/definitions/swagresponse.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Error: Kesalahan server internal",
+                        "schema": {
+                            "$ref": "#/definitions/swagresponse.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/partner": {
+            "get": {
+                "description": "Mengambil daftar semua partner (brand) yang terdaftar di platform, dengan pagination.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Partners"
+                ],
+                "summary": "Mendapatkan Daftar Partner (Pagination)",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "example": 1,
+                        "description": "Nomor halaman",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "example": 10,
+                        "description": "Jumlah item per halaman",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Daftar partner yang dipaginasi",
+                        "schema": {
+                            "$ref": "#/definitions/swagresponse.PaginatedPartnersResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Error: Kesalahan server internal",
+                        "schema": {
+                            "$ref": "#/definitions/swagresponse.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/partner/{address}": {
+            "get": {
+                "description": "Mengambil detail lengkap dari satu partner (brand) berdasarkan Alamat (Address) blockchain-nya.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Partners"
+                ],
+                "summary": "Mendapatkan Detail Partner (Brand)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "example": "\"0x179b6b1cb6755e31\"",
+                        "description": "Alamat Partner (Brand)",
+                        "name": "address",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Detail Partner (Brand)",
+                        "schema": {
+                            "$ref": "#/definitions/ent.Partner"
+                        }
+                    },
+                    "400": {
+                        "description": "Error: Alamat (Address) tidak boleh kosong",
+                        "schema": {
+                            "$ref": "#/definitions/swagresponse.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Error: Partner tidak ditemukan",
+                        "schema": {
+                            "$ref": "#/definitions/swagresponse.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Error: Kesalahan server internal",
+                        "schema": {
+                            "$ref": "#/definitions/swagresponse.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "ent.Event": {
+            "type": "object",
+            "properties": {
+                "counter": {
+                    "description": "Counter holds the value of the \"counter\" field.",
+                    "type": "integer"
+                },
+                "description": {
+                    "description": "Description holds the value of the \"description\" field.",
+                    "type": "string"
+                },
+                "edges": {
+                    "description": "Edges holds the relations/edges for other nodes in the graph.\nThe values are being populated by the EventQuery when eager-loading is set.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.EventEdges"
+                        }
+                    ]
+                },
+                "endDate": {
+                    "description": "EndDate holds the value of the \"endDate\" field.",
+                    "type": "number"
+                },
+                "eventId": {
+                    "description": "EventId holds the value of the \"eventId\" field.",
+                    "type": "integer"
+                },
+                "eventName": {
+                    "description": "EventName holds the value of the \"eventName\" field.",
+                    "type": "string"
+                },
+                "id": {
+                    "description": "ID of the ent.",
+                    "type": "integer"
+                },
+                "image": {
+                    "description": "Image holds the value of the \"image\" field.",
+                    "type": "string"
+                },
+                "lat": {
+                    "description": "Lat holds the value of the \"lat\" field.",
+                    "type": "number"
+                },
+                "long": {
+                    "description": "Long holds the value of the \"long\" field.",
+                    "type": "number"
+                },
+                "quota": {
+                    "description": "Quota holds the value of the \"quota\" field.",
+                    "type": "integer"
+                },
+                "radius": {
+                    "description": "Radius holds the value of the \"radius\" field.",
+                    "type": "number"
+                },
+                "startDate": {
+                    "description": "StartDate holds the value of the \"startDate\" field.",
+                    "type": "number"
+                },
+                "status": {
+                    "description": "Status holds the value of the \"status\" field.",
+                    "type": "integer"
+                },
+                "totalRareNFT": {
+                    "description": "TotalRareNFT holds the value of the \"totalRareNFT\" field.",
+                    "type": "integer"
+                }
+            }
+        },
+        "ent.EventEdges": {
+            "type": "object",
+            "properties": {
+                "nfts": {
+                    "description": "Nfts holds the value of the nfts edge.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ent.Nft"
+                    }
+                },
+                "participants": {
+                    "description": "Participants holds the value of the participants edge.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ent.EventParticipant"
+                    }
+                },
+                "partner": {
+                    "description": "Partner holds the value of the partner edge.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.Partner"
+                        }
+                    ]
+                }
+            }
+        },
+        "ent.EventParticipant": {
+            "type": "object",
+            "properties": {
+                "edges": {
+                    "description": "Edges holds the relations/edges for other nodes in the graph.\nThe values are being populated by the EventParticipantQuery when eager-loading is set.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.EventParticipantEdges"
+                        }
+                    ]
+                },
+                "id": {
+                    "description": "ID of the ent.",
+                    "type": "integer"
+                },
+                "isCheckedIn": {
+                    "description": "IsCheckedIn holds the value of the \"isCheckedIn\" field.",
+                    "type": "boolean"
+                },
+                "userAddress": {
+                    "description": "UserAddress holds the value of the \"userAddress\" field.",
+                    "type": "string"
+                }
+            }
+        },
+        "ent.EventParticipantEdges": {
+            "type": "object",
+            "properties": {
+                "event": {
+                    "description": "Event holds the value of the event edge.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.Event"
+                        }
+                    ]
+                }
+            }
+        },
+        "ent.Nft": {
+            "type": "object",
+            "properties": {
+                "edges": {
+                    "description": "Edges holds the relations/edges for other nodes in the graph.\nThe values are being populated by the NftQuery when eager-loading is set.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.NftEdges"
+                        }
+                    ]
+                },
+                "id": {
+                    "description": "ID of the ent.",
+                    "type": "integer"
+                },
+                "metadata": {
+                    "description": "Metadata holds the value of the \"metadata\" field.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/schema.Metadata"
+                        }
+                    ]
+                },
+                "mint_time": {
+                    "description": "MintTime holds the value of the \"mint_time\" field.",
+                    "type": "string"
+                },
+                "nft_id": {
+                    "description": "NftID holds the value of the \"nft_id\" field.",
+                    "type": "integer"
+                },
+                "owner_address": {
+                    "description": "OwnerAddress holds the value of the \"owner_address\" field.",
+                    "type": "string"
+                },
+                "rarity": {
+                    "description": "Rarity holds the value of the \"rarity\" field.",
+                    "type": "string"
+                }
+            }
+        },
+        "ent.NftEdges": {
+            "type": "object",
+            "properties": {
+                "event": {
+                    "description": "Event holds the value of the event edge.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.Event"
+                        }
+                    ]
+                }
+            }
+        },
+        "ent.Partner": {
+            "type": "object",
+            "properties": {
+                "address": {
+                    "description": "Address holds the value of the \"address\" field.",
+                    "type": "string"
+                },
+                "description": {
+                    "description": "Description holds the value of the \"description\" field.",
+                    "type": "string"
+                },
+                "edges": {
+                    "description": "Edges holds the relations/edges for other nodes in the graph.\nThe values are being populated by the PartnerQuery when eager-loading is set.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.PartnerEdges"
+                        }
+                    ]
+                },
+                "email": {
+                    "description": "Email holds the value of the \"email\" field.",
+                    "type": "string"
+                },
+                "id": {
+                    "description": "ID of the ent.",
+                    "type": "integer"
+                },
+                "image": {
+                    "description": "Image holds the value of the \"image\" field.",
+                    "type": "string"
+                },
+                "name": {
+                    "description": "Name holds the value of the \"name\" field.",
+                    "type": "string"
+                }
+            }
+        },
+        "ent.PartnerEdges": {
+            "type": "object",
+            "properties": {
+                "partner_address": {
+                    "description": "PartnerAddress holds the value of the partner_address edge.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ent.Event"
+                    }
+                }
+            }
+        },
+        "route.CreateEventRequest": {
+            "type": "object",
+            "required": [
+                "brandAddress",
+                "endDate",
+                "eventName",
+                "startDate"
+            ],
+            "properties": {
+                "brandAddress": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "endDate": {
+                    "type": "string"
+                },
+                "eventName": {
+                    "type": "string"
+                },
+                "image": {
+                    "type": "string"
+                },
+                "lat": {
+                    "type": "number"
+                },
+                "long": {
+                    "type": "number"
+                },
+                "quota": {
+                    "type": "integer",
+                    "minimum": 0
+                },
+                "radius": {
+                    "type": "number",
+                    "minimum": 0
+                },
+                "startDate": {
+                    "type": "string"
+                },
+                "totalRareNFT": {
+                    "type": "integer",
+                    "minimum": 0
+                }
+            }
+        },
+        "route.PaginatedUserEventsResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "description": "Slice dari data event (user view)",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/route.UserEventView"
+                    }
+                },
+                "pagination": {
+                    "$ref": "#/definitions/swagresponse.PaginationMetadata"
+                }
+            }
+        },
+        "route.UpdateStatusRequest": {
+            "type": "object",
+            "required": [
+                "brandAddress",
+                "eventId"
+            ],
+            "properties": {
+                "brandAddress": {
+                    "type": "string"
+                },
+                "eventId": {
+                    "type": "string"
+                }
+            }
+        },
+        "route.UserEventView": {
+            "description": "Mencatat check-in user di database (off-chain) dan memicu transaksi on-chain (asinkron).",
+            "type": "object",
+            "properties": {
+                "counter": {
+                    "description": "Counter holds the value of the \"counter\" field.",
+                    "type": "integer"
+                },
+                "description": {
+                    "description": "Description holds the value of the \"description\" field.",
+                    "type": "string"
+                },
+                "edges": {
+                    "description": "Edges holds the relations/edges for other nodes in the graph.\nThe values are being populated by the EventQuery when eager-loading is set.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.EventEdges"
+                        }
+                    ]
+                },
+                "endDate": {
+                    "description": "EndDate holds the value of the \"endDate\" field.",
+                    "type": "number"
+                },
+                "eventId": {
+                    "description": "EventId holds the value of the \"eventId\" field.",
+                    "type": "integer"
+                },
+                "eventName": {
+                    "description": "EventName holds the value of the \"eventName\" field.",
+                    "type": "string"
+                },
+                "id": {
+                    "description": "ID of the ent.",
+                    "type": "integer"
+                },
+                "image": {
+                    "description": "Image holds the value of the \"image\" field.",
+                    "type": "string"
+                },
+                "lat": {
+                    "description": "Lat holds the value of the \"lat\" field.",
+                    "type": "number"
+                },
+                "long": {
+                    "description": "Long holds the value of the \"long\" field.",
+                    "type": "number"
+                },
+                "participants": {
+                    "description": "Daftar partisipan (maks 5)",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ent.EventParticipant"
+                    }
+                },
+                "quota": {
+                    "description": "Quota holds the value of the \"quota\" field.",
+                    "type": "integer"
+                },
+                "radius": {
+                    "description": "Radius holds the value of the \"radius\" field.",
+                    "type": "number"
+                },
+                "startDate": {
+                    "description": "StartDate holds the value of the \"startDate\" field.",
+                    "type": "number"
+                },
+                "status": {
+                    "description": "Status holds the value of the \"status\" field.",
+                    "type": "integer"
+                },
+                "totalRareNFT": {
+                    "description": "TotalRareNFT holds the value of the \"totalRareNFT\" field.",
+                    "type": "integer"
+                },
+                "userStatus": {
+                    "type": "string"
+                }
+            }
+        },
+        "schema.Location": {
+            "type": "object",
+            "properties": {
+                "city": {
+                    "type": "string"
+                },
+                "country": {
+                    "type": "string"
+                },
+                "latitude": {
+                    "description": "Using float64 for lat/long",
+                    "type": "number"
+                },
+                "longitude": {
+                    "type": "number"
+                },
+                "placeName": {
+                    "description": "Use omitempty for optional fields",
+                    "type": "string"
+                }
+            }
+        },
+        "schema.Metadata": {
+            "type": "object",
+            "properties": {
+                "altitude": {
+                    "type": "string"
+                },
+                "attributes": {
+                    "description": "Map for dictionary",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "audio": {
+                    "description": "Storing enum as string",
+                    "type": "string"
+                },
+                "border": {
+                    "description": "Storing enum as string",
+                    "type": "string"
+                },
+                "category": {
+                    "description": "Storing enum as string",
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "filter": {
+                    "description": "Storing enum as string",
+                    "type": "string"
+                },
+                "imageURL": {
+                    "type": "string"
+                },
+                "javaneseText": {
+                    "type": "string"
+                },
+                "location": {
+                    "description": "Pointer for optional struct",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/schema.Location"
+                        }
+                    ]
+                },
+                "sticker": {
+                    "description": "Storing enum as string",
+                    "type": "string"
+                },
+                "tags": {
+                    "description": "Slice for array",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "temperature": {
+                    "type": "string"
+                },
+                "thumbnailURL": {
+                    "type": "string"
+                },
+                "timestamp": {
+                    "description": "Using float64 for UFix64 timestamp",
+                    "type": "number"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "weather": {
+                    "type": "string"
+                },
+                "windSpeed": {
+                    "type": "string"
+                }
+            }
+        },
+        "swagresponse.ErrorResponse": {
+            "type": "object",
+            "properties": {
+                "details": {
+                    "description": "omitempty jika tidak selalu ada",
+                    "type": "string",
+                    "example": "Detail teknis (jika ada)"
+                },
+                "message": {
+                    "type": "string",
+                    "example": "Deskripsi error spesifik"
+                },
+                "status": {
+                    "type": "string",
+                    "example": "error"
+                }
+            }
+        },
+        "swagresponse.PaginatedEventsResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "description": "Slice dari data event",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ent.Event"
+                    }
+                },
+                "pagination": {
+                    "$ref": "#/definitions/swagresponse.PaginationMetadata"
+                }
+            }
+        },
+        "swagresponse.PaginatedNFTsResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "description": "Tipe spesifik: slice dari Nft",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ent.Nft"
+                    }
+                },
+                "pagination": {
+                    "$ref": "#/definitions/swagresponse.PaginationMetadata"
+                }
+            }
+        },
+        "swagresponse.PaginatedPartnersResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "description": "Tipe spesifik: slice dari Partner",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ent.Partner"
+                    }
+                },
+                "pagination": {
+                    "$ref": "#/definitions/swagresponse.PaginationMetadata"
+                }
+            }
+        },
+        "swagresponse.PaginationMetadata": {
+            "type": "object",
+            "properties": {
+                "currentPage": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "pageSize": {
+                    "type": "integer",
+                    "example": 10
+                },
+                "totalItems": {
+                    "type": "integer",
+                    "example": 100
+                },
+                "totalPages": {
+                    "type": "integer",
+                    "example": 10
+                }
+            }
+        },
+        "swagresponse.SuccessCreateResponse": {
+            "type": "object",
+            "properties": {
+                "brand": {
+                    "type": "string",
+                    "example": "0x179b6b1cb6755e31"
+                },
+                "disclaimer": {
+                    "type": "string",
+                    "example": "Status transaksi final akan terlihat di blockchain/indexer."
+                },
+                "eventName": {
+                    "type": "string",
+                    "example": "Event Keren"
+                },
+                "message": {
+                    "type": "string",
+                    "example": "Permintaan CreateEvent diterima dan transaksi berhasil dikirim."
+                },
+                "status": {
+                    "type": "string",
+                    "example": "success"
+                }
+            }
+        },
+        "swagresponse.UpdateStatusResponse": {
+            "type": "object",
+            "properties": {
+                "eventId": {
+                    "type": "string",
+                    "example": "1"
+                },
+                "message": {
+                    "type": "string",
+                    "example": "Transaksi update status berhasil dikirim dan di-seal."
+                },
+                "status": {
+                    "type": "string",
+                    "example": "success"
+                }
+            }
+        }
+    }
+}
