@@ -5,22 +5,27 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Typhography } from "@/components/ui/typhography";
 import { Spinner } from "@/components/ui/spinner";
-import { Calendar, MapPin, Users, Clock, LucideCheckCircle } from "lucide-react";
+import {
+  Calendar,
+  MapPin,
+  Users,
+  Clock,
+  LucideCheckCircle,
+} from "lucide-react";
 import { motion } from "motion/react";
 import { formatEvent, useCheckIn } from "@/hooks";
 import { useAccount } from "@/hooks/useAccount";
-import { useFlowCurrentUser } from "@onflow/react-sdk";
 import { toast } from "sonner";
 
 import Galaxy from "@/components/Galaxy";
 import { PageHeader } from "@/components/PageHeader";
+import { MintNFTSection } from "./MintNFTSection";
 
 const EventsDetailsPage = () => {
   const { event: rawEvent } = useLoaderData({
     from: "/events/details/$eventId",
   });
   const event = rawEvent ? formatEvent(rawEvent) : null;
-  const { user } = useFlowCurrentUser();
   const { data: accountData } = useAccount();
   const { mutate: checkIn, isPending: isCheckingIn } = useCheckIn();
   const [isCheckInSuccess, setIsCheckInSuccess] = useState(false);
@@ -59,7 +64,9 @@ const EventsDetailsPage = () => {
           setIsCheckInSuccess(true);
         },
         onError: (error) => {
-          toast.error(error instanceof Error ? error.message : "Check-in failed");
+          toast.error(
+            error instanceof Error ? error.message : "Check-in failed"
+          );
         },
       }
     );
@@ -162,7 +169,10 @@ const EventsDetailsPage = () => {
                       <Typhography variant="lg" className="font-semibold">
                         {event.partner.name}
                       </Typhography>
-                      <Typhography variant="t2" className="text-muted-foreground line-clamp-1">
+                      <Typhography
+                        variant="t2"
+                        className="text-muted-foreground line-clamp-1"
+                      >
                         {event.partner.description}
                       </Typhography>
                     </div>
@@ -346,23 +356,30 @@ const EventsDetailsPage = () => {
               )}
 
               {/* Show different messages based on user state */}
-              {!isUserRegistered && event.statusLabel === "Active" && !event.isFull && (
-                <Typhography variant="t1" className="text-muted-foreground">
-                  Welcome! To join the event, please register below.
-                </Typhography>
-              )}
+              {!isUserRegistered &&
+                event.statusLabel === "Active" &&
+                !event.isFull && (
+                  <Typhography variant="t1" className="text-muted-foreground">
+                    Welcome! To join the event, please register below.
+                  </Typhography>
+                )}
 
-              {isUserRegistered && !isUserCheckedIn && event.statusLabel === "Active" && (
-                <Typhography variant="t1" className="text-muted-foreground">
-                  You're registered! Check in to confirm your attendance.
-                </Typhography>
-              )}
+              {isUserRegistered &&
+                !isUserCheckedIn &&
+                event.statusLabel === "Active" && (
+                  <Typhography variant="t1" className="text-muted-foreground">
+                    You're registered! Check in to confirm your attendance.
+                  </Typhography>
+                )}
 
               {isUserCheckedIn && (
                 <div className="bg-primary/10 backdrop-blur-sm rounded-lg p-4 flex items-center gap-3">
                   <LucideCheckCircle className="text-primary" size={20} />
                   <div>
-                    <Typhography variant="t1" className="font-semibold text-primary">
+                    <Typhography
+                      variant="t1"
+                      className="font-semibold text-primary"
+                    >
                       Checked In
                     </Typhography>
                     <Typhography variant="t2" className="text-muted-foreground">
@@ -435,11 +452,21 @@ const EventsDetailsPage = () => {
                   className="w-full font-semibold"
                 >
                   <Typhography variant="lg">
-                    {event.statusLabel === "Pending" ? "Not Started" : "Event Ended"}
+                    {event.statusLabel === "Pending"
+                      ? "Not Started"
+                      : "Event Ended"}
                   </Typhography>
                 </Button>
               )}
             </div>
+
+            {/* Mint NFT Section - Shows after user is checked in */}
+            <MintNFTSection
+              eventId={event.eventId}
+              eventName={event.eventName}
+              partnerAddress={event.brandAddress}
+              isCheckedIn={isUserCheckedIn}
+            />
 
             {/* Event Stats */}
             <div className="grid grid-cols-2 gap-4">
