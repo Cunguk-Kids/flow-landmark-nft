@@ -2,7 +2,7 @@
 
 // Initialize user's collection
 export const SETUP_COLLECTION = `
-  import NFTMoment from 0x15728ff209769c63
+  import NFTMoment from 0x1b7f070ebf7d0431
 
   transaction {
     prepare(acct: auth(Storage, Capabilities) &Account) {
@@ -26,7 +26,7 @@ export const SETUP_COLLECTION = `
 
 // Mint NFT with full metadata
 export const MINT_NFT = `
-  import NFTMoment from 0x15728ff209769c63
+  import NFTMoment from 0x1b7f070ebf7d0431
 
   transaction(
     title: String,
@@ -104,7 +104,7 @@ export const MINT_NFT = `
 
 // Simplified mint transaction for quick testing
 export const MINT_SIMPLE_NFT = `
-  import NFTMoment from 0x15728ff209769c63
+  import NFTMoment from 0x1b7f070ebf7d0431
 
   transaction(
     title: String,
@@ -154,7 +154,7 @@ export const MINT_SIMPLE_NFT = `
 
 // Upgrade NFT rarity
 export const UPGRADE_NFT = `
-  import NFTMoment from 0x15728ff209769c63
+  import NFTMoment from 0x1b7f070ebf7d0431
 
   transaction(nftId: UInt64, newRarityRaw: UInt8) {
     let collection: &NFTMoment.Collection

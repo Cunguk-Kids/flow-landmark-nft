@@ -19,7 +19,7 @@ import (
 )
 
 const (
-	ContractAddress = "15728ff209769c63" // Alamat tempat kontrak di-deploy
+	ContractAddress = "1b7f070ebf7d0431" // Alamat tempat kontrak di-deploy
 )
 
 var (
@@ -67,7 +67,7 @@ func main() {
 
 	dataCh, errCh, initErr := grpcClient.SubscribeEventsByBlockHeight(
 		ctx,
-		287546460,
+		287624135,
 		flow.EventFilter{
 			EventTypes: []string{EventCreated, UserRegistered, UserUnregistered, EventStatus, PartnerAdded, EventNFTMinted},
 		},

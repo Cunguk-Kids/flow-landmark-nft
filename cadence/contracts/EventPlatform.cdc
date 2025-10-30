@@ -16,8 +16,8 @@ access(all) contract EventPlatform {
     access(all) let EventManagerStoragePath: StoragePath
     access(all) let EventManagerPublicPath: PublicPath
     access(all) let AdminReceiverStoragePath: StoragePath
-    access(all) let AdminReceiverPublicPath: PublicPath 
-    access(contract) let NFTAdminCapStoragePath: StoragePath 
+    access(all) let AdminReceiverPublicPath: PublicPath
+    access(contract) let NFTAdminCapStoragePath: StoragePath
 
     access(contract) var nftAdminCap: Capability<&NFTMoment.Admin>?
     access(self) var nextEventId: UInt64 
@@ -386,7 +386,7 @@ access(all) contract EventPlatform {
         
         // Initialize State Kontrak
         self.nftAdminCap = nil
-        self.nextEventId = 0
+        self.nextEventId = 1
         log("Kontrak EventPlatform berhasil di-deploy.")
     }
 }

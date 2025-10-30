@@ -136,8 +136,6 @@ func SendCheckinTransactionAsync(brandAddressString string, eventID int, userAdd
 		return
 	}
 
-	log.Println("[Async Checkin] Transaksi check-in terkirim: %s. Menunggu seal...", tx.ID())
-
 	// Tunggu Seal (Gunakan WaitForSeal yang MENGEMBALIKAN error)
 	result, err := utils.WaitForSeal(ctx, flowClient, tx.ID())
 	if err != nil {

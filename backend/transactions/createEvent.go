@@ -70,7 +70,7 @@ transaction(
 `
 
 const (
-	deployerAddress = "15728ff209769c63"
+	deployerAddress = "1b7f070ebf7d0431"
 	// Ingat konstanta EmulatorHost Anda (Anda mungkin punya ini di tempat lain)
 	EmulatorHost = "127.0.0.1:3569" // Atau port HTTP Anda jika tetap pakai http client
 )

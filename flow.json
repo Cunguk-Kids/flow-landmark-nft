@@ -64,6 +64,13 @@
 				"type": "file",
 				"location": "emulator-account.pkey"
 			}
+		},
+		"harkon-admin": {
+			"address": "1b7f070ebf7d0431",
+			"key": {
+				"type": "file",
+				"location": "harkon-admin.pkey"
+			}
 		}
 	},
 	"deployments": {
@@ -75,7 +82,7 @@
 			]
 		},
 		"testnet": {
-			"dev-harkon2": [
+			"harkon-admin": [
 				"NFTMoment",
 				"EventPlatform",
 				"MomentUtility"
