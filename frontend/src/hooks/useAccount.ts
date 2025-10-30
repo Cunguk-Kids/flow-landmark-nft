@@ -6,12 +6,12 @@ export function useAccount() {
 
   return useQuery({
     queryKey: ["account", user?.addr],
-    queryFn: () => {
-      return {
-        address: user?.addr,
-        avatar: "https://api.dicebear.com/9.x/adventurer/svg?seed=" + user?.addr,
-      };
-    },
+    queryFn: () => useAccount.fetch(user!.addr!),
     enabled: user?.loggedIn ?? false,
   });
 }
+
+useAccount.fetch = (addr: string) => ({
+  address: addr,
+  avatar: "https://api.dicebear.com/9.x/adventurer/svg?seed=" + addr,
+});

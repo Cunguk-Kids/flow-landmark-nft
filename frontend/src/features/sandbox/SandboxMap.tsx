@@ -5,10 +5,10 @@ import "maplibre-gl/dist/maplibre-gl.css";
 import { useQuery } from "@tanstack/react-query";
 import { useStore } from "@tanstack/react-store";
 import { store } from "@/stores";
-import { LocateFixed } from "lucide-react";
+import { LocateFixed, LucideMapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useEventList } from "@/hooks/useEventList";
-import { EventCategoryIcon, EventMarkerContent } from "./EventMarkerContent";
+import { EventMarkerContent } from "./EventMarkerContent";
 import {
   Popover,
   PopoverContent,
@@ -71,7 +71,7 @@ const SandboxMap: React.FC = () => {
             longitude={position?.coords.longitude}
             anchor="bottom"
           >
-            <div className="bg-blue-500 w-4 h-4 rounded-full border-2 border-white shadow-lg" />
+            <div className="bg-primary w-4 h-4 rounded-full border-2 border-white shadow-lg" />
           </Marker>
         )}
         {eventList?.data.map((event) => (
@@ -89,10 +89,10 @@ const SandboxMap: React.FC = () => {
                 <Button
                   className="cursor-pointer rounded-full"
                   title={event.eventName.replace(/^"|"$/g, "")}
-                  variant="outline"
+                  variant="ghost"
                   size="icon"
                 >
-                  <EventCategoryIcon category={''} />
+                  <LucideMapPin className="text-primary fill-primary/10 size-5" />
                 </Button>
               </PopoverTrigger>
             </Popover>
@@ -106,7 +106,7 @@ const SandboxMap: React.FC = () => {
           size="icon"
           className="rounded-full shadow-lg bg-white hover:bg-gray-100 absolute bottom-12 right-2"
         >
-          <LocateFixed className="w-8 h-8 text-blue-600" />
+          <LocateFixed className="w-8 h-8 text-primary" />
         </Button>
       )}
     </div>
