@@ -1,3 +1,5 @@
+// EventPlatform.cdc
+
 import "NFTMoment"
 
 access(all) contract EventPlatform {
@@ -14,11 +16,11 @@ access(all) contract EventPlatform {
     access(all) let EventManagerStoragePath: StoragePath
     access(all) let EventManagerPublicPath: PublicPath
     access(all) let AdminReceiverStoragePath: StoragePath
-    access(all) let AdminReceiverPublicPath: PublicPath 
-    access(contract) let NFTAdminCapStoragePath: StoragePath 
+    access(all) let AdminReceiverPublicPath: PublicPath
+    access(contract) let NFTAdminCapStoragePath: StoragePath
 
     access(contract) var nftAdminCap: Capability<&NFTMoment.Admin>?
-
+    access(self) var nextEventId: UInt64 
     // --- Enum Status ---
     access(all) enum EventStatus: UInt8 {
         access(all) case pending
@@ -166,11 +168,8 @@ access(all) contract EventPlatform {
     // --- Event Manager Resource ---
     access(all) resource EventManager: IAdmin, IPublicEventManager {
         access(self) var ownedEvents: @{UInt64: Event}
-        access(self) var nextEventID: UInt64 
-
         init() { 
             self.ownedEvents <- {} 
-            self.nextEventID = 1
         }
 
         // ... createEvent, getEvent, getEventIDs SAMA ...
@@ -187,8 +186,8 @@ access(all) contract EventPlatform {
             totalRareNFT: UInt64
         ): UInt64 {
             
-            let eventID = self.nextEventID
-            self.nextEventID = self.nextEventID + 1
+            let eventID = EventPlatform.nextEventId
+            EventPlatform.nextEventId = EventPlatform.nextEventId + 1
 
             let newEvent <- create Event(
                 eventID: eventID,
@@ -387,6 +386,7 @@ access(all) contract EventPlatform {
         
         // Initialize State Kontrak
         self.nftAdminCap = nil
+        self.nextEventId = 1
         log("Kontrak EventPlatform berhasil di-deploy.")
     }
 }

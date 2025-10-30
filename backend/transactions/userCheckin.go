@@ -54,7 +54,7 @@ transaction(brandAddress: Address, eventID: UInt64, userAddress: Address) {
 // sendCheckinTransactionAsync mengirim transaksi check-in di background
 // Anda perlu alamat Brand untuk menemukan EventManager-nya
 func SendCheckinTransactionAsync(brandAddressString string, eventID int, userAddress string) {
-	log.Printf("[Async Checkin] Memulai proses on-chain untuk Event: %d, User: %s", eventID, userAddress)
+	log.Println("[Async Checkin] Memulai proses on-chain untuk Event: %d, User: %s", eventID, userAddress)
 
 	// Muat .env (diperlukan lagi di goroutine terpisah)
 	err := godotenv.Load()
@@ -68,7 +68,7 @@ func SendCheckinTransactionAsync(brandAddressString string, eventID int, userAdd
 
 	flowClient, err = http.NewClient(http.TestnetHost) // Pola koneksi Anda
 	if err != nil {
-		log.Printf("[Async Checkin] Connection Error: %v", err)
+		log.Println("[Async Checkin] Connection Error: %v", err)
 		return // Keluar dari goroutine jika koneksi gagal
 	}
 
@@ -81,18 +81,18 @@ func SendCheckinTransactionAsync(brandAddressString string, eventID int, userAdd
 	platformAddress := flow.HexToAddress(deployerAddress) // Gunakan konstanta deployerAddress Anda
 	platformKey, err := crypto.DecodePrivateKeyHex(crypto.ECDSA_P256, privateKey)
 	if err != nil {
-		log.Printf("[Async Checkin] Gagal decode key: %v", err)
+		log.Println("[Async Checkin] Gagal decode key: %v", err)
 		return
 	}
 	platformAccount, err := flowClient.GetAccount(ctx, platformAddress)
 	if err != nil {
-		log.Printf("[Async Checkin] Gagal get account: %v", err)
+		log.Println("[Async Checkin] Gagal get account: %v", err)
 		return
 	}
 	key := platformAccount.Keys[0]
 	signer, err := crypto.NewInMemorySigner(platformKey, key.HashAlgo)
 	if err != nil {
-		log.Printf("[Async Checkin] Gagal load signer: %v", err)
+		log.Println("[Async Checkin] Gagal load signer: %v", err)
 		return
 	}
 
@@ -107,7 +107,7 @@ func SendCheckinTransactionAsync(brandAddressString string, eventID int, userAdd
 	// Buat Transaksi
 	latestBlock, err := flowClient.GetLatestBlock(ctx, true)
 	if err != nil {
-		log.Printf("[Async Checkin] Gagal get block: %v", err)
+		log.Println("[Async Checkin] Gagal get block: %v", err)
 		return
 	}
 	tx := flow.NewTransaction().
@@ -125,28 +125,26 @@ func SendCheckinTransactionAsync(brandAddressString string, eventID int, userAdd
 	// Tanda Tangani
 	err = tx.SignEnvelope(platformAddress, key.Index, signer)
 	if err != nil {
-		log.Printf("[Async Checkin] Gagal sign tx: %v", err)
+		log.Println("[Async Checkin] Gagal sign tx: %v", err)
 		return
 	}
 
 	// Kirim Transaksi
 	err = flowClient.SendTransaction(ctx, *tx)
 	if err != nil {
-		log.Printf("[Async Checkin] Gagal kirim tx: %v", err)
+		log.Println("[Async Checkin] Gagal kirim tx: %v", err)
 		return
 	}
-
-	log.Printf("[Async Checkin] Transaksi check-in terkirim: %s. Menunggu seal...", tx.ID())
 
 	// Tunggu Seal (Gunakan WaitForSeal yang MENGEMBALIKAN error)
 	result, err := utils.WaitForSeal(ctx, flowClient, tx.ID())
 	if err != nil {
 		// Termasuk error Cadence panic
-		log.Printf("[Async Checkin] Transaksi %s GAGAL: %v", tx.ID(), err)
+		log.Println("[Async Checkin] Transaksi %s GAGAL: %v", tx.ID(), err)
 		// TODO: Implementasikan mekanisme retry atau logging error persisten
 		return
 	}
 
 	// Sukses
-	log.Printf("[Async Checkin] Transaksi %s Berhasil di-seal! Status: %s", tx.ID(), result.Status)
+	log.Println("[Async Checkin] Transaksi %s Berhasil di-seal! Status: %s", tx.ID(), result.Status)
 }

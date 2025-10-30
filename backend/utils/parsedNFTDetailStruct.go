@@ -211,78 +211,78 @@ func parseNFTDetailsStruct(fields map[string]cadence.Value) (*schema.Metadata, e
 	// (Gunakan error handling yang lebih baik di produksi jika diperlukan)
 	meta.Title, err = getStringField("title")
 	if err != nil {
-		log.Printf("Warning parsing title: %v", err)
+		log.Println("Warning parsing title: %v", err)
 	}
 	meta.Description, err = getStringField("description")
 	if err != nil {
-		log.Printf("Warning parsing description: %v", err)
+		log.Println("Warning parsing description: %v", err)
 	}
 	meta.Category, err = getEnumStringField("category")
 	if err != nil {
-		log.Printf("Warning parsing category: %v", err)
+		log.Println("Warning parsing category: %v", err)
 	}
 	meta.ImageURL, err = getStringField("imageURL")
 	if err != nil {
-		log.Printf("Warning parsing imageURL: %v", err)
+		log.Println("Warning parsing imageURL: %v", err)
 	}
 	meta.ThumbnailURL, err = getStringField("thumbnailURL")
 	if err != nil {
-		log.Printf("Warning parsing thumbnailURL: %v", err)
+		log.Println("Warning parsing thumbnailURL: %v", err)
 	}
 	tsStr, err := getUFix64StringField("timestamp")
 	if err != nil {
-		log.Printf("Warning parsing timestamp: %v", err)
+		log.Println("Warning parsing timestamp: %v", err)
 	} else {
 		tsFloat, _ := strconv.ParseFloat(tsStr, 64)
 		meta.Timestamp = tsFloat
 	}
 	meta.Weather, err = getStringField("weather")
 	if err != nil {
-		log.Printf("Warning parsing weather: %v", err)
+		log.Println("Warning parsing weather: %v", err)
 	}
 	meta.Temperature, err = getStringField("temperature")
 	if err != nil {
-		log.Printf("Warning parsing temperature: %v", err)
+		log.Println("Warning parsing temperature: %v", err)
 	}
 	meta.Location, err = getLocationField("location")
 	if err != nil {
-		log.Printf("Warning parsing location: %v", err)
+		log.Println("Warning parsing location: %v", err)
 	}
 	meta.Altitude, err = getStringField("altitude")
 	if err != nil {
-		log.Printf("Warning parsing altitude: %v", err)
+		log.Println("Warning parsing altitude: %v", err)
 	}
 	meta.WindSpeed, err = getStringField("windSpeed")
 	if err != nil {
-		log.Printf("Warning parsing windSpeed: %v", err)
+		log.Println("Warning parsing windSpeed: %v", err)
 	}
 	meta.Border, err = getEnumStringField("border")
 	if err != nil {
-		log.Printf("Warning parsing border: %v", err)
+		log.Println("Warning parsing border: %v", err)
 	}
 	meta.Sticker, err = getEnumStringField("sticker")
 	if err != nil {
-		log.Printf("Warning parsing sticker: %v", err)
+		log.Println("Warning parsing sticker: %v", err)
 	}
 	meta.Filter, err = getEnumStringField("filter")
 	if err != nil {
-		log.Printf("Warning parsing filter: %v", err)
+		log.Println("Warning parsing filter: %v", err)
 	}
 	meta.Audio, err = getEnumStringField("audio")
 	if err != nil {
-		log.Printf("Warning parsing audio: %v", err)
+		log.Println("Warning parsing audio: %v", err)
 	}
 	meta.JavaneseText, err = getStringField("javaneseText")
 	if err != nil {
-		log.Printf("Warning parsing javaneseText: %v", err)
+		log.Println("Warning parsing javaneseText: %v", err)
 	}
 	meta.Tags, err = getStringArrayField("tags")
 	if err != nil {
-		log.Printf("Warning parsing tags: %v", err)
+		log.Println("Warning parsing tags: %v", err)
 	}
 	meta.Attributes, err = getStringDictField("attributes")
 	if err != nil {
-		log.Printf("Warning parsing attributes: %v", err)
+		log.Println("Warning parsing attributes: %v", err)
 	}
 
 	// Kembalikan metadata yang berhasil diparsing (meskipun ada warning)

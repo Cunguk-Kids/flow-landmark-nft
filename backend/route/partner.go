@@ -59,7 +59,7 @@ func HandleGetAllPartner(c echo.Context) error {
 		Query().
 		Count(ctx)
 	if err != nil {
-		log.Printf("Error counting partners: %v", err)
+		log.Println("Error counting partners: %v", err)
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Database count error"})
 	}
 
@@ -72,7 +72,7 @@ func HandleGetAllPartner(c echo.Context) error {
 
 	// 5. Handle Error Query Data
 	if err != nil {
-		log.Printf("Error querying database for partners: %v", err)
+		log.Println("Error querying database for partners: %v", err)
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Database query error"})
 	}
 
@@ -94,7 +94,7 @@ func HandleGetAllPartner(c echo.Context) error {
 	response.Pagination.Limit = limit
 
 	// 7. Kembalikan data sebagai JSON
-	log.Printf("Sukses mengambil %d data partner (halaman %d, limit %d)", len(partnerRecords), page, limit)
+	log.Println("Sukses mengambil %d data partner (halaman %d, limit %d)", len(partnerRecords), page, limit)
 	return c.JSON(http.StatusOK, response)
 }
 
@@ -143,15 +143,15 @@ func HandleGetPartnerByAddress(c echo.Context) error {
 	// 4. Handle Error (Termasuk 'Not Found')
 	if err != nil {
 		if ent.IsNotFound(err) {
-			log.Printf("Partner dengan address %s tidak ditemukan", addressParam)
+			log.Println("Partner dengan address %s tidak ditemukan", addressParam)
 			return c.JSON(http.StatusNotFound, map[string]string{"error": "Partner not found"})
 		}
 		// Error database lainnya
-		log.Printf("Error querying database for partner address %s: %v", addressParam, err)
+		log.Println("Error querying database for partner address %s: %v", addressParam, err)
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Database query error"})
 	}
 
 	// 5. Kembalikan data partner sebagai JSON
-	log.Printf("Partner ditemukan: %v", partnerRecord)
+	log.Println("Partner ditemukan: %v", partnerRecord)
 	return c.JSON(http.StatusOK, partnerRecord)
 }

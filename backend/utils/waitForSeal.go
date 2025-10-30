@@ -11,7 +11,7 @@ import (
 )
 
 func WaitForSeal(ctx context.Context, c access.Client, id flow.Identifier) (*flow.TransactionResult, error) {
-	log.Printf("Menunggu transaksi %s di-seal...\n", id)
+	log.Println("Menunggu transaksi %s di-seal...\n", id)
 
 	// Tentukan timeout agar tidak menunggu selamanya
 	// 60 detik adalah waktu yang wajar untuk Testnet
@@ -38,24 +38,24 @@ func WaitForSeal(ctx context.Context, c access.Client, id flow.Identifier) (*flo
 			if err != nil {
 				// Ini adalah 'Flow resource not found'
 				// JANGAN KEMBALIKAN ERROR, kita anggap ini sementara
-				log.Printf("... (Menunggu tx %s diketahui jaringan: %v)", id.String(), err)
+				log.Println("... (Menunggu tx %s diketahui jaringan: %v)", id.String(), err)
 				// Lanjutkan ke iterasi loop berikutnya (coba lagi nanti)
 				continue
 			}
 
 			// 2. Cek error Cadence (Fatal, transaksi gagal di-seal)
 			if result.Error != nil {
-				log.Printf("Transaksi %s GAGAL di-seal (Error Cadence): %v\n", id, result.Error)
+				log.Println("Transaksi %s GAGAL di-seal (Error Cadence): %v\n", id, result.Error)
 				return result, fmt.Errorf("transaksi gagal di chain: %w", result.Error)
 			}
 
 			// 3. Cek Status
 			if result.Status == flow.TransactionStatusSealed {
-				log.Printf("\nTransaksi %s BERHASIL di-seal! Status: %s\n", id.String(), result.Status)
+				log.Println("\nTransaksi %s BERHASIL di-seal! Status: %s\n", id.String(), result.Status)
 				return result, nil // SUKSES
 			}
 
-			log.Printf("... (Status tx %s: %s)", id.String(), result.Status)
+			log.Println("... (Status tx %s: %s)", id.String(), result.Status)
 		}
 	}
 }

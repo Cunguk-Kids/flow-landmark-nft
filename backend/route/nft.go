@@ -62,7 +62,7 @@ func HandleGetNFTs(c echo.Context) error {
 	}
 	offset := (page - 1) * limit
 
-	log.Printf("Filter - EventID: '%s', UserAddress: '%s', Page: %d, Limit: %d",
+	log.Println("Filter - EventID: '%s', UserAddress: '%s', Page: %d, Limit: %d",
 		eventIDFilter, userAddressFilter, page, limit)
 
 	// 3. Bangun Query Secara Dinamis
@@ -72,7 +72,7 @@ func HandleGetNFTs(c echo.Context) error {
 	if eventIDFilter != "" {
 		eventID, err := strconv.Atoi(eventIDFilter)
 		if err != nil {
-			log.Printf("Format eventId tidak valid: %s", eventIDFilter)
+			log.Println("Format eventId tidak valid: %s", eventIDFilter)
 			return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid eventId format"})
 		}
 		// Cari NFT yang punya relasi ke Event dengan EventId yang cocok
@@ -88,7 +88,7 @@ func HandleGetNFTs(c echo.Context) error {
 	// 4. Query total count (dengan filter yang sama)
 	totalCount, err := query.Count(ctx)
 	if err != nil {
-		log.Printf("Error menghitung total NFT: %v", err)
+		log.Println("Error menghitung total NFT: %v", err)
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Database count error"})
 	}
 
@@ -102,7 +102,7 @@ func HandleGetNFTs(c echo.Context) error {
 
 	// 6. Handle Error Query Data
 	if err != nil {
-		log.Printf("Error querying database for nfts: %v", err)
+		log.Println("Error querying database for nfts: %v", err)
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Database query error"})
 	}
 
@@ -115,6 +115,6 @@ func HandleGetNFTs(c echo.Context) error {
 	response.Pagination.Limit = limit
 
 	// 8. Kembalikan data sebagai JSON
-	log.Printf("Sukses mengambil %d data NFT (halaman %d, limit %d)", len(nftRecords), page, limit)
+	log.Println("Sukses mengambil %d data NFT (halaman %d, limit %d)", len(nftRecords), page, limit)
 	return c.JSON(http.StatusOK, response)
 }

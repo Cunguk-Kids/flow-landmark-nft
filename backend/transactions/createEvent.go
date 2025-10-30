@@ -70,7 +70,7 @@ transaction(
 `
 
 const (
-	deployerAddress = "15728ff209769c63"
+	deployerAddress = "1b7f070ebf7d0431"
 	// Ingat konstanta EmulatorHost Anda (Anda mungkin punya ini di tempat lain)
 	EmulatorHost = "127.0.0.1:3569" // Atau port HTTP Anda jika tetap pakai http client
 )
@@ -105,7 +105,7 @@ func CreateEvent(
 	// Koneksi Flow
 	flowClient, err = http.NewClient(http.TestnetHost) // Menggunakan koneksi HTTP Anda
 	if err != nil {
-		log.Printf("Connection Error: %v\n", err)
+		log.Println("Connection Error: %v\n", err)
 		// Jangan panic, return error
 		return fmt.Errorf("gagal membuat flow client: %w", err)
 	}
@@ -119,20 +119,20 @@ func CreateEvent(
 	platformAddress := flow.HexToAddress(deployerAddress)
 	platformKey, err := crypto.DecodePrivateKeyHex(crypto.ECDSA_P256, privateKey)
 	if err != nil {
-		log.Printf("Gagal decode private key: %v\n", err)
+		log.Println("Gagal decode private key: %v\n", err)
 		return fmt.Errorf("gagal decode private key: %w", err)
 	}
 
 	platformAccount, err := flowClient.GetAccount(ctx, platformAddress)
 	if err != nil {
-		log.Printf("Gagal mendapatkan akun platform: %v\n", err)
+		log.Println("Gagal mendapatkan akun platform: %v\n", err)
 		return fmt.Errorf("gagal mendapatkan akun platform %s: %w", platformAddress.String(), err)
 	}
 
 	key := platformAccount.Keys[0]
 	signer, err := crypto.NewInMemorySigner(platformKey, key.HashAlgo)
 	if err != nil {
-		log.Printf("Gagal memuat signer: %v\n", err)
+		log.Println("Gagal memuat signer: %v\n", err)
 		return fmt.Errorf("gagal memuat signer: %w", err)
 	}
 
@@ -140,7 +140,7 @@ func CreateEvent(
 	script := []byte(fmt.Sprintf(adminCreateEventScriptTemplate, deployerAddress))
 
 	// 3. SIAPKAN SEMUA ARGUMEN (11 Argumen)
-	// (Gunakan helper function jika Anda punya untuk menghindari Fatalf)
+	// (Gunakan helper function jika Anda punya untuk menghindari Println)
 	makeStrArg := func(s string) (cadence.String, error) {
 		val, err := cadence.NewString(s)
 		if err != nil {
@@ -223,7 +223,7 @@ func CreateEvent(
 	// 4. BUAT TRANSAKSI
 	latestBlock, err := flowClient.GetLatestBlock(ctx, true)
 	if err != nil {
-		log.Printf("Gagal mendapatkan block terbaru: %v\n", err)
+		log.Println("Gagal mendapatkan block terbaru: %v\n", err)
 		return fmt.Errorf("gagal mendapatkan block terbaru: %w", err)
 	}
 
@@ -251,7 +251,7 @@ func CreateEvent(
 	// 6. TANDA TANGANI TRANSAKSI
 	err = tx.SignEnvelope(platformAddress, key.Index, signer)
 	if err != nil {
-		log.Printf("Gagal menandatangani transaksi: %v\n", err)
+		log.Println("Gagal menandatangani transaksi: %v\n", err)
 		return fmt.Errorf("gagal menandatangani transaksi: %w", err)
 	}
 
@@ -259,7 +259,7 @@ func CreateEvent(
 	log.Println("Mengirim transaksi 'admin_create_event'...")
 	err = flowClient.SendTransaction(ctx, *tx)
 	if err != nil {
-		log.Printf("Gagal mengirim transaksi: %v\n", err)
+		log.Println("Gagal mengirim transaksi: %v\n", err)
 		return fmt.Errorf("gagal mengirim transaksi: %w", err)
 	}
 
@@ -268,11 +268,11 @@ func CreateEvent(
 	result, err := utils.WaitForSeal(ctx, flowClient, tx.ID())
 	if err != nil {
 		// Error bisa dari WaitForSeal itu sendiri atau error Cadence di chain
-		log.Printf("Transaksi %s gagal: %v\n", tx.ID(), err)
+		log.Println("Transaksi %s gagal: %v\n", tx.ID(), err)
 		return fmt.Errorf("transaksi %s gagal: %w", tx.ID(), err) // Kembalikan error
 	}
 
 	// Jika tidak ada error dari WaitForSeal, berarti sukses
-	log.Printf("Transaksi Create Event Berhasil! 🔥 Status: %s", result.Status)
+	log.Println("Transaksi Create Event Berhasil! 🔥 Status: %s", result.Status)
 	return nil // <-- PERUBAHAN: Kembalikan nil error jika sukses
 }

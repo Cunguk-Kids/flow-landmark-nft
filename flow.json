@@ -37,6 +37,13 @@
 				"location": "a-brand.pkey"
 			}
 		},
+		"b-brand": {
+			"address": "1c2092e42a189207",
+			"key": {
+				"type": "file",
+				"location": "b-brand.pkey"
+			}
+		},
 		"dev-harkon": {
 			"address": "15728ff209769c63",
 			"key": {
@@ -44,11 +51,25 @@
 				"location": "dev-harkon.pkey"
 			}
 		},
+		"dev-harkon2": {
+			"address": "1eea1e42593c56ab",
+			"key": {
+				"type": "file",
+				"location": "dev-harkon2.pkey"
+			}
+		},
 		"emulator-account": {
 			"address": "f8d6e0586b0a20c7",
 			"key": {
 				"type": "file",
 				"location": "emulator-account.pkey"
+			}
+		},
+		"harkon-admin": {
+			"address": "1b7f070ebf7d0431",
+			"key": {
+				"type": "file",
+				"location": "harkon-admin.pkey"
 			}
 		}
 	},
@@ -61,7 +82,7 @@
 			]
 		},
 		"testnet": {
-			"dev-harkon": [
+			"harkon-admin": [
 				"NFTMoment",
 				"EventPlatform",
 				"MomentUtility"

@@ -19,7 +19,7 @@ import (
 )
 
 const (
-	ContractAddress = "15728ff209769c63" // Alamat tempat kontrak di-deploy
+	ContractAddress = "1b7f070ebf7d0431" // Alamat tempat kontrak di-deploy
 )
 
 var (
@@ -36,7 +36,7 @@ func main() {
 	// Load .env file if it exists (optional, environment variables can be set by Docker/system)
 	err := godotenv.Load()
 	if err != nil {
-		log.Printf("Warning: .env file not found, using environment variables from system: %v", err)
+		log.Println("Warning: .env file not found, using environment variables from system: %v", err)
 	}
 
 	client := utils.Open(os.Getenv("DATABASE_URL"))
@@ -55,26 +55,26 @@ func main() {
 	)
 
 	if err != nil {
-		log.Fatalf("Gagal terhubung ke emulator gRPC: %v", err)
+		log.Println("Gagal terhubung ke emulator gRPC: %v", err)
 	}
 
 	grpcBlock, err := grpcClient.GetLatestBlockHeader(ctx, true)
 
 	if err != nil {
-		log.Fatalf("Gagal gRPC get latest block: %v", err)
+		log.Println("Gagal gRPC get latest block: %v", err)
 	}
 	fmt.Println("Block ID:", grpcBlock.ID.String(), grpcBlock.Height)
 
 	dataCh, errCh, initErr := grpcClient.SubscribeEventsByBlockHeight(
 		ctx,
-		287546460,
+		287624135,
 		flow.EventFilter{
 			EventTypes: []string{EventCreated, UserRegistered, UserUnregistered, EventStatus, PartnerAdded, EventNFTMinted},
 		},
 	)
 	if initErr != nil {
 		// handle init error
-		log.Fatalf("Gagal subscribe ke event init err: %v", initErr.Error())
+		log.Println("Gagal subscribe ke event init err: %v", initErr.Error())
 	}
 
 	for {
@@ -87,7 +87,7 @@ func main() {
 				panic("data subscription closed")
 			}
 			for _, ev := range data.Events {
-				fmt.Printf("Type: %s\n", ev.Type)
+				fmt.Println("Type: %s\n", ev.Type)
 
 				switch ev.Type {
 				case EventCreated:
@@ -107,7 +107,7 @@ func main() {
 		case err := <-errCh:
 			if err != nil {
 				// handle streaming error (log, reconnect / exponential back-off)
-				log.Fatalf("errorCh")
+				log.Println("errorCh")
 			}
 		}
 	}
