@@ -1,0 +1,733 @@
+basePath: /
+definitions:
+  ent.Event:
+    properties:
+      counter:
+        description: Counter holds the value of the "counter" field.
+        type: integer
+      description:
+        description: Description holds the value of the "description" field.
+        type: string
+      edges:
+        allOf:
+        - $ref: '#/definitions/ent.EventEdges'
+        description: |-
+          Edges holds the relations/edges for other nodes in the graph.
+          The values are being populated by the EventQuery when eager-loading is set.
+      endDate:
+        description: EndDate holds the value of the "endDate" field.
+        type: number
+      eventId:
+        description: EventId holds the value of the "eventId" field.
+        type: integer
+      eventName:
+        description: EventName holds the value of the "eventName" field.
+        type: string
+      id:
+        description: ID of the ent.
+        type: integer
+      image:
+        description: Image holds the value of the "image" field.
+        type: string
+      lat:
+        description: Lat holds the value of the "lat" field.
+        type: number
+      long:
+        description: Long holds the value of the "long" field.
+        type: number
+      quota:
+        description: Quota holds the value of the "quota" field.
+        type: integer
+      radius:
+        description: Radius holds the value of the "radius" field.
+        type: number
+      startDate:
+        description: StartDate holds the value of the "startDate" field.
+        type: number
+      status:
+        description: Status holds the value of the "status" field.
+        type: integer
+      totalRareNFT:
+        description: TotalRareNFT holds the value of the "totalRareNFT" field.
+        type: integer
+    type: object
+  ent.EventEdges:
+    properties:
+      nfts:
+        description: Nfts holds the value of the nfts edge.
+        items:
+          $ref: '#/definitions/ent.Nft'
+        type: array
+      participants:
+        description: Participants holds the value of the participants edge.
+        items:
+          $ref: '#/definitions/ent.EventParticipant'
+        type: array
+      partner:
+        allOf:
+        - $ref: '#/definitions/ent.Partner'
+        description: Partner holds the value of the partner edge.
+    type: object
+  ent.EventParticipant:
+    properties:
+      edges:
+        allOf:
+        - $ref: '#/definitions/ent.EventParticipantEdges'
+        description: |-
+          Edges holds the relations/edges for other nodes in the graph.
+          The values are being populated by the EventParticipantQuery when eager-loading is set.
+      id:
+        description: ID of the ent.
+        type: integer
+      isCheckedIn:
+        description: IsCheckedIn holds the value of the "isCheckedIn" field.
+        type: boolean
+      userAddress:
+        description: UserAddress holds the value of the "userAddress" field.
+        type: string
+    type: object
+  ent.EventParticipantEdges:
+    properties:
+      event:
+        allOf:
+        - $ref: '#/definitions/ent.Event'
+        description: Event holds the value of the event edge.
+    type: object
+  ent.Nft:
+    properties:
+      edges:
+        allOf:
+        - $ref: '#/definitions/ent.NftEdges'
+        description: |-
+          Edges holds the relations/edges for other nodes in the graph.
+          The values are being populated by the NftQuery when eager-loading is set.
+      id:
+        description: ID of the ent.
+        type: integer
+      metadata:
+        allOf:
+        - $ref: '#/definitions/schema.Metadata'
+        description: Metadata holds the value of the "metadata" field.
+      mint_time:
+        description: MintTime holds the value of the "mint_time" field.
+        type: string
+      nft_id:
+        description: NftID holds the value of the "nft_id" field.
+        type: integer
+      owner_address:
+        description: OwnerAddress holds the value of the "owner_address" field.
+        type: string
+      rarity:
+        description: Rarity holds the value of the "rarity" field.
+        type: string
+    type: object
+  ent.NftEdges:
+    properties:
+      event:
+        allOf:
+        - $ref: '#/definitions/ent.Event'
+        description: Event holds the value of the event edge.
+    type: object
+  ent.Partner:
+    properties:
+      address:
+        description: Address holds the value of the "address" field.
+        type: string
+      description:
+        description: Description holds the value of the "description" field.
+        type: string
+      edges:
+        allOf:
+        - $ref: '#/definitions/ent.PartnerEdges'
+        description: |-
+          Edges holds the relations/edges for other nodes in the graph.
+          The values are being populated by the PartnerQuery when eager-loading is set.
+      email:
+        description: Email holds the value of the "email" field.
+        type: string
+      id:
+        description: ID of the ent.
+        type: integer
+      image:
+        description: Image holds the value of the "image" field.
+        type: string
+      name:
+        description: Name holds the value of the "name" field.
+        type: string
+    type: object
+  ent.PartnerEdges:
+    properties:
+      partner_address:
+        description: PartnerAddress holds the value of the partner_address edge.
+        items:
+          $ref: '#/definitions/ent.Event'
+        type: array
+    type: object
+  route.CreateEventRequest:
+    properties:
+      brandAddress:
+        type: string
+      description:
+        type: string
+      endDate:
+        type: string
+      eventName:
+        type: string
+      image:
+        type: string
+      lat:
+        type: number
+      long:
+        type: number
+      quota:
+        minimum: 0
+        type: integer
+      radius:
+        minimum: 0
+        type: number
+      startDate:
+        type: string
+      totalRareNFT:
+        minimum: 0
+        type: integer
+    required:
+    - brandAddress
+    - endDate
+    - eventName
+    - startDate
+    type: object
+  route.PaginatedUserEventsResponse:
+    properties:
+      data:
+        description: Slice dari data event (user view)
+        items:
+          $ref: '#/definitions/route.UserEventView'
+        type: array
+      pagination:
+        $ref: '#/definitions/swagresponse.PaginationMetadata'
+    type: object
+  route.UpdateStatusRequest:
+    properties:
+      brandAddress:
+        type: string
+      eventId:
+        type: string
+    required:
+    - brandAddress
+    - eventId
+    type: object
+  route.UserEventView:
+    description: Mencatat check-in user di database (off-chain) dan memicu transaksi
+      on-chain (asinkron).
+    properties:
+      counter:
+        description: Counter holds the value of the "counter" field.
+        type: integer
+      description:
+        description: Description holds the value of the "description" field.
+        type: string
+      edges:
+        allOf:
+        - $ref: '#/definitions/ent.EventEdges'
+        description: |-
+          Edges holds the relations/edges for other nodes in the graph.
+          The values are being populated by the EventQuery when eager-loading is set.
+      endDate:
+        description: EndDate holds the value of the "endDate" field.
+        type: number
+      eventId:
+        description: EventId holds the value of the "eventId" field.
+        type: integer
+      eventName:
+        description: EventName holds the value of the "eventName" field.
+        type: string
+      id:
+        description: ID of the ent.
+        type: integer
+      image:
+        description: Image holds the value of the "image" field.
+        type: string
+      lat:
+        description: Lat holds the value of the "lat" field.
+        type: number
+      long:
+        description: Long holds the value of the "long" field.
+        type: number
+      participants:
+        description: Daftar partisipan (maks 5)
+        items:
+          $ref: '#/definitions/ent.EventParticipant'
+        type: array
+      quota:
+        description: Quota holds the value of the "quota" field.
+        type: integer
+      radius:
+        description: Radius holds the value of the "radius" field.
+        type: number
+      startDate:
+        description: StartDate holds the value of the "startDate" field.
+        type: number
+      status:
+        description: Status holds the value of the "status" field.
+        type: integer
+      totalRareNFT:
+        description: TotalRareNFT holds the value of the "totalRareNFT" field.
+        type: integer
+      userStatus:
+        type: string
+    type: object
+  schema.Location:
+    properties:
+      city:
+        type: string
+      country:
+        type: string
+      latitude:
+        description: Using float64 for lat/long
+        type: number
+      longitude:
+        type: number
+      placeName:
+        description: Use omitempty for optional fields
+        type: string
+    type: object
+  schema.Metadata:
+    properties:
+      altitude:
+        type: string
+      attributes:
+        additionalProperties:
+          type: string
+        description: Map for dictionary
+        type: object
+      audio:
+        description: Storing enum as string
+        type: string
+      border:
+        description: Storing enum as string
+        type: string
+      category:
+        description: Storing enum as string
+        type: string
+      description:
+        type: string
+      filter:
+        description: Storing enum as string
+        type: string
+      imageURL:
+        type: string
+      javaneseText:
+        type: string
+      location:
+        allOf:
+        - $ref: '#/definitions/schema.Location'
+        description: Pointer for optional struct
+      sticker:
+        description: Storing enum as string
+        type: string
+      tags:
+        description: Slice for array
+        items:
+          type: string
+        type: array
+      temperature:
+        type: string
+      thumbnailURL:
+        type: string
+      timestamp:
+        description: Using float64 for UFix64 timestamp
+        type: number
+      title:
+        type: string
+      weather:
+        type: string
+      windSpeed:
+        type: string
+    type: object
+  swagresponse.ErrorResponse:
+    properties:
+      details:
+        description: omitempty jika tidak selalu ada
+        example: Detail teknis (jika ada)
+        type: string
+      message:
+        example: Deskripsi error spesifik
+        type: string
+      status:
+        example: error
+        type: string
+    type: object
+  swagresponse.PaginatedEventsResponse:
+    properties:
+      data:
+        description: Slice dari data event
+        items:
+          $ref: '#/definitions/ent.Event'
+        type: array
+      pagination:
+        $ref: '#/definitions/swagresponse.PaginationMetadata'
+    type: object
+  swagresponse.PaginatedNFTsResponse:
+    properties:
+      data:
+        description: 'Tipe spesifik: slice dari Nft'
+        items:
+          $ref: '#/definitions/ent.Nft'
+        type: array
+      pagination:
+        $ref: '#/definitions/swagresponse.PaginationMetadata'
+    type: object
+  swagresponse.PaginatedPartnersResponse:
+    properties:
+      data:
+        description: 'Tipe spesifik: slice dari Partner'
+        items:
+          $ref: '#/definitions/ent.Partner'
+        type: array
+      pagination:
+        $ref: '#/definitions/swagresponse.PaginationMetadata'
+    type: object
+  swagresponse.PaginationMetadata:
+    properties:
+      currentPage:
+        example: 1
+        type: integer
+      pageSize:
+        example: 10
+        type: integer
+      totalItems:
+        example: 100
+        type: integer
+      totalPages:
+        example: 10
+        type: integer
+    type: object
+  swagresponse.SuccessCreateResponse:
+    properties:
+      brand:
+        example: "0x179b6b1cb6755e31"
+        type: string
+      disclaimer:
+        example: Status transaksi final akan terlihat di blockchain/indexer.
+        type: string
+      eventName:
+        example: Event Keren
+        type: string
+      message:
+        example: Permintaan CreateEvent diterima dan transaksi berhasil dikirim.
+        type: string
+      status:
+        example: success
+        type: string
+    type: object
+  swagresponse.UpdateStatusResponse:
+    properties:
+      eventId:
+        example: "1"
+        type: string
+      message:
+        example: Transaksi update status berhasil dikirim dan di-seal.
+        type: string
+      status:
+        example: success
+        type: string
+    type: object
+host: localhost:6060
+info:
+  contact: {}
+  title: Event Platform API
+  version: "1.0"
+paths:
+  /event:
+    get:
+      description: Mengambil daftar semua event dengan filter opsional (brandAddress,
+        status) dan pagination.
+      parameters:
+      - description: Filter berdasarkan Brand Address (Partner)
+        example: '"0x179b6b1cb6755e31"'
+        in: query
+        name: brandAddress
+        type: string
+      - description: Filter berdasarkan Status Event (0=Pending, 1=Active, 2=Ended)
+        example: 1
+        in: query
+        name: status
+        type: integer
+      - description: Nomor halaman
+        example: 1
+        in: query
+        name: page
+        type: integer
+      - description: Jumlah item per halaman
+        example: 10
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Daftar event yang dipaginasi
+          schema:
+            $ref: '#/definitions/swagresponse.PaginatedEventsResponse'
+        "400":
+          description: 'Error: Format query param tidak valid'
+          schema:
+            $ref: '#/definitions/swagresponse.ErrorResponse'
+        "500":
+          description: 'Error: Kesalahan server internal'
+          schema:
+            $ref: '#/definitions/swagresponse.ErrorResponse'
+      summary: Mendapatkan Daftar Event (Pagination)
+      tags:
+      - Events
+  /event/{id}:
+    get:
+      description: Mengambil detail lengkap dari satu event berdasarkan ID-nya, termasuk
+        daftar partisipan dan info partner.
+      parameters:
+      - description: Event ID
+        example: 1
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Detail Event (termasuk relasi Edges.Participants dan Edges.Partner)
+          schema:
+            $ref: '#/definitions/ent.Event'
+        "400":
+          description: 'Error: Format ID tidak valid'
+          schema:
+            $ref: '#/definitions/swagresponse.ErrorResponse'
+        "404":
+          description: 'Error: Event tidak ditemukan'
+          schema:
+            $ref: '#/definitions/swagresponse.ErrorResponse'
+        "500":
+          description: 'Error: Kesalahan server internal'
+          schema:
+            $ref: '#/definitions/swagresponse.ErrorResponse'
+      summary: Mendapatkan Detail Event
+      tags:
+      - Events
+  /event/create:
+    post:
+      consumes:
+      - application/json
+      description: Mendaftarkan event baru ke platform dan mengirim transaksi on-chain.
+      parameters:
+      - description: Data Event Baru
+        in: body
+        name: event
+        required: true
+        schema:
+          $ref: '#/definitions/route.CreateEventRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Pesan sukses
+          schema:
+            $ref: '#/definitions/swagresponse.SuccessCreateResponse'
+        "400":
+          description: 'Error: Invalid request'
+          schema:
+            $ref: '#/definitions/swagresponse.ErrorResponse'
+        "500":
+          description: 'Error: Gagal kirim transaksi'
+          schema:
+            $ref: '#/definitions/swagresponse.ErrorResponse'
+      summary: Membuat Event Baru
+      tags:
+      - Events
+  /event/update-status:
+    post:
+      consumes:
+      - application/json
+      description: Memicu transaksi on-chain untuk mengevaluasi ulang status event
+        (Pending/Active/Ended) berdasarkan waktu blockchain saat ini.
+      parameters:
+      - description: Data Update Status (BrandAddress, EventID)
+        in: body
+        name: statusRequest
+        required: true
+        schema:
+          $ref: '#/definitions/route.UpdateStatusRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Status event berhasil diupdate
+          schema:
+            $ref: '#/definitions/swagresponse.UpdateStatusResponse'
+        "400":
+          description: 'Error: Request tidak valid (ID salah, body salah)'
+          schema:
+            $ref: '#/definitions/swagresponse.ErrorResponse'
+        "500":
+          description: 'Error: Transaksi blockchain gagal'
+          schema:
+            $ref: '#/definitions/swagresponse.ErrorResponse'
+      summary: Memperbarui Status Event (On-Chain)
+      tags:
+      - Events
+  /event/user:
+    get:
+      description: Mengambil daftar event, difilter, dengan status partisipasi user
+        (Available, Registered, CheckedIn, dll.)
+      parameters:
+      - description: Alamat user untuk mengecek status partisipasinya
+        example: '"0x179b6b1cb6755e31"'
+        in: query
+        name: userAddress
+        required: true
+        type: string
+      - description: Filter berdasarkan Brand Address (Partner)
+        example: '"0xf8d6e0a20c7"'
+        in: query
+        name: brandAddress
+        type: string
+      - description: Filter berdasarkan Status Event (0=Pending, 1=Active, 2=Ended)
+        example: 1
+        in: query
+        name: status
+        type: integer
+      - description: Nomor halaman
+        example: 1
+        in: query
+        name: page
+        type: integer
+      - description: Jumlah item per halaman
+        example: 10
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Daftar event yang dipaginasi (user view)
+          schema:
+            $ref: '#/definitions/route.PaginatedUserEventsResponse'
+        "400":
+          description: 'Error: Format query param tidak valid atau ''userAddress''
+            hilang'
+          schema:
+            $ref: '#/definitions/swagresponse.ErrorResponse'
+        "500":
+          description: 'Error: Kesalahan server internal'
+          schema:
+            $ref: '#/definitions/swagresponse.ErrorResponse'
+      summary: Mendapatkan Daftar Event (View User)
+      tags:
+      - Events
+  /nft:
+    get:
+      description: Mengambil daftar semua NFT dengan filter opsional (eventId, userAddress)
+        dan pagination.
+      parameters:
+      - description: Filter berdasarkan Event ID
+        example: 1
+        in: query
+        name: eventId
+        type: integer
+      - description: Filter berdasarkan Alamat User (Owner)
+        example: '"0x179b6b1cb6755e31"'
+        in: query
+        name: userAddress
+        type: string
+      - description: Nomor halaman
+        example: 1
+        in: query
+        name: page
+        type: integer
+      - description: Jumlah item per halaman
+        example: 10
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Daftar NFT yang dipaginasi
+          schema:
+            $ref: '#/definitions/swagresponse.PaginatedNFTsResponse'
+        "400":
+          description: 'Error: Format query param tidak valid'
+          schema:
+            $ref: '#/definitions/swagresponse.ErrorResponse'
+        "500":
+          description: 'Error: Kesalahan server internal'
+          schema:
+            $ref: '#/definitions/swagresponse.ErrorResponse'
+      summary: Mendapatkan Daftar NFT (Pagination & Filter)
+      tags:
+      - NFTs
+  /partner:
+    get:
+      description: Mengambil daftar semua partner (brand) yang terdaftar di platform,
+        dengan pagination.
+      parameters:
+      - description: Nomor halaman
+        example: 1
+        in: query
+        name: page
+        type: integer
+      - description: Jumlah item per halaman
+        example: 10
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Daftar partner yang dipaginasi
+          schema:
+            $ref: '#/definitions/swagresponse.PaginatedPartnersResponse'
+        "500":
+          description: 'Error: Kesalahan server internal'
+          schema:
+            $ref: '#/definitions/swagresponse.ErrorResponse'
+      summary: Mendapatkan Daftar Partner (Pagination)
+      tags:
+      - Partners
+  /partner/{address}:
+    get:
+      description: Mengambil detail lengkap dari satu partner (brand) berdasarkan
+        Alamat (Address) blockchain-nya.
+      parameters:
+      - description: Alamat Partner (Brand)
+        example: '"0x179b6b1cb6755e31"'
+        in: path
+        name: address
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Detail Partner (Brand)
+          schema:
+            $ref: '#/definitions/ent.Partner'
+        "400":
+          description: 'Error: Alamat (Address) tidak boleh kosong'
+          schema:
+            $ref: '#/definitions/swagresponse.ErrorResponse'
+        "404":
+          description: 'Error: Partner tidak ditemukan'
+          schema:
+            $ref: '#/definitions/swagresponse.ErrorResponse'
+        "500":
+          description: 'Error: Kesalahan server internal'
+          schema:
+            $ref: '#/definitions/swagresponse.ErrorResponse'
+      summary: Mendapatkan Detail Partner (Brand)
+      tags:
+      - Partners
+swagger: "2.0"

@@ -23,7 +23,18 @@ type PaginatedResponse struct {
 	} `json:"pagination"`
 }
 
-// HandleGetNFTs (BARU) - Menggabungkan GetByEventID dan GetByUserAddress
+// @Summary Mendapatkan Daftar NFT (Pagination & Filter)
+// @Description Mengambil daftar semua NFT dengan filter opsional (eventId, userAddress) dan pagination.
+// @Tags NFTs
+// @Produce json
+// @Param   eventId query int false "Filter berdasarkan Event ID" example(1)
+// @Param   userAddress query string false "Filter berdasarkan Alamat User (Owner)" example("0x179b6b1cb6755e31")
+// @Param   page query int false "Nomor halaman" example(1)
+// @Param   limit query int false "Jumlah item per halaman" example(10)
+// @Success 200 {object} swagresponse.PaginatedNFTsResponse "Daftar NFT yang dipaginasi"
+// @Failure 400 {object} swagresponse.ErrorResponse "Error: Format query param tidak valid"
+// @Failure 500 {object} swagresponse.ErrorResponse "Error: Kesalahan server internal"
+// @Router  /nft [get]
 func HandleGetNFTs(c echo.Context) error {
 	log.Println("Menerima request /nfts...")
 	ctx := context.Background()

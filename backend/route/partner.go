@@ -15,6 +15,15 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
+// @Summary Mendapatkan Daftar Partner (Pagination)
+// @Description Mengambil daftar semua partner (brand) yang terdaftar di platform, dengan pagination.
+// @Tags Partners
+// @Produce json
+// @Param   page query int false "Nomor halaman" example(1)
+// @Param   limit query int false "Jumlah item per halaman" example(10)
+// @Success 200 {object} swagresponse.PaginatedPartnersResponse "Daftar partner yang dipaginasi"
+// @Failure 500 {object} swagresponse.ErrorResponse "Error: Kesalahan server internal"
+// @Router  /partner [get]
 func HandleGetAllPartner(c echo.Context) error {
 	entClient := utils.Open(os.Getenv("DATABASE_URL"))
 	defer entClient.Close()
@@ -89,6 +98,16 @@ func HandleGetAllPartner(c echo.Context) error {
 	return c.JSON(http.StatusOK, response)
 }
 
+// @Summary Mendapatkan Detail Partner (Brand)
+// @Description Mengambil detail lengkap dari satu partner (brand) berdasarkan Alamat (Address) blockchain-nya.
+// @Tags Partners
+// @Produce json
+// @Param   address path string true "Alamat Partner (Brand)" example("0x179b6b1cb6755e31")
+// @Success 200 {object} ent.Partner "Detail Partner (Brand)"
+// @Failure 400 {object} swagresponse.ErrorResponse "Error: Alamat (Address) tidak boleh kosong"
+// @Failure 404 {object} swagresponse.ErrorResponse "Error: Partner tidak ditemukan"
+// @Failure 500 {object} swagresponse.ErrorResponse "Error: Kesalahan server internal"
+// @Router  /partner/{address} [get]
 func HandleGetPartnerByAddress(c echo.Context) error {
 	entClient := utils.Open(os.Getenv("DATABASE_URL"))
 	defer entClient.Close()

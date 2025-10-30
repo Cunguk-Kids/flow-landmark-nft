@@ -1,6 +1,7 @@
 package main
 
 import (
+	_ "backend/docs"
 	"backend/route"
 	"log"
 
@@ -8,8 +9,13 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+	echoSwagger "github.com/swaggo/echo-swagger"
 )
 
+// @title Event Platform API
+// @version 1.0
+// @host localhost:6666
+// @BasePath /
 func main() {
 	// Load .env file if it exists (optional, environment variables can be set by Docker/system)
 	err := godotenv.Load()
@@ -23,7 +29,9 @@ func main() {
 	// Ini setara dengan 'logger' & 'recovery' di Gin
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
+	e.Use(middleware.CORS())
 	e.GET("/", route.Welcome)
+	e.GET("/swagger/*", echoSwagger.WrapHandler)
 	// 3. Definisikan Rute (Routes)
 	// Kita gunakan e.POST karena ini adalah aksi "membuat" (create)
 	e.POST("/event/create", route.HandleCreateEvent)
@@ -41,6 +49,6 @@ func main() {
 	e.GET("/nft", route.HandleGetNFTs)
 
 	// 4. Jalankan Server
-	log.Println("Server API Echo berjalan di http://localhost:6666")
+	log.Println("Server API Echo berjalan di http://localhost:6060")
 	e.Logger.Fatal(e.Start(":6666"))
 }
