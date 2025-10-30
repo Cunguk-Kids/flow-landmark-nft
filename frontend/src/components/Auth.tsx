@@ -63,11 +63,12 @@ export default function Auth() {
           ) : (
             <Button
               onClick={() => {
-                authenticate();
+                authenticate().then(x => console.log(x));
                 requestAnimationFrame(() => {
-                  (
-                    document.querySelector("#FCL_IFRAME") as HTMLIFrameElement
-                  ).style.pointerEvents = "auto";
+                  const frame = document.querySelector(
+                    "#FCL_IFRAME"
+                  ) as HTMLIFrameElement | null;
+                  if (frame) frame.style.pointerEvents = "auto";
                 });
               }}
               variant="default"
