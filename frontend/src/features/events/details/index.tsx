@@ -1,12 +1,16 @@
 import { Link, useLoaderData } from "@tanstack/react-router";
+import { useState } from "react";
 import { formatDateTime } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Typhography } from "@/components/ui/typhography";
-import { Calendar, MapPin, Users, Clock } from "lucide-react";
+import { Spinner } from "@/components/ui/spinner";
+import { Calendar, MapPin, Users, Clock, LucideCheckCircle } from "lucide-react";
 import { motion } from "motion/react";
-import { formatEvent } from "@/hooks";
+import { formatEvent, useCheckIn } from "@/hooks";
 import { useAccount } from "@/hooks/useAccount";
+import { useFlowCurrentUser } from "@onflow/react-sdk";
+import { toast } from "sonner";
 
 import Galaxy from "@/components/Galaxy";
 import { PageHeader } from "@/components/PageHeader";
@@ -16,6 +20,10 @@ const EventsDetailsPage = () => {
     from: "/events/details/$eventId",
   });
   const event = rawEvent ? formatEvent(rawEvent) : null;
+  const { user } = useFlowCurrentUser();
+  const { data: accountData } = useAccount();
+  const { mutate: checkIn, isPending: isCheckingIn } = useCheckIn();
+  const [isCheckInSuccess, setIsCheckInSuccess] = useState(false);
 
   if (!event)
     return (
@@ -25,6 +33,37 @@ const EventsDetailsPage = () => {
         </Typhography>
       </div>
     );
+
+  // Check if current user is registered for this event
+  const userParticipant = event.participants.find(
+    (p) => p.userAddress === accountData?.address
+  );
+  const isUserRegistered = !!userParticipant;
+  const isUserCheckedIn = userParticipant?.isCheckedIn || isCheckInSuccess;
+
+  const handleCheckIn = () => {
+    if (!accountData?.address) {
+      toast.error("Please connect your wallet first!");
+      return;
+    }
+
+    checkIn(
+      {
+        eventId: String(event.eventId),
+        userAddress: accountData.address,
+        brandAddress: event.brandAddress,
+      },
+      {
+        onSuccess: () => {
+          toast.success("Checked in successfully!");
+          setIsCheckInSuccess(true);
+        },
+        onError: (error) => {
+          toast.error(error instanceof Error ? error.message : "Check-in failed");
+        },
+      }
+    );
+  };
 
   return (
     <motion.div
@@ -306,36 +345,100 @@ const EventsDetailsPage = () => {
                 </div>
               )}
 
-              {event.statusLabel === "Active" && !event.isFull && (
+              {/* Show different messages based on user state */}
+              {!isUserRegistered && event.statusLabel === "Active" && !event.isFull && (
                 <Typhography variant="t1" className="text-muted-foreground">
                   Welcome! To join the event, please register below.
                 </Typhography>
               )}
 
-              <Button
-                asChild
-                size="lg"
-                disabled={event.statusLabel !== "Active" || event.isFull}
-                variant={
-                  event.statusLabel === "Active" && !event.isFull
-                    ? "default"
-                    : "secondary"
-                }
-                className="w-full font-semibold"
-              >
-                <Link
-                  to="/events/form/$eventId"
-                  params={{ eventId: event.id.toString() }}
+              {isUserRegistered && !isUserCheckedIn && event.statusLabel === "Active" && (
+                <Typhography variant="t1" className="text-muted-foreground">
+                  You're registered! Check in to confirm your attendance.
+                </Typhography>
+              )}
+
+              {isUserCheckedIn && (
+                <div className="bg-primary/10 backdrop-blur-sm rounded-lg p-4 flex items-center gap-3">
+                  <LucideCheckCircle className="text-primary" size={20} />
+                  <div>
+                    <Typhography variant="t1" className="font-semibold text-primary">
+                      Checked In
+                    </Typhography>
+                    <Typhography variant="t2" className="text-muted-foreground">
+                      See you at the event!
+                    </Typhography>
+                  </div>
+                </div>
+              )}
+
+              {/* Button logic based on user state */}
+              {!isUserRegistered ? (
+                <Button
+                  asChild
+                  size="lg"
+                  disabled={event.statusLabel !== "Active" || event.isFull}
+                  variant={
+                    event.statusLabel === "Active" && !event.isFull
+                      ? "default"
+                      : "secondary"
+                  }
+                  className="w-full font-semibold"
+                >
+                  <Link
+                    to="/events/form/$eventId"
+                    params={{ eventId: event.id.toString() }}
+                  >
+                    <Typhography variant="lg">
+                      {event.isFull
+                        ? "Event Full"
+                        : event.statusLabel === "Active"
+                          ? "Request to Join"
+                          : event.statusLabel}
+                    </Typhography>
+                  </Link>
+                </Button>
+              ) : !isUserCheckedIn && event.statusLabel === "Active" ? (
+                <Button
+                  size="lg"
+                  onClick={handleCheckIn}
+                  disabled={isCheckingIn}
+                  className="w-full font-semibold"
+                >
+                  {isCheckingIn ? (
+                    <>
+                      <Spinner />
+                      <Typhography variant="lg">Checking In...</Typhography>
+                    </>
+                  ) : (
+                    <>
+                      <LucideCheckCircle size={20} />
+                      <Typhography variant="lg">Check In</Typhography>
+                    </>
+                  )}
+                </Button>
+              ) : isUserCheckedIn ? (
+                <Button
+                  size="lg"
+                  disabled
+                  variant="secondary"
+                  className="w-full font-semibold"
+                >
+                  <LucideCheckCircle size={20} />
+                  <Typhography variant="lg">Checked In</Typhography>
+                </Button>
+              ) : (
+                <Button
+                  size="lg"
+                  disabled
+                  variant="secondary"
+                  className="w-full font-semibold"
                 >
                   <Typhography variant="lg">
-                    {event.isFull
-                      ? "Event Full"
-                      : event.statusLabel === "Active"
-                        ? "Request to Join"
-                        : event.statusLabel}
+                    {event.statusLabel === "Pending" ? "Not Started" : "Event Ended"}
                   </Typhography>
-                </Link>
-              </Button>
+                </Button>
+              )}
             </div>
 
             {/* Event Stats */}

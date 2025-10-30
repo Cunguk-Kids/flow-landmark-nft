@@ -1,12 +1,8 @@
-import { useState, type FC, type FormEvent, useEffect } from "react";
+import { useState, type FC, useEffect, useCallback } from "react";
 import { useNavigate, useRouter } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Typhography } from "@/components/ui/typhography";
-import { Phone, Mail, User, CheckCircle2 } from "lucide-react";
-import {
-  FieldLabel,
-} from "@/components/ui/field";
+import { CheckCircle2, ExternalLink } from "lucide-react";
 import { Spinner } from "@/components/ui/spinner";
 import { toast } from "sonner";
 import { useRegisterEvent, useEventDetail, formatEvent } from "@/hooks";
@@ -14,6 +10,7 @@ import { useFlowCurrentUser, useFlowTransactionStatus } from "@onflow/react-sdk"
 import { motion } from "motion/react";
 import Galaxy from "@/components/Galaxy";
 import { PageHeader } from "@/components/PageHeader";
+import RegistrationForm from "./RegistrationForm";
 
 const EventsFormPage: FC<{ id: string }> = ({ id }) => {
   const router = useRouter();
@@ -36,13 +33,6 @@ const EventsFormPage: FC<{ id: string }> = ({ id }) => {
     }
   }, [event]);
 
-  const [formData, setFormData] = useState({
-    id: id,
-    name: "",
-    email: "",
-    phoneNo: "",
-  });
-
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [loadingToastId, setLoadingToastId] = useState<string | number | null>(null);
@@ -50,54 +40,85 @@ const EventsFormPage: FC<{ id: string }> = ({ id }) => {
   // Watch transaction status and show success when sealed
   useEffect(() => {
     if (txId && transactionStatus?.status === 4) {
-      // Status 4 = sealed (completed)
+      // Status 4 = sealed (included in a block)
       setIsSubmitting(false);
-      setIsSuccess(true);
-      setFormData({
-        id: id,
-        name: "",
-        email: "",
-        phoneNo: "",
-      });
 
-      // Dismiss loading toast and show success
-      if (loadingToastId) {
-        toast.success("Event registered successfully!", { id: loadingToastId });
-        setLoadingToastId(null);
+      // Debug: Log the full transaction status
+      console.log("Transaction sealed - Full status:", transactionStatus);
+
+      // Check if transaction actually succeeded
+      // Check for errorMessage first, then statusCode
+      const hasError =
+        transactionStatus.errorMessage ||
+        (transactionStatus.statusCode !== undefined && transactionStatus.statusCode > 1);
+
+      if (hasError) {
+        // Transaction was sealed but failed - parse the error message
+        const rawError = transactionStatus.errorMessage || "Transaction failed";
+
+        // Try to extract the actual Cadence error message
+        // Look for patterns like "error: pre-condition failed: [message]"
+        let userFriendlyError = rawError;
+
+        // Pattern 1: "error: pre-condition failed: [message]"
+        const preConditionMatch = rawError.match(/error: pre-condition failed: (.+?)(?:\n|$)/);
+        if (preConditionMatch) {
+          userFriendlyError = preConditionMatch[1].trim();
+        } else {
+          // Pattern 2: "error: [message]" (general Cadence errors)
+          const errorMatch = rawError.match(/error: (.+?)(?:\n|  -->|$)/);
+          if (errorMatch) {
+            userFriendlyError = errorMatch[1].trim();
+          }
+        }
+
+        // Log full error for debugging
+        console.error("Transaction failed:", {
+          statusCode: transactionStatus.statusCode,
+          rawError: rawError,
+          parsedError: userFriendlyError,
+          events: transactionStatus.events,
+        });
+
+        if (loadingToastId) {
+          toast.error(userFriendlyError, { id: loadingToastId, duration: 10000 });
+          setLoadingToastId(null);
+        } else {
+          toast.error(userFriendlyError, { duration: 10000 });
+        }
       } else {
-        toast.success("Event registered successfully!");
+        // Transaction succeeded
+        setIsSuccess(true);
+
+        if (loadingToastId) {
+          toast.success("Event registered successfully!", { id: loadingToastId });
+          setLoadingToastId(null);
+        } else {
+          toast.success("Event registered successfully!");
+        }
       }
     } else if (txId && transactionStatus?.status === 5) {
-      // Status 5 = error
+      // Status 5 = expired/unknown error
       setIsSubmitting(false);
 
-      // Dismiss loading toast and show error
       if (loadingToastId) {
-        toast.error("Registration failed. Please try again.", { id: loadingToastId });
+        toast.error("Transaction expired or failed. Please try again.", { id: loadingToastId });
         setLoadingToastId(null);
       } else {
-        toast.error("Registration failed. Please try again.");
+        toast.error("Transaction expired or failed. Please try again.");
       }
     }
-  }, [transactionStatus, txId, id, loadingToastId]);
+  }, [transactionStatus, txId, loadingToastId]);
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-  ) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleClickBack = () => {
+  const handleClickBack = useCallback(() => {
     router.history.back();
-  };
+  }, [router]);
 
-  const handleClickMyTicket = () => {
+  const handleClickMyTicket = useCallback(() => {
     navigate({ to: `/` });
-  };
+  }, [navigate]);
 
-  const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = useCallback(async (formData: { name: string; email: string; phoneNo: string }) => {
 
     // Check if user is logged in
     if (!user?.loggedIn) {
@@ -165,7 +186,7 @@ const EventsFormPage: FC<{ id: string }> = ({ id }) => {
 
       toast.error(errorMessage);
     }
-  };
+  }, [user, event, registerEvent]);
 
   if (isSuccess) {
     return (
@@ -178,7 +199,7 @@ const EventsFormPage: FC<{ id: string }> = ({ id }) => {
           <Galaxy />
         </div>
 
-        <div className="bg-background/10 backdrop-blur-lg border border-border rounded-2xl p-8 max-w-md w-full text-center space-y-6">
+        <div className="bg-background/10 backdrop-blur-lg border border-border rounded-2xl p-8 max-w-md w-full text-center space-y-6 flex flex-col">
           <div className="flex justify-center">
             <div className="p-4 rounded-full bg-primary/20 backdrop-blur-sm">
               <CheckCircle2 className="w-16 h-16 text-primary" />
@@ -192,6 +213,21 @@ const EventsFormPage: FC<{ id: string }> = ({ id }) => {
           <Typhography variant="lg" className="text-muted-foreground">
             Your ticket has been generated and saved to your wallet.
           </Typhography>
+
+          {/* Transaction Link */}
+          {txId && (
+            <a
+              href={`https://testnet.flowscan.io/transaction/${txId}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 text-primary hover:text-primary/80 transition-colors"
+            >
+              <Typhography variant="t1" className="font-mono">
+                {txId.slice(0, 8)}...{txId.slice(-6)}
+              </Typhography>
+              <ExternalLink size={14} />
+            </a>
+          )}
 
           <div className="flex flex-col gap-3 pt-4">
             <Button onClick={handleClickMyTicket} size="lg" className="w-full">
@@ -270,129 +306,13 @@ const EventsFormPage: FC<{ id: string }> = ({ id }) => {
 
       {/* Main content */}
       <div className="container mx-auto px-4 py-8 max-w-2xl">
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Page Header */}
-          <div className="text-center space-y-2 flex flex-col">
-            <Typhography variant="3xl" className="font-bold">
-              Event Registration
-            </Typhography>
-            {formattedEvent && (
-              <Typhography variant="lg" className="text-muted-foreground">
-                {formattedEvent.eventName}
-              </Typhography>
-            )}
-          </div>
-
-          {/* Wallet Connection Warning */}
-          {!user?.loggedIn && (
-            <div className="bg-background/10 backdrop-blur-lg border border-border rounded-xl p-6">
-              <Typhography variant="lg" className="text-muted-foreground text-center">
-                Please connect your wallet to register for this event
-              </Typhography>
-            </div>
-          )}
-
-          {/* Registration Form Card */}
-          <div className="bg-background/10 backdrop-blur-lg border border-border rounded-xl p-6 space-y-6">
-            <Typhography variant="lg" className="font-semibold text-center block">
-              Your Information
-            </Typhography>
-
-            {/* Name Field */}
-            <div className="space-y-2">
-              <FieldLabel htmlFor="name" className="flex items-center gap-2">
-                <User size={16} className="text-muted-foreground" />
-                <Typhography variant="lg">
-                  Full Name<span className="text-destructive ml-1">*</span>
-                </Typhography>
-              </FieldLabel>
-              <Input
-                id="name"
-                name="name"
-                autoComplete="off"
-                required
-                value={formData.name}
-                onChange={handleChange}
-                placeholder="Enter your full name"
-                className="bg-background/50 backdrop-blur-sm"
-                max={50}
-              />
-            </div>
-
-            {/* Email Field */}
-            <div className="space-y-2">
-              <FieldLabel htmlFor="email" className="flex items-center gap-2">
-                <Mail size={16} className="text-muted-foreground" />
-                <Typhography variant="lg">
-                  Email Address<span className="text-destructive ml-1">*</span>
-                </Typhography>
-              </FieldLabel>
-              <Input
-                id="email"
-                type="email"
-                name="email"
-                autoComplete="off"
-                required
-                value={formData.email}
-                onChange={handleChange}
-                placeholder="your.email@example.com"
-                className="bg-background/50 backdrop-blur-sm"
-                max={50}
-              />
-            </div>
-
-            {/* Phone Field */}
-            <div className="space-y-2">
-              <FieldLabel htmlFor="phoneNo" className="flex items-center gap-2">
-                <Phone size={16} className="text-muted-foreground" />
-                <Typhography variant="lg">
-                  Phone Number<span className="text-destructive ml-1">*</span>
-                </Typhography>
-              </FieldLabel>
-              <Input
-                id="phoneNo"
-                type="tel"
-                name="phoneNo"
-                autoComplete="off"
-                required
-                value={formData.phoneNo}
-                onChange={handleChange}
-                placeholder="Enter your phone number"
-                className="bg-background/50 backdrop-blur-sm"
-                maxLength={20}
-                minLength={5}
-              />
-            </div>
-          </div>
-
-          {/* Action Buttons */}
-          <div className="flex flex-col sm:flex-row gap-3">
-            <Button
-              onClick={handleClickBack}
-              type="button"
-              variant="outline"
-              className="flex-1"
-            >
-              <Typhography variant="lg">Cancel</Typhography>
-            </Button>
-            <Button
-              type="submit"
-              disabled={isSubmitting || !user?.loggedIn}
-              className="flex-1"
-            >
-              {isSubmitting ? (
-                <>
-                  <Spinner />
-                  <Typhography variant="lg">Processing...</Typhography>
-                </>
-              ) : !user?.loggedIn ? (
-                <Typhography variant="lg">Connect Wallet First</Typhography>
-              ) : (
-                <Typhography variant="lg">Complete Registration</Typhography>
-              )}
-            </Button>
-          </div>
-        </form>
+        <RegistrationForm
+          eventName={formattedEvent?.eventName}
+          isSubmitting={isSubmitting}
+          isLoggedIn={!!user?.loggedIn}
+          onSubmit={handleSubmit}
+          onCancel={handleClickBack}
+        />
       </div>
     </motion.div>
   );
