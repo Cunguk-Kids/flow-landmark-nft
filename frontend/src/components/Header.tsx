@@ -1,6 +1,6 @@
 import Auth from "./Auth";
 import { Logo } from "./Logo";
-import { Typhography } from "./ui/typhography";
+import EventListPopup from "@/components/EventListPopup";
 
 const Header = () => {
   return (
@@ -9,7 +9,10 @@ const Header = () => {
         <div className="flex items-center gap-3">
           <Logo />
         </div>
+        <div className="flex">
+        <EventListPopup />
         <Auth />
+        </div>
       </div>
     </header>
   );

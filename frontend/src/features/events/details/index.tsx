@@ -4,13 +4,12 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Typhography } from "@/components/ui/typhography";
 import { Calendar, MapPin, Users, Clock } from "lucide-react";
-import BackButton from "@/components/BackButton";
 import { motion } from "motion/react";
 import { formatEvent } from "@/hooks";
 import { useAccount } from "@/hooks/useAccount";
 
 import Galaxy from "@/components/Galaxy";
-import { Logo } from "@/components/Logo";
+import { PageHeader } from "@/components/PageHeader";
 
 const EventsDetailsPage = () => {
   const { event: rawEvent } = useLoaderData({
@@ -36,14 +35,9 @@ const EventsDetailsPage = () => {
       <div className="absolute inset-0 -z-1">
         <Galaxy />
       </div>
+
       {/* Header with back button */}
-      <div className="sticky top-0 z-50 bg-background/80 backdrop-blur-lg border-b border-border">
-        <div className="container mx-auto px-4 py-3 flex justify-between">
-          <BackButton />
-          <Logo />
-          <div></div>
-        </div>
-      </div>
+      <PageHeader showLogo />
 
       {/* Main content */}
       <div className="container mx-auto px-4 py-8 max-w-7xl">
@@ -107,29 +101,37 @@ const EventsDetailsPage = () => {
               </Typhography>
 
               {event.partner && (
-                <div className="flex items-center gap-3 mt-2">
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary/20 to-purple-500/20 flex items-center justify-center">
-                    {event.partner.image ? (
-                      <img
-                        src={event.partner.image}
-                        alt={event.partner.name}
-                        className="w-full h-full rounded-full object-cover"
-                      />
-                    ) : (
-                      <Typhography variant="lg" className="font-bold">
-                        {event.partner.name.charAt(0)}
+                <Link
+                  to="/partners/details/$address"
+                  params={{ address: event.partner.address }}
+                >
+                  <div className="flex items-center gap-3 mt-2 cursor-pointer hover:bg-background/10 rounded-lg p-2 -m-2 transition-colors">
+                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary/20 to-purple-500/20 flex items-center justify-center">
+                      {event.partner.image ? (
+                        <img
+                          src={event.partner.image}
+                          alt={event.partner.name}
+                          className="w-full h-full rounded-full object-cover"
+                        />
+                      ) : (
+                        <Typhography variant="lg" className="font-bold">
+                          {event.partner.name.charAt(0)}
+                        </Typhography>
+                      )}
+                    </div>
+                    <div className="flex flex-col flex-1">
+                      <Typhography variant="lg" className="font-semibold">
+                        {event.partner.name}
                       </Typhography>
-                    )}
-                  </div>
-                  <div className="flex flex-col">
-                    <Typhography variant="lg" className="font-semibold">
-                      {event.partner.name}
-                    </Typhography>
-                    <Typhography variant="t2" className="text-muted-foreground">
-                      {event.partner.description}
+                      <Typhography variant="t2" className="text-muted-foreground line-clamp-1">
+                        {event.partner.description}
+                      </Typhography>
+                    </div>
+                    <Typhography variant="t3" className="text-primary">
+                      View →
                     </Typhography>
                   </div>
-                </div>
+                </Link>
               )}
             </div>
 
@@ -265,7 +267,7 @@ const EventsDetailsPage = () => {
               {event.statusLabel === "Pending" && (
                 <div className="bg-muted/30 backdrop-blur-sm rounded-lg p-4 flex items-center gap-3">
                   <Clock className="text-muted-foreground" size={20} />
-                  <div>
+                  <div className="flex flex-col">
                     <Typhography variant="t1" className="font-semibold">
                       Event Not Started
                     </Typhography>

@@ -1,14 +1,14 @@
 import Header from "@/components/Header";
-import EventListPopup from "@/components/EventListPopup";
 import SandboxMap from "../sandbox/SandboxMap";
-
+import { motion } from "motion/react";
 const MainPage = () => {
   return (
-    <div className="min-h-screen isolate relative grid grid-cols-1 text-foreground bg-background">
-      <SandboxMap />
-      <Header />
-      <EventListPopup />
-    </div>
+    <motion.div animate={{ opacity: 1 }} initial={{ opacity: 0 }} className="">
+      <div className="min-h-screen isolate relative grid grid-cols-1 text-foreground bg-background">
+        <SandboxMap />
+        <Header />
+      </div>
+    </motion.div>
   );
 };
 

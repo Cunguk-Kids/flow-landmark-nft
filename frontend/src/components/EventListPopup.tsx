@@ -170,25 +170,21 @@ const EventListPopup = () => {
     return (
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
-          <Button
-            variant="outline"
-            size="icon"
-            className="absolute left-4 bottom-4 z-10 shadow-lg bg-background/95 backdrop-blur-lg"
-          >
+          <Button variant="link">
             <LucidePartyPopper />
+            Explore Events
           </Button>
         </PopoverTrigger>
         <PopoverContent
-          side="right"
-          align="start"
+          side="bottom"
+          align="end"
           sideOffset={12}
           className={cn(
             "w-80 md:w-96 h-[calc(100vh-8rem)] p-0 overflow-hidden dark"
           )}
         >
           <div className="h-full flex flex-col">
-            {/* Header */}
-            <div className="p-4 border-b border-border flex flex-col">
+            {/* Header */} <div className="p-4 border-b border-border flex flex-col">
               <Typhography variant="2xl" className="font-bold">
                 Events Near You
               </Typhography>
@@ -211,12 +207,9 @@ const EventListPopup = () => {
   return (
     <Drawer open={open} onOpenChange={setOpen}>
       <DrawerTrigger asChild>
-        <Button
-          variant="outline"
-          size="icon"
-          className="absolute left-4 bottom-4 z-10 shadow-lg bg-background/95 backdrop-blur-lg"
-        >
+        <Button variant="link">
           <LucidePartyPopper />
+          Explore Events
         </Button>
       </DrawerTrigger>
       <DrawerContent className="max-h-[80vh] dark">
