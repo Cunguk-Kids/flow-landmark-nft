@@ -31,8 +31,10 @@ func main() {
 	e.GET("/event/", route.HandleGetAllEvents)
 	e.POST("/event/check-in", route.HandleCheckin)
 	e.GET("/event/user", route.HandleGetEventsForUser)
-	// Anda bisa menambahkan endpoint lain dengan mudah
-	// e.GET("/events/:id", handleGetEvent)
+
+	// partner
+	e.GET("/partner/", route.HandleGetAllPartner)
+	e.GET("/partner/:address", route.HandleGetPartnerByAddress)
 
 	// 4. Jalankan Server
 	log.Println("Server API Echo berjalan di http://localhost:6666")
