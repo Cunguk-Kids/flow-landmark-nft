@@ -1,7 +1,7 @@
 package script
 
 const GetEventDetailScriptTemplate = `
-import EventPlatform from 0xf8d6e0586b0a20c7
+import EventPlatform from 0x15728ff209769c63
 
 // Copy of the struct from get_event_detail.cdc
 access(all) struct PublicEventDetails {

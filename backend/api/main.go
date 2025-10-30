@@ -23,7 +23,7 @@ func main() {
 	// Ini setara dengan 'logger' & 'recovery' di Gin
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
-
+	e.GET("/", route.Welcome)
 	// 3. Definisikan Rute (Routes)
 	// Kita gunakan e.POST karena ini adalah aksi "membuat" (create)
 	e.POST("/event/create", route.HandleCreateEvent)
