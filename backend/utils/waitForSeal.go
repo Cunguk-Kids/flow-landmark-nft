@@ -11,45 +11,51 @@ import (
 )
 
 func WaitForSeal(ctx context.Context, c access.Client, id flow.Identifier) (*flow.TransactionResult, error) {
-	log.Printf("Waiting for transaction %s to be sealed...\n", id) // Use log.Printf for consistency
+	log.Printf("Menunggu transaksi %s di-seal...\n", id)
 
-	var result *flow.TransactionResult
-	var err error
+	// Tentukan timeout agar tidak menunggu selamanya
+	// 60 detik adalah waktu yang wajar untuk Testnet
+	timeout := time.After(60 * time.Second)
+	// Tentukan ticker untuk polling (cek setiap 1-2 detik)
+	ticker := time.NewTicker(2 * time.Second)
+	defer ticker.Stop()
 
-	for { // Loop indefinitely until sealed or definitive error
-		result, err = c.GetTransactionResult(ctx, id)
-		// --- Handle GetTransactionResult errors ---
-		if err != nil {
-			// Could be a network error, or tx not found yet.
-			// Depending on the error type, you might want to retry or give up.
-			// For simplicity here, we return the error immediately.
-			log.Printf("Error fetching transaction result for %s: %v\n", id, err)
-			return nil, fmt.Errorf("failed fetching tx result: %w", err) // Return the Go error
-		}
+	for {
+		select {
+		case <-timeout:
+			// Jika timeout, kembalikan error
+			return nil, fmt.Errorf("timeout (60s) menunggu transaksi %s", id.String())
 
-		// --- Check transaction status ---
-		if result.Status == flow.TransactionStatusSealed {
-			fmt.Println() // Newline after the dots
-			log.Printf("Transaction %s sealed\n", id)
-			// Check for ON-CHAIN errors *after* sealing
-			if result.Error != nil {
-				log.Printf("Transaction %s failed on-chain: %v\n", id, result.Error)
-				// Return the Cadence error wrapped in a Go error
-				return result, fmt.Errorf("transaction failed on-chain: %w", result.Error)
-			}
-			// Success!
-			return result, nil // Return result and nil error
-		}
-
-		// If not sealed yet, wait and try again
-		fmt.Print(".") // Progress indicator
-		time.Sleep(1 * time.Second)
-
-		// Check context cancellation (e.g., if the API request timed out)
-		if ctx.Err() != nil {
-			fmt.Println()
-			log.Printf("Context cancelled while waiting for tx %s: %v", id, ctx.Err())
+		case <-ctx.Done():
+			// Jika context API dibatalkan (misal: user menutup request)
 			return nil, ctx.Err()
+
+		case <-ticker.C:
+			// Setiap 2 detik, kita cek status
+			result, err := c.GetTransactionResult(ctx, id)
+
+			// 1. Cek error Go (Network/Not Found)
+			if err != nil {
+				// Ini adalah 'Flow resource not found'
+				// JANGAN KEMBALIKAN ERROR, kita anggap ini sementara
+				log.Printf("... (Menunggu tx %s diketahui jaringan: %v)", id.String(), err)
+				// Lanjutkan ke iterasi loop berikutnya (coba lagi nanti)
+				continue
+			}
+
+			// 2. Cek error Cadence (Fatal, transaksi gagal di-seal)
+			if result.Error != nil {
+				log.Printf("Transaksi %s GAGAL di-seal (Error Cadence): %v\n", id, result.Error)
+				return result, fmt.Errorf("transaksi gagal di chain: %w", result.Error)
+			}
+
+			// 3. Cek Status
+			if result.Status == flow.TransactionStatusSealed {
+				log.Printf("\nTransaksi %s BERHASIL di-seal! Status: %s\n", id.String(), result.Status)
+				return result, nil // SUKSES
+			}
+
+			log.Printf("... (Status tx %s: %s)", id.String(), result.Status)
 		}
 	}
 }
