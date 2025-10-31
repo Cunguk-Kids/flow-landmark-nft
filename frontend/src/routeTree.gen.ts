@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as LandingRouteImport } from './routes/landing'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as TicketsIndexRouteImport } from './routes/tickets/index'
+import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as PartnersDetailsAddressRouteImport } from './routes/partners/details.$address'
 import { Route as EventsFormEventIdRouteImport } from './routes/events/form.$eventId'
 import { Route as EventsDetailsEventIdRouteImport } from './routes/events/details.$eventId'
@@ -29,6 +30,11 @@ const IndexRoute = IndexRouteImport.update({
 const TicketsIndexRoute = TicketsIndexRouteImport.update({
   id: '/tickets/',
   path: '/tickets/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminIndexRoute = AdminIndexRouteImport.update({
+  id: '/admin/',
+  path: '/admin/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PartnersDetailsAddressRoute = PartnersDetailsAddressRouteImport.update({
@@ -50,6 +56,7 @@ const EventsDetailsEventIdRoute = EventsDetailsEventIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/landing': typeof LandingRoute
+  '/admin': typeof AdminIndexRoute
   '/tickets': typeof TicketsIndexRoute
   '/events/details/$eventId': typeof EventsDetailsEventIdRoute
   '/events/form/$eventId': typeof EventsFormEventIdRoute
@@ -58,6 +65,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/landing': typeof LandingRoute
+  '/admin': typeof AdminIndexRoute
   '/tickets': typeof TicketsIndexRoute
   '/events/details/$eventId': typeof EventsDetailsEventIdRoute
   '/events/form/$eventId': typeof EventsFormEventIdRoute
@@ -67,6 +75,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/landing': typeof LandingRoute
+  '/admin/': typeof AdminIndexRoute
   '/tickets/': typeof TicketsIndexRoute
   '/events/details/$eventId': typeof EventsDetailsEventIdRoute
   '/events/form/$eventId': typeof EventsFormEventIdRoute
@@ -77,6 +86,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/landing'
+    | '/admin'
     | '/tickets'
     | '/events/details/$eventId'
     | '/events/form/$eventId'
@@ -85,6 +95,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/landing'
+    | '/admin'
     | '/tickets'
     | '/events/details/$eventId'
     | '/events/form/$eventId'
@@ -93,6 +104,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/landing'
+    | '/admin/'
     | '/tickets/'
     | '/events/details/$eventId'
     | '/events/form/$eventId'
@@ -102,6 +114,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   LandingRoute: typeof LandingRoute
+  AdminIndexRoute: typeof AdminIndexRoute
   TicketsIndexRoute: typeof TicketsIndexRoute
   EventsDetailsEventIdRoute: typeof EventsDetailsEventIdRoute
   EventsFormEventIdRoute: typeof EventsFormEventIdRoute
@@ -131,6 +144,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TicketsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/': {
+      id: '/admin/'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/partners/details/$address': {
       id: '/partners/details/$address'
       path: '/partners/details/$address'
@@ -158,6 +178,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   LandingRoute: LandingRoute,
+  AdminIndexRoute: AdminIndexRoute,
   TicketsIndexRoute: TicketsIndexRoute,
   EventsDetailsEventIdRoute: EventsDetailsEventIdRoute,
   EventsFormEventIdRoute: EventsFormEventIdRoute,
