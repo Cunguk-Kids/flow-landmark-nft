@@ -1,4 +1,5 @@
 import type { FC } from "react";
+import { Link } from "@tanstack/react-router";
 import { Calendar, Plus } from "lucide-react";
 import {
   Empty,
@@ -11,7 +12,7 @@ import {
 import { Button } from "@/components/ui/button";
 
 interface EmptyListProps {
-  onClickButton: React.MouseEventHandler<HTMLButtonElement>;
+  onClickButton?: React.MouseEventHandler<HTMLButtonElement>;
 }
 
 const EmptyList: FC<EmptyListProps> = ({ onClickButton }) => {
@@ -29,10 +30,12 @@ const EmptyList: FC<EmptyListProps> = ({ onClickButton }) => {
       </EmptyHeader>
       <EmptyContent>
         <div className="flex gap-2">
-          <Button onClick={onClickButton}>
-            <Plus className="mr-2 h-4 w-4" />
-            Add Event
-          </Button>
+          <Link to={`/admin/form`}>
+            <Button className="w-full sm:w-auto">
+              <Plus className="mr-2 h-4 w-4" />
+              Add Event
+            </Button>
+          </Link>
         </div>
       </EmptyContent>
     </Empty>
