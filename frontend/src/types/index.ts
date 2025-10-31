@@ -1,5 +1,6 @@
 export type EventStatus = "Open" | "Sold Out";
 export type EventCategory = "Technology" | "Art" | "Sport";
+export type TicketStatus = "Active" | "Checked In" | "Cancelled";
 
 export interface EventData {
   id: string;
@@ -18,4 +19,14 @@ export interface EventDetail extends EventData {
   ticketPrice: number;
   description: string;
   bannerUrl: string;
+}
+
+export interface UserTicket {
+  id: string;
+  eventId: string;
+  eventTitle: string;
+  eventCategory: EventCategory;
+  date: string;
+  venue: string;
+  status: TicketStatus;
 }
