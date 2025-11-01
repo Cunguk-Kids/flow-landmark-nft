@@ -9,12 +9,18 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as PitchRouteImport } from './routes/pitch'
 import { Route as LandingRouteImport } from './routes/landing'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as PartnersDetailsAddressRouteImport } from './routes/partners/details.$address'
 import { Route as EventsFormEventIdRouteImport } from './routes/events/form.$eventId'
 import { Route as EventsDetailsEventIdRouteImport } from './routes/events/details.$eventId'
 
+const PitchRoute = PitchRouteImport.update({
+  id: '/pitch',
+  path: '/pitch',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LandingRoute = LandingRouteImport.update({
   id: '/landing',
   path: '/landing',
@@ -44,6 +50,7 @@ const EventsDetailsEventIdRoute = EventsDetailsEventIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/landing': typeof LandingRoute
+  '/pitch': typeof PitchRoute
   '/events/details/$eventId': typeof EventsDetailsEventIdRoute
   '/events/form/$eventId': typeof EventsFormEventIdRoute
   '/partners/details/$address': typeof PartnersDetailsAddressRoute
@@ -51,6 +58,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/landing': typeof LandingRoute
+  '/pitch': typeof PitchRoute
   '/events/details/$eventId': typeof EventsDetailsEventIdRoute
   '/events/form/$eventId': typeof EventsFormEventIdRoute
   '/partners/details/$address': typeof PartnersDetailsAddressRoute
@@ -59,6 +67,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/landing': typeof LandingRoute
+  '/pitch': typeof PitchRoute
   '/events/details/$eventId': typeof EventsDetailsEventIdRoute
   '/events/form/$eventId': typeof EventsFormEventIdRoute
   '/partners/details/$address': typeof PartnersDetailsAddressRoute
@@ -68,6 +77,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/landing'
+    | '/pitch'
     | '/events/details/$eventId'
     | '/events/form/$eventId'
     | '/partners/details/$address'
@@ -75,6 +85,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/landing'
+    | '/pitch'
     | '/events/details/$eventId'
     | '/events/form/$eventId'
     | '/partners/details/$address'
@@ -82,6 +93,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/landing'
+    | '/pitch'
     | '/events/details/$eventId'
     | '/events/form/$eventId'
     | '/partners/details/$address'
@@ -90,6 +102,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   LandingRoute: typeof LandingRoute
+  PitchRoute: typeof PitchRoute
   EventsDetailsEventIdRoute: typeof EventsDetailsEventIdRoute
   EventsFormEventIdRoute: typeof EventsFormEventIdRoute
   PartnersDetailsAddressRoute: typeof PartnersDetailsAddressRoute
@@ -97,6 +110,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/pitch': {
+      id: '/pitch'
+      path: '/pitch'
+      fullPath: '/pitch'
+      preLoaderRoute: typeof PitchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/landing': {
       id: '/landing'
       path: '/landing'
@@ -138,6 +158,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   LandingRoute: LandingRoute,
+  PitchRoute: PitchRoute,
   EventsDetailsEventIdRoute: EventsDetailsEventIdRoute,
   EventsFormEventIdRoute: EventsFormEventIdRoute,
   PartnersDetailsAddressRoute: PartnersDetailsAddressRoute,
