@@ -1,9 +1,16 @@
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import {
+  Sheet,
+  SheetClose,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from '@/components/ui/sheet';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ImageOff, Gem, Image } from 'lucide-react';
+import { ImageOff, Gem, Image, X } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useNFTList } from '@/hooks';
 import { useAccount } from '@/hooks/useAccount';
@@ -36,9 +43,17 @@ export default function MyListNft() {
 
         <SheetContent
           side="left"
-          className="w-[380px] sm:w-[400px] bg-background border-r border-border p-4">
-          <SheetHeader className="px-4 py-3 border-b border-border">
-            <SheetTitle className="text-lg font-semibold">My NFT Collection</SheetTitle>
+          className="w-[380px] sm:w-[250px] bg-background border-r border-border p-4">
+          <SheetHeader className="px-4 py-3 border-b border-border flex flex-row items-center w-full">
+            <SheetTitle className="text-lg font-semibold grow">My NFT</SheetTitle>
+            <SheetClose asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="text-muted-foreground hover:text-foreground">
+                <X className="w-4 h-4" />
+              </Button>
+            </SheetClose>
           </SheetHeader>
 
           <ScrollArea className="h-[calc(100vh-64px)] px-4 py-3 space-y-3">
