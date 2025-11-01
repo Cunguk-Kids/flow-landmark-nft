@@ -42,7 +42,7 @@ function MyListNftComponent() {
             variant="secondary"
             size="sm"
             className="shadow-md rounded-lg font-medium bg-white hover:bg-gray-100 dark:bg-neutral-900 cursor-pointer">
-            <Image className="w-4 h-4 text-primary mr-2" /> My NFTs {account?.address}
+            <Image className="w-4 h-4 text-primary mr-2" /> My NFTs
           </Button>
         </SheetTrigger>
 
