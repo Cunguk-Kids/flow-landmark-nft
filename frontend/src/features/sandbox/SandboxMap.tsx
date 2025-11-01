@@ -128,7 +128,7 @@ const SandboxMap: React.FC = () => {
         </TooltipTrigger>
 
         <TooltipContent side="left" className="text-xs font-medium">
-          Show all radius <br /> (available at zoom level 15)
+          Show all radius <br /> (available at zoom level 10)
         </TooltipContent>
       </Tooltip>
     </div>
