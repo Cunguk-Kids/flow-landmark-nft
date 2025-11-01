@@ -336,7 +336,7 @@ const EventsDetailsPage = () => {
                     event.statusLabel === 'Active' && !event.isFull ? 'default' : 'secondary'
                   }
                   className="w-full font-semibold">
-                  <Link to="/events/form/$eventId" params={{ eventId: event.id.toString() }}>
+                  <Link to="/events/form/$eventId" params={{ eventId: event.eventId.toString() }}>
                     <Typhography variant="lg">
                       {event.isFull
                         ? 'Event Full'
