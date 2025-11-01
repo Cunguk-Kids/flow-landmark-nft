@@ -1,10 +1,10 @@
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import type { Event } from "@/hooks";
-import { formatEvent } from "@/hooks";
-import { formatDateTime } from "@/lib/utils";
-import { Link } from "@tanstack/react-router";
-import { Calendar, Clock } from "lucide-react";
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import type { Event } from '@/hooks';
+import { formatEvent } from '@/hooks';
+import { formatDateTime } from '@/lib/utils';
+import { Link } from '@tanstack/react-router';
+import { Calendar, Clock } from 'lucide-react';
 
 export function EventMarkerContent(props: { event: Event }) {
   const formatted = formatEvent(props.event);
@@ -23,23 +23,23 @@ export function EventMarkerContent(props: { event: Event }) {
       <div className="flex items-start text-xs gap-1">
         <div className="self-start flex items-center gap-1">
           <Calendar className="w-4 h-4" />
-          <span>{formatDateTime(formatted.startDateTime.toISOString(), "date")}</span>
+          <span>{formatDateTime(formatted.startDateTime.toISOString(), 'date')}</span>
         </div>
         <span>•</span>
         <div className="self-end flex items-center gap-1">
           <Clock className="w-4 h-4" />
-          <span>{formatDateTime(formatted.startDateTime.toISOString(), "time")}</span>
+          <span>{formatDateTime(formatted.startDateTime.toISOString(), 'time')}</span>
         </div>
       </div>
 
       <Button className="w-full" asChild>
-        <Link
-          to="/events/details/$eventId"
-          params={{ eventId: props.event.id.toString() }}
-        >
+        <Link to="/events/details/$eventId" params={{ eventId: props.event.eventId.toString() }}>
           View Detail
         </Link>
       </Button>
+      <p className="text-xs italic text-gray-500 bg-gray-900/40 px-3 py-1 rounded-md inline-block mt-2">
+        Zoom in to see event radius
+      </p>
     </div>
   );
 }

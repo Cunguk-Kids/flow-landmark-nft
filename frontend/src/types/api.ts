@@ -189,7 +189,7 @@ export interface PartnersListResponse {
   pagination: PaginationMeta;
 }
 
-export interface PartnerDetailResponse extends Partner {}
+export interface PartnerDetailResponse extends Partner { }
 
 /**
  * NFT types
@@ -199,6 +199,7 @@ export interface NFTMetadata {
   description: string;
   category: number;
   imageUrl: string;
+  imageURL: string;
   thumbnailUrl: string;
   weather: string;
   temperature: string;
@@ -217,12 +218,22 @@ export interface NFTMetadata {
   tags: string[];
 }
 
+export interface Edges {
+  event?: {
+    eventName?: string;
+    partner?: {
+      name?: string;
+    };
+  };
+};
+
 export interface NFT {
   nft_id: number;
   owner_address: string;
   rarity: number;
   metadata: NFTMetadata;
   mint_time: string;
+  edges: Edges;
 }
 
 export interface NFTsListResponse {
