@@ -113,7 +113,12 @@ export default function EventFormPage({ event, handleSubmit }: EventFormPageProp
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleMapClick = (mapEvt: any) => {
-    const { lngLat } = mapEvt;
+    const lngLat = mapEvt?.lngLat || mapEvt?.point || null;
+
+    if (!lngLat || typeof lngLat.lat !== 'number' || typeof lngLat.lng !== 'number') {
+      return;
+    }
+
     setFormData((prev) => ({
       ...prev,
       latitude: lngLat.lat,
@@ -373,8 +378,9 @@ export default function EventFormPage({ event, handleSubmit }: EventFormPageProp
             <div className="border rounded-lg overflow-hidden" style={{ height: 300 }}>
               <Map
                 {...viewState}
-                latitude={!event ? position?.coords?.latitude : viewState.latitude}
-                longitude={!event ? position?.coords?.longitude : viewState.longitude}
+                latitude={
+                  !event ? (position?.coords?.latitude ?? -6.2088) : (viewState.latitude ?? -6.2088)
+                }
                 zoom={5}
                 onMove={(evt) => setViewState(evt.viewState)}
                 onClick={handleMapClick}
