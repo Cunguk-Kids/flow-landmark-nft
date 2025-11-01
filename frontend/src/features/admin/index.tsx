@@ -183,7 +183,9 @@ export default function AdminPage() {
                         </TableCell>
                         <TableCell className="text-right">
                           <div className="flex justify-end gap-2">
-                            <Link to={`/admin/form`}>
+                            <Link
+                              to={`/admin/form/$eventId`}
+                              params={{ eventId: event.id.toString() }}>
                               <Button variant="ghost" size="sm">
                                 <Pencil className="h-4 w-4" />
                               </Button>
