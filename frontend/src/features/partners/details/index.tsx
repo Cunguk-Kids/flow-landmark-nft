@@ -1,27 +1,31 @@
-import { Link, useLoaderData } from "@tanstack/react-router";
-import { usePartnerDetail, useEventList, formatEvent } from "@/hooks";
-import { Typhography } from "@/components/ui/typhography";
-import { Badge } from "@/components/ui/badge";
-import { Spinner } from "@/components/ui/spinner";
-import { motion } from "motion/react";
+import { Link, useLoaderData } from '@tanstack/react-router';
+import { usePartnerDetail, useEventList, formatEvent } from '@/hooks';
+import { Typhography } from '@/components/ui/typhography';
+import { Badge } from '@/components/ui/badge';
+import { Spinner } from '@/components/ui/spinner';
+import { motion } from 'motion/react';
 import {
   LucideBuilding2,
   LucideMail,
   LucideCalendar,
   LucideMapPin,
   LucideUsers,
-} from "lucide-react";
-import { formatDateTime } from "@/lib/utils";
-import Galaxy from "@/components/Galaxy";
-import { PageHeader } from "@/components/PageHeader";
+} from 'lucide-react';
+import { formatDateTime } from '@/lib/utils';
+import Galaxy from '@/components/Galaxy';
+import { PageHeader } from '@/components/PageHeader';
 
 const PartnerDetailsPage = () => {
   const { address } = useLoaderData({
-    from: "/partners/details/$address",
+    from: '/partners/details/$address',
   });
 
   // Fetch partner details
-  const { data: partner, isLoading: isLoadingPartner, error: partnerError } = usePartnerDetail(address);
+  const {
+    data: partner,
+    isLoading: isLoadingPartner,
+    error: partnerError,
+  } = usePartnerDetail(address);
 
   // Fetch events by this partner
   const { data: eventsData, isLoading: isLoadingEvents } = useEventList({
@@ -34,8 +38,7 @@ const PartnerDetailsPage = () => {
       <motion.div
         animate={{ opacity: 1 }}
         initial={{ opacity: 0 }}
-        className="min-h-screen bg-background relative isolate flex items-center justify-center"
-      >
+        className="min-h-screen bg-background relative isolate flex items-center justify-center">
         <div className="absolute inset-0 -z-1">
           <Galaxy />
         </div>
@@ -52,8 +55,7 @@ const PartnerDetailsPage = () => {
     <motion.div
       animate={{ opacity: 1 }}
       initial={{ opacity: 0 }}
-      className="min-h-screen bg-background relative isolate"
-    >
+      className="min-h-screen bg-background relative isolate">
       <div className="absolute inset-0 -z-1">
         <Galaxy />
       </div>
@@ -89,7 +91,7 @@ const PartnerDetailsPage = () => {
                   {/* Partner Info */}
                   <div className="flex-1 text-center sm:text-left flex flex-col">
                     <Typhography variant="3xl" className="font-bold mb-2">
-                      {partner?.name || "Loading..."}
+                      {partner?.name || 'Loading...'}
                     </Typhography>
 
                     {partner?.email && (
@@ -120,7 +122,7 @@ const PartnerDetailsPage = () => {
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <Typhography variant="2xl" className="font-bold">
-                  Events by {partner?.name || "this Partner"}
+                  Events by {partner?.name || 'this Partner'}
                 </Typhography>
                 {eventsData?.data.length ? (
                   <Badge variant="secondary">
@@ -142,8 +144,7 @@ const PartnerDetailsPage = () => {
                       <Link
                         key={event.id}
                         to="/events/details/$eventId"
-                        params={{ eventId: event.id.toString() }}
-                      >
+                        params={{ eventId: event.eventId.toString() }}>
                         <div className="bg-background/10 backdrop-blur-lg border border-border rounded-xl overflow-hidden hover:bg-background/20 transition-all hover:scale-[1.02] cursor-pointer h-full">
                           {/* Event Image */}
                           <div className="relative h-48 overflow-hidden">
@@ -157,15 +158,8 @@ const PartnerDetailsPage = () => {
                             {/* Status Badge */}
                             <div className="absolute top-3 right-3">
                               <Badge
-                                variant={
-                                  event.statusLabel === "Active"
-                                    ? "default"
-                                    : "secondary"
-                                }
-                              >
-                                <Typhography variant="t3">
-                                  {event.statusLabel}
-                                </Typhography>
+                                variant={event.statusLabel === 'Active' ? 'default' : 'secondary'}>
+                                <Typhography variant="t3">{event.statusLabel}</Typhography>
                               </Badge>
                             </div>
 
@@ -173,8 +167,7 @@ const PartnerDetailsPage = () => {
                             <div className="absolute bottom-3 left-3 right-3">
                               <Typhography
                                 variant="lg"
-                                className="font-bold text-white line-clamp-2"
-                              >
+                                className="font-bold text-white line-clamp-2">
                                 {event.eventName}
                               </Typhography>
                             </div>
@@ -185,25 +178,22 @@ const PartnerDetailsPage = () => {
                             <div className="flex items-center gap-2 text-muted-foreground">
                               <LucideCalendar size={14} />
                               <Typhography variant="t2">
-                                {formatDateTime(
-                                  event.startDateTime.toISOString(),
-                                  "date"
-                                )}
+                                {formatDateTime(event.startDateTime.toISOString(), 'date')}
                               </Typhography>
                             </div>
 
                             <div className="flex items-center gap-2 text-muted-foreground">
                               <LucideMapPin size={14} />
                               <Typhography variant="t2" className="line-clamp-1">
-                                {event.partner?.name || "TBA"}
+                                {event.partner?.name || 'TBA'}
                               </Typhography>
                             </div>
 
                             <div className="flex items-center gap-2 text-muted-foreground">
                               <LucideUsers size={14} />
                               <Typhography variant="t2">
-                                {event.participantCount}/{event.quota}{" "}
-                                {event.isFull ? "(Full)" : "spots"}
+                                {event.participantCount}/{event.quota}{' '}
+                                {event.isFull ? '(Full)' : 'spots'}
                               </Typhography>
                             </div>
                           </div>
@@ -220,10 +210,7 @@ const PartnerDetailsPage = () => {
                   <Typhography variant="2xl" className="font-bold mb-2">
                     No events yet
                   </Typhography>
-                  <Typhography
-                    variant="lg"
-                    className="text-muted-foreground max-w-md"
-                  >
+                  <Typhography variant="lg" className="text-muted-foreground max-w-md">
                     This partner hasn't created any events yet. Check back later!
                   </Typhography>
                 </div>
