@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ChevronDownIcon, MapPin } from 'lucide-react';
+import { ChevronDownIcon, LucideMapPin } from 'lucide-react';
 import Map, { Marker } from 'react-map-gl/maplibre';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { Typhography } from '@/components/ui/typhography';
@@ -21,6 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { useQuery } from '@tanstack/react-query';
 
 export interface EventPayload {
   brand: string;
@@ -39,6 +40,16 @@ export interface EventPayload {
 interface EventFormPageProps<T = EventPayload> {
   event: Event | null;
   handleSubmit?: (data: T) => Promise<void> | void;
+}
+
+async function getCurrentLocation() {
+  return new Promise<GeolocationPosition>((resolve, reject) => {
+    navigator.geolocation.getCurrentPosition(resolve, reject, {
+      enableHighAccuracy: true,
+      timeout: 10000,
+      maximumAge: 0,
+    });
+  });
 }
 
 export default function EventFormPage({ event, handleSubmit }: EventFormPageProps) {
@@ -163,6 +174,12 @@ export default function EventFormPage({ event, handleSubmit }: EventFormPageProp
       setSubmitting(false);
     }
   };
+
+  const { data: position } = useQuery({
+    queryKey: ['geolocation'],
+    queryFn: getCurrentLocation,
+    retry: false,
+  });
 
   return (
     <div className="w-full flex justify-center">
@@ -355,12 +372,15 @@ export default function EventFormPage({ event, handleSubmit }: EventFormPageProp
             <div className="border rounded-lg overflow-hidden" style={{ height: 300 }}>
               <Map
                 {...viewState}
+                latitude={!event ? position?.coords?.latitude : viewState.latitude}
+                longitude={!event ? position?.coords?.longitude : viewState.longitude}
+                zoom={5}
                 onMove={(evt) => setViewState(evt.viewState)}
                 onClick={handleMapClick}
                 mapStyle="https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json"
                 style={{ width: '100%', height: '100%' }}>
                 <Marker longitude={formData.longitude} latitude={formData.latitude} anchor="bottom">
-                  <MapPin className="h-8 w-8 text-red-500" fill="currentColor" />
+                  <LucideMapPin className="text-primary fill-primary/10 size-5" />
                 </Marker>
               </Map>
             </div>
