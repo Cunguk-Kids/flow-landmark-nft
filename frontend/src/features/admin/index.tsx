@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
 import {
   Table,
   TableBody,
@@ -7,18 +7,11 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Plus,
-  Pencil,
-  Trash2,
-  MapPin,
-  Users,
-  CalendarDays,
-} from "lucide-react";
-import { Typhography } from "@/components/ui/typhography";
-import EmptyList from "./components/EmptyList";
+} from '@/components/ui/table';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Plus, Pencil, Trash2, MapPin, Users, CalendarDays } from 'lucide-react';
+import { Typhography } from '@/components/ui/typhography';
+import EmptyList from './components/EmptyList';
 import {
   AlertDialog,
   AlertDialogHeader,
@@ -28,19 +21,19 @@ import {
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogCancel,
-} from "@/components/ui/alert-dialog";
-import { Link } from "@tanstack/react-router";
-import type { EventForm } from "./types";
+} from '@/components/ui/alert-dialog';
+import { Link } from '@tanstack/react-router';
+import type { EventForm } from './types';
 
 export default function AdminPage() {
   const [events, setEvents] = useState<EventForm[]>([
     {
-      image: "",
-      id: "1",
-      title: "Tech Conference 2025",
-      description: "Annual technology conference featuring latest innovations",
+      image: '',
+      id: '1',
+      title: 'Tech Conference 2025',
+      description: 'Annual technology conference featuring latest innovations',
       date: undefined,
-      time: "19:00:00",
+      time: '19:00:00',
       latitude: -6.2088,
       longitude: 106.8456,
       capacity: 500,
@@ -48,12 +41,12 @@ export default function AdminPage() {
       rareNft: 50,
     },
     {
-      image: "",
-      id: "2",
-      title: "Workshop: React Fundamentals",
-      description: "Hands-on workshop for learning React basics",
+      image: '',
+      id: '2',
+      title: 'Workshop: React Fundamentals',
+      description: 'Hands-on workshop for learning React basics',
       date: undefined,
-      time: "12:00:00",
+      time: '12:00:00',
       latitude: -6.1751,
       longitude: 106.865,
       capacity: 100,
@@ -63,18 +56,18 @@ export default function AdminPage() {
   ]);
 
   const [alert, setAlert] = useState<{
-    type: "success" | "error";
+    type: 'success' | 'error';
     message: string;
   } | null>(null);
 
   const handleDelete = (id: string) => {
     setEvents(events.filter((evt) => evt.id !== id));
-    setAlert({ type: "success", message: "Event deleted!" });
+    setAlert({ type: 'success', message: 'Event deleted!' });
     setTimeout(() => setAlert(null), 3000);
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen ">
       <div className="container mx-auto p-4 md:p-6 lg:p-8 max-w-7xl">
         <div className="mb-6">
           <Typhography className="text-3xl font-bold text-gray-900 mb-2">
@@ -85,9 +78,7 @@ export default function AdminPage() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium">
-                Total Events
-              </CardTitle>
+              <CardTitle className="text-sm font-medium">Total Events</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{events.length}</div>
@@ -95,9 +86,7 @@ export default function AdminPage() {
           </Card>
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium">
-                Total Capacity
-              </CardTitle>
+              <CardTitle className="text-sm font-medium">Total Capacity</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
@@ -107,9 +96,7 @@ export default function AdminPage() {
           </Card>
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium">
-                Total Registered
-              </CardTitle>
+              <CardTitle className="text-sm font-medium">Total Registered</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
@@ -174,7 +161,7 @@ export default function AdminPage() {
                         <TableCell className="hidden md:table-cell">
                           <div className="flex items-center text-sm">
                             <CalendarDays className="mr-2 h-4 w-4 text-gray-400" />
-                            {new Date(event.date).toLocaleDateString("id-ID")}
+                            {new Date(event.date).toLocaleDateString('id-ID')}
                           </div>
                         </TableCell>
                         <TableCell className="hidden lg:table-cell">
@@ -182,8 +169,7 @@ export default function AdminPage() {
                             <MapPin className="mr-2 h-4 w-4 text-gray-400" />
                             <div>
                               <div className="text-xs text-gray-400">
-                                {event.latitude.toFixed(4)},{" "}
-                                {event.longitude.toFixed(4)}
+                                {event.latitude.toFixed(4)}, {event.longitude.toFixed(4)}
                               </div>
                             </div>
                           </div>
@@ -206,29 +192,23 @@ export default function AdminPage() {
                                 <Button
                                   variant="ghost"
                                   size="sm"
-                                  className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                                >
+                                  className="text-red-600 hover:text-red-700 hover:bg-red-50">
                                   <Trash2 className="h-4 w-4" />
                                 </Button>
                               </AlertDialogTrigger>
                               <AlertDialogContent>
                                 <AlertDialogHeader>
-                                  <AlertDialogTitle>
-                                    Are you absolutely sure?
-                                  </AlertDialogTitle>
+                                  <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
                                   <AlertDialogDescription>
-                                    This action cannot be undone. This will
-                                    permanently delete and remove your data from
-                                    our servers.
+                                    This action cannot be undone. This will permanently delete and
+                                    remove your data from our servers.
                                   </AlertDialogDescription>
                                 </AlertDialogHeader>
                                 <AlertDialogFooter>
                                   <AlertDialogCancel>
                                     <Typhography>Cancel</Typhography>
                                   </AlertDialogCancel>
-                                  <Button
-                                    onClick={() => handleDelete(event.id)}
-                                  >
+                                  <Button onClick={() => handleDelete(event.id)}>
                                     <Typhography>Continue</Typhography>
                                   </Button>
                                 </AlertDialogFooter>
