@@ -1,10 +1,10 @@
-import { useState } from "react";
-import { Link } from "@tanstack/react-router";
-import { usePartnerDetail, useEventList, formatEvent } from "@/hooks";
-import { Typhography } from "./ui/typhography";
-import { Button } from "./ui/button";
-import { Badge } from "./ui/badge";
-import { Spinner } from "./ui/spinner";
+import { useState } from 'react';
+import { Link } from '@tanstack/react-router';
+import { usePartnerDetail, useEventList, formatEvent } from '@/hooks';
+import { Typhography } from './ui/typhography';
+import { Button } from './ui/button';
+import { Badge } from './ui/badge';
+import { Spinner } from './ui/spinner';
 import {
   Sheet,
   SheetContent,
@@ -12,15 +12,15 @@ import {
   SheetHeader,
   SheetTitle,
   SheetTrigger,
-} from "./ui/sheet";
+} from './ui/sheet';
 import {
   LucideBuilding2,
   LucideMail,
   LucideCalendar,
   LucideMapPin,
   LucideUsers,
-} from "lucide-react";
-import { formatDateTime } from "@/lib/utils";
+} from 'lucide-react';
+import { formatDateTime } from '@/lib/utils';
 
 interface PartnerInfoSheetProps {
   partnerAddress: string;
@@ -28,16 +28,11 @@ interface PartnerInfoSheetProps {
   children: React.ReactNode;
 }
 
-export function PartnerInfoSheet({
-  partnerAddress,
-  partnerName,
-  children,
-}: PartnerInfoSheetProps) {
+export function PartnerInfoSheet({ partnerAddress, partnerName, children }: PartnerInfoSheetProps) {
   const [open, setOpen] = useState(false);
 
   // Fetch partner details
-  const { data: partner, isLoading: isLoadingPartner } =
-    usePartnerDetail(partnerAddress);
+  const { data: partner, isLoading: isLoadingPartner } = usePartnerDetail(partnerAddress);
 
   // Fetch events by this partner
   const { data: eventsData, isLoading: isLoadingEvents } = useEventList({
@@ -68,13 +63,15 @@ export function PartnerInfoSheet({
                 <div className="flex-1">
                   <SheetTitle>
                     <Typhography variant="2xl" className="font-bold">
-                      {isLoadingPartner ? "Loading..." : partner?.name || partnerName}
+                      {isLoadingPartner ? 'Loading...' : partner?.name || partnerName}
                     </Typhography>
                   </SheetTitle>
                   <SheetDescription>
-                    <Typhography variant="t1" className="text-muted-foreground flex items-center gap-2 mt-1">
+                    <Typhography
+                      variant="t1"
+                      className="text-muted-foreground flex items-center gap-2 mt-1">
                       <LucideMail size={14} />
-                      {partner?.email || "No email provided"}
+                      {partner?.email || 'No email provided'}
                     </Typhography>
                   </SheetDescription>
                 </div>
@@ -118,9 +115,8 @@ export function PartnerInfoSheet({
                   <Link
                     key={event.id}
                     to="/events/details/$eventId"
-                    params={{ eventId: event.id.toString() }}
-                    onClick={() => setOpen(false)}
-                  >
+                    params={{ eventId: event.eventId.toString() }}
+                    onClick={() => setOpen(false)}>
                     <div className="bg-background/10 backdrop-blur-lg border border-border rounded-lg p-3 space-y-3 cursor-pointer hover:bg-background/20 transition-colors">
                       <div className="flex gap-3">
                         <img
@@ -130,47 +126,34 @@ export function PartnerInfoSheet({
                         />
                         <div className="flex-1 min-w-0">
                           <div className="flex items-start justify-between gap-2">
-                            <Typhography
-                              variant="t1"
-                              className="font-semibold line-clamp-2"
-                            >
+                            <Typhography variant="t1" className="font-semibold line-clamp-2">
                               {event.eventName}
                             </Typhography>
                             <Badge
-                              variant={
-                                event.statusLabel === "Active"
-                                  ? "default"
-                                  : "secondary"
-                              }
-                            >
-                              <Typhography variant="t3">
-                                {event.statusLabel}
-                              </Typhography>
+                              variant={event.statusLabel === 'Active' ? 'default' : 'secondary'}>
+                              <Typhography variant="t3">{event.statusLabel}</Typhography>
                             </Badge>
                           </div>
 
                           <div className="flex items-center gap-1 text-muted-foreground mt-1">
                             <LucideCalendar size={12} />
                             <Typhography variant="t3" className="line-clamp-1">
-                              {formatDateTime(
-                                event.startDateTime.toISOString(),
-                                "date"
-                              )}
+                              {formatDateTime(event.startDateTime.toISOString(), 'date')}
                             </Typhography>
                           </div>
 
                           <div className="flex items-center gap-1 text-muted-foreground">
                             <LucideMapPin size={12} />
                             <Typhography variant="t3" className="line-clamp-1">
-                              {event.partner?.name || "TBA"}
+                              {event.partner?.name || 'TBA'}
                             </Typhography>
                           </div>
 
                           <div className="flex items-center gap-1 text-muted-foreground">
                             <LucideUsers size={12} />
                             <Typhography variant="t3">
-                              {event.participantCount}/{event.quota}{" "}
-                              {event.isFull ? "(Full)" : "spots"}
+                              {event.participantCount}/{event.quota}{' '}
+                              {event.isFull ? '(Full)' : 'spots'}
                             </Typhography>
                           </div>
                         </div>
@@ -188,10 +171,7 @@ export function PartnerInfoSheet({
               <Typhography variant="lg" className="font-semibold mb-2">
                 No events yet
               </Typhography>
-              <Typhography
-                variant="t2"
-                className="text-muted-foreground max-w-[250px]"
-              >
+              <Typhography variant="t2" className="text-muted-foreground max-w-[250px]">
                 This partner hasn't created any events yet
               </Typhography>
             </div>

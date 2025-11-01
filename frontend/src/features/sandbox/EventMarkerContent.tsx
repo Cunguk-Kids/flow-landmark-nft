@@ -33,7 +33,7 @@ export function EventMarkerContent(props: { event: Event }) {
       </div>
 
       <Button className="w-full" asChild>
-        <Link to="/events/details/$eventId" params={{ eventId: props.event.id.toString() }}>
+        <Link to="/events/details/$eventId" params={{ eventId: props.event.eventId.toString() }}>
           View Detail
         </Link>
       </Button>
