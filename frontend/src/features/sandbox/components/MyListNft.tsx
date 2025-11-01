@@ -44,7 +44,7 @@ function MyListNftComponent() {
 
         <SheetContent
           side="left"
-          className="w-[380px] sm:w-[300px] bg-background border-r border-border p-0">
+          className="w-[380px] sm:w-[500px] bg-background border-r border-border p-0">
           {/* Header */}
           <SheetHeader className="px-4 py-3 border-b border-border flex flex-row items-center">
             <SheetTitle className="text-lg font-semibold grow">My NFT</SheetTitle>
