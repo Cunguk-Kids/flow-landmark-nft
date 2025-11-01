@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ChevronDownIcon, MapPin } from 'lucide-react';
+import { ChevronDownIcon, LucideMapPin } from 'lucide-react';
 import Map, { Marker } from 'react-map-gl/maplibre';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { Typhography } from '@/components/ui/typhography';
@@ -13,6 +13,15 @@ import { Calendar } from '@/components/ui/calendar';
 import BackButton from '@/components/BackButton';
 import type { Event } from '@/types/api';
 import { useRouter } from '@tanstack/react-router';
+import { usePartnerList } from '@/hooks';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { useQuery } from '@tanstack/react-query';
 
 export interface EventPayload {
   brand: string;
@@ -33,14 +42,30 @@ interface EventFormPageProps<T = EventPayload> {
   handleSubmit?: (data: T) => Promise<void> | void;
 }
 
+async function getCurrentLocation() {
+  return new Promise<GeolocationPosition>((resolve, reject) => {
+    navigator.geolocation.getCurrentPosition(resolve, reject, {
+      enableHighAccuracy: true,
+      timeout: 10000,
+      maximumAge: 0,
+    });
+  });
+}
+
 export default function EventFormPage({ event, handleSubmit }: EventFormPageProps) {
   const router = useRouter();
   const [openStartPicker, setOpenStartPicker] = useState(false);
   const [openEndPicker, setOpenEndPicker] = useState(false);
   const [editingEvent, setEditingEvent] = useState<typeof event | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [brandPagination, setBrandPagination] = useState({
+    limit: 10,
+    page: 1,
+  });
 
+  const { data: partnerBrand } = usePartnerList(brandPagination);
   const today = new Date();
+  today.setDate(today.getDate() + 1);
   today.setHours(0, 0, 0, 0);
 
   const [formData, setFormData] = useState({
@@ -151,6 +176,12 @@ export default function EventFormPage({ event, handleSubmit }: EventFormPageProp
     }
   };
 
+  const { data: position } = useQuery({
+    queryKey: ['geolocation'],
+    queryFn: getCurrentLocation,
+    retry: false,
+  });
+
   return (
     <div className="w-full flex justify-center">
       <div className="min-h-screen md:w-5xl max-w-5xl bg-background px-4 py-6 sm:px-6 sm:py-8 space-y-6">
@@ -197,11 +228,41 @@ export default function EventFormPage({ event, handleSubmit }: EventFormPageProp
           {/* Brand */}
           <Field>
             <Label>Event Brand</Label>
-            <Input
+            <Select
               value={formData.brand}
-              onChange={(e) => setFormData({ ...formData, brand: e.target.value })}
-              placeholder="Enter event brand"
-            />
+              onValueChange={(value) => setFormData((prev) => ({ ...prev, brand: value }))}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select Brand" />
+              </SelectTrigger>
+
+              <SelectContent
+                className="max-h-60 overflow-y-auto"
+                onScrollCapture={(e) => {
+                  const el = e.currentTarget;
+                  const isBottom = el.scrollHeight - el.scrollTop <= el.clientHeight + 5;
+                  if (
+                    (isBottom && partnerBrand?.pagination?.totalItems) ||
+                    0 >= brandPagination.limit
+                  ) {
+                    setBrandPagination((old) => ({
+                      ...old,
+                      page: old.page + 1,
+                    }));
+                  }
+                }}>
+                {partnerBrand?.data?.map((brand) => (
+                  <SelectItem key={brand.address} value={brand.address}>
+                    {brand.name?.replace(/^"|"$/g, '')}
+                  </SelectItem>
+                ))}
+
+                {!partnerBrand?.data?.length && (
+                  <div className="text-center text-sm text-muted-foreground py-2">
+                    No brand found
+                  </div>
+                )}
+              </SelectContent>
+            </Select>
           </Field>
 
           {/* Title */}
@@ -312,12 +373,15 @@ export default function EventFormPage({ event, handleSubmit }: EventFormPageProp
             <div className="border rounded-lg overflow-hidden" style={{ height: 300 }}>
               <Map
                 {...viewState}
+                latitude={!event ? position?.coords?.latitude : viewState.latitude}
+                longitude={!event ? position?.coords?.longitude : viewState.longitude}
+                zoom={5}
                 onMove={(evt) => setViewState(evt.viewState)}
                 onClick={handleMapClick}
                 mapStyle="https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json"
                 style={{ width: '100%', height: '100%' }}>
                 <Marker longitude={formData.longitude} latitude={formData.latitude} anchor="bottom">
-                  <MapPin className="h-8 w-8 text-red-500" fill="currentColor" />
+                  <LucideMapPin className="text-primary fill-primary/10 size-5" />
                 </Marker>
               </Map>
             </div>
