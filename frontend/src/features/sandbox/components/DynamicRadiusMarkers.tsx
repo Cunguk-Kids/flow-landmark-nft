@@ -127,7 +127,7 @@ export const DynamicRadiusMarkers = ({
 
           return (
             <React.Fragment key={event.id}>
-              {(selectedEvent?.id === event.id || zoom >= 10) && (
+              {((selectedEvent?.id === event.id && zoom >= 15) || zoom >= 10) && (
                 <Source id={`radius-${event.id}`} type="geojson" data={circle}>
                   <Layer
                     id={`fill-${event.id}`}
