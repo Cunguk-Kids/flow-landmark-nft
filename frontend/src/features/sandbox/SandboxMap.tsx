@@ -1,19 +1,17 @@
-import * as React from "react";
-import Map, { Marker } from "react-map-gl/maplibre";
-import maplibregl from "maplibre-gl";
-import "maplibre-gl/dist/maplibre-gl.css";
-import { useQuery } from "@tanstack/react-query";
-import { useStore } from "@tanstack/react-store";
-import { store } from "@/stores";
-import { LocateFixed, LucideMapPin } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { useEventList } from "@/hooks/useEventList";
-import { EventMarkerContent } from "./EventMarkerContent";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+import * as React from 'react';
+import Map, { Marker } from 'react-map-gl/maplibre';
+import maplibregl from 'maplibre-gl';
+import 'maplibre-gl/dist/maplibre-gl.css';
+import { useQuery } from '@tanstack/react-query';
+import { useStore } from '@tanstack/react-store';
+import { store } from '@/stores';
+import { LocateFixed } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { useEventList } from '@/hooks/useEventList';
+// import { LocateFixed, LucideMapPin } from 'lucide-react';
+// import { EventMarkerContent } from './EventMarkerContent';
+// import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { DynamicRadiusMarkers } from './components/DynamicRadiusMarkers';
 
 async function getCurrentLocation() {
   return new Promise<GeolocationPosition>((resolve, reject) => {
@@ -27,17 +25,18 @@ async function getCurrentLocation() {
 
 const SandboxMap: React.FC = () => {
   const viewport = useStore(store, (x) => x.mapViewState);
+
   const setViewport = React.useCallback(
     (viewp: typeof viewport) =>
       store.setState((prev) => ({
         ...prev,
         mapViewState: viewp,
       })),
-    []
+    [],
   );
 
   const { data: position } = useQuery({
-    queryKey: ["geolocation"],
+    queryKey: ['geolocation'],
     queryFn: getCurrentLocation,
     retry: false,
   });
@@ -63,24 +62,19 @@ const SandboxMap: React.FC = () => {
         initialViewState={viewport}
         onMove={(evt) => setViewport(evt.viewState)}
         mapStyle="https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json"
-        style={{ width: "100%", height: "100%" }}
-      >
+        style={{ width: '100%', height: '100%' }}>
         {position && (
           <Marker
             latitude={position?.coords.latitude}
             longitude={position?.coords.longitude}
-            anchor="bottom"
-          >
+            anchor="bottom">
             <div className="bg-primary w-4 h-4 rounded-full border-2 border-white shadow-lg" />
           </Marker>
         )}
-        {eventList?.data.map((event) => (
-          <Marker
-            key={event.id}
-            latitude={event.lat}
-            longitude={event.long}
-            anchor="bottom"
-          >
+        <DynamicRadiusMarkers mapRef={store.state.ref} eventList={eventList?.data || []} />
+
+        {/* {eventList?.data.map((event) => (
+          <Marker key={event.id} latitude={event.lat} longitude={event.long} anchor="bottom">
             <Popover>
               <PopoverContent>
                 <EventMarkerContent event={event} />
@@ -88,24 +82,22 @@ const SandboxMap: React.FC = () => {
               <PopoverTrigger asChild>
                 <Button
                   className="cursor-pointer rounded-full"
-                  title={event.eventName.replace(/^"|"$/g, "")}
+                  title={event.eventName.replace(/^"|"$/g, '')}
                   variant="ghost"
-                  size="icon"
-                >
+                  size="icon">
                   <LucideMapPin className="text-primary fill-primary/10 size-5" />
                 </Button>
               </PopoverTrigger>
             </Popover>
           </Marker>
-        ))}
+        ))} */}
       </Map>
       {position?.coords && (
         <Button
           onClick={handleCenterToUser}
           variant="secondary"
           size="icon"
-          className="rounded-full shadow-lg bg-white hover:bg-gray-100 absolute bottom-12 right-2"
-        >
+          className="rounded-full shadow-lg bg-white hover:bg-gray-100 absolute bottom-12 right-2">
           <LocateFixed className="w-8 h-8 text-primary" />
         </Button>
       )}
