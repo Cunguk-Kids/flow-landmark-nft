@@ -39,6 +39,8 @@ export default function Auth() {
     limit: 10,
   });
 
+  console.log(eventsData, '============eventsData===========');
+
   const { mutate: checkIn, isPending: isCheckingIn } = useCheckIn();
 
   const handleCheckIn = (eventId: number, brandAddress: string) => {
