@@ -65,6 +65,7 @@ export default function EventFormPage({ event, handleSubmit }: EventFormPageProp
 
   const { data: partnerBrand } = usePartnerList(brandPagination);
   const today = new Date();
+  today.setDate(today.getDate() + 1);
   today.setHours(0, 0, 0, 0);
 
   const [formData, setFormData] = useState({
