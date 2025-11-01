@@ -9,7 +9,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Plus, Pencil, Trash2, MapPin, Users, CalendarDays } from 'lucide-react';
+import { Plus, Pencil, Trash2, MapPin, Users, CalendarDays, Stamp } from 'lucide-react';
 import { Typhography } from '@/components/ui/typhography';
 import EmptyList from './components/EmptyList';
 import {
@@ -23,7 +23,23 @@ import {
   AlertDialogCancel,
 } from '@/components/ui/alert-dialog';
 import { Link } from '@tanstack/react-router';
-import { useEventList } from '@/hooks';
+import { EventStatusLabels, useEventList } from '@/hooks';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import { UpdateEventStatusForm } from './components/FormStatus';
+import { Badge } from '@/components/ui/badge';
+
+const statusColor: Record<number, string> = {
+  1: 'bg-green-100 text-green-700',
+  2: 'bg-yellow-100 text-yellow-700',
+  3: 'bg-blue-100 text-blue-700',
+};
 
 export default function AdminPage() {
   // const [events, setEvents] = useState<EventForm[]>([
@@ -138,6 +154,9 @@ export default function AdminPage() {
                     <TableHead className="hidden sm:table-cell">
                       <Typhography>Capacity</Typhography>
                     </TableHead>
+                    <TableHead className="hidden sm:table-cell">
+                      <Typhography>Status</Typhography>
+                    </TableHead>
                     <TableHead className="text-right"></TableHead>
                   </TableRow>
                 </TableHeader>
@@ -181,15 +200,41 @@ export default function AdminPage() {
                             {event.edges?.participants?.length ?? 0}/{event.quota}
                           </div>
                         </TableCell>
+                        <TableCell className="hidden sm:table-cell">
+                          <div className="flex items-center gap-2 text-sm">
+                            <Stamp className="h-4 w-4 text-gray-400" />
+                            <Badge
+                              variant="outline"
+                              className={`text-xs font-medium px-2 py-0.5 ${statusColor[event.status] || 'bg-gray-100 text-gray-700'}`}>
+                              {EventStatusLabels[event.status as keyof typeof EventStatusLabels] ||
+                                EventStatusLabels[0] ||
+                                'Unknown'}
+                            </Badge>
+                          </div>
+                        </TableCell>
                         <TableCell className="text-right">
                           <div className="flex justify-end gap-2">
-                            <Link
-                              to={`/admin/form/$eventId`}
-                              params={{ eventId: event.id.toString() }}>
-                              <Button variant="ghost" size="sm">
-                                <Pencil className="h-4 w-4" />
-                              </Button>
-                            </Link>
+                            <Dialog>
+                              <DialogTrigger asChild>
+                                <Button variant="ghost" size="sm">
+                                  <Pencil className="h-4 w-4" />
+                                </Button>
+                              </DialogTrigger>
+                              <DialogContent className="sm:max-w-md">
+                                <DialogHeader>
+                                  <DialogTitle>Update Event Status</DialogTitle>
+                                  <DialogDescription>
+                                    Update status for{' '}
+                                    <span className="font-semibold">{event.eventName}</span>.
+                                  </DialogDescription>
+                                </DialogHeader>
+
+                                <UpdateEventStatusForm
+                                  eventId={String(event.eventId)}
+                                  brandAddress={event.edges?.partner?.address}
+                                />
+                              </DialogContent>
+                            </Dialog>
                             <AlertDialog>
                               <AlertDialogTrigger asChild>
                                 <Button
