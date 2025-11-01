@@ -23,7 +23,6 @@ import {
   AlertDialogCancel,
 } from '@/components/ui/alert-dialog';
 import { Link } from '@tanstack/react-router';
-import { has } from 'lodash';
 import { useEventList } from '@/hooks';
 
 export default function AdminPage() {
@@ -58,9 +57,8 @@ export default function AdminPage() {
 
   const { data: events } = useEventList();
 
-  console.log(events, '======== events ==========');
-
-  const [alert, setAlert] = useState<{
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [_alert, setAlert] = useState<{
     type: 'success' | 'error';
     message: string;
   } | null>(null);
