@@ -1,12 +1,12 @@
-import { useState } from "react";
-import { useFlowCurrentUser } from "@onflow/react-sdk";
-import { useNavigate } from "@tanstack/react-router";
-import { Typhography } from "./ui/typhography";
-import { useAccount } from "@/hooks/useAccount";
-import { useUserEvents, useCheckIn, formatEvent } from "@/hooks";
-import { Button } from "./ui/button";
-import { Badge } from "./ui/badge";
-import { Spinner } from "./ui/spinner";
+import { useState } from 'react';
+import { useFlowCurrentUser } from '@onflow/react-sdk';
+import { useNavigate } from '@tanstack/react-router';
+import { Typhography } from './ui/typhography';
+import { useAccount } from '@/hooks/useAccount';
+import { useUserEvents, useCheckIn, formatEvent } from '@/hooks';
+import { Button } from './ui/button';
+import { Badge } from './ui/badge';
+import { Spinner } from './ui/spinner';
 import {
   LucideCircleUserRound,
   LucideLogIn,
@@ -15,7 +15,7 @@ import {
   LucideCalendar,
   LucideMapPin,
   LucideCheckCircle,
-} from "lucide-react";
+} from 'lucide-react';
 import {
   Sheet,
   SheetContent,
@@ -23,8 +23,8 @@ import {
   SheetHeader,
   SheetTitle,
   SheetTrigger,
-} from "@/components/ui/sheet";
-import { toast } from "sonner";
+} from '@/components/ui/sheet';
+import { toast } from 'sonner';
 
 export default function Auth() {
   const navigate = useNavigate();
@@ -34,8 +34,8 @@ export default function Auth() {
 
   // Fetch user's registered events
   const { data: eventsData, isLoading: isLoadingEvents } = useUserEvents({
-    userAddress: data?.address || "",
-    status: "Registered",
+    userAddress: data?.address || '',
+    status: 'Registered',
     limit: 10,
   });
 
@@ -43,7 +43,7 @@ export default function Auth() {
 
   const handleCheckIn = (eventId: number, brandAddress: string) => {
     if (!data?.address) {
-      toast.error("Please connect your wallet first!");
+      toast.error('Please connect your wallet first!');
       return;
     }
 
@@ -55,18 +55,18 @@ export default function Auth() {
       },
       {
         onSuccess: () => {
-          toast.success("Checked in successfully!");
+          toast.success('Checked in successfully!');
         },
         onError: (error) => {
-          toast.error(error instanceof Error ? error.message : "Check-in failed");
+          toast.error(error instanceof Error ? error.message : 'Check-in failed');
         },
-      }
+      },
     );
   };
 
   const handleEventClick = (eventId: number) => {
     setOpen(false);
-    navigate({ to: "/events/details/$eventId", params: { eventId: String(eventId) } });
+    navigate({ to: '/events/details/$eventId', params: { eventId: String(eventId) } });
   };
 
   return (
@@ -94,7 +94,7 @@ export default function Auth() {
               </div>
               <div className="flex flex-col">
                 <SheetTitle>
-                  <Typhography variant="t1">{data?.address ?? "0x0"}</Typhography>
+                  <Typhography variant="t1">{data?.address ?? '0x0'}</Typhography>
                 </SheetTitle>
                 <SheetDescription>
                   <Typhography variant="t3">
@@ -112,16 +112,13 @@ export default function Auth() {
           ) : (
             <Button
               onClick={() => {
-                authenticate().then(x => console.log(x));
+                authenticate().then((x) => console.log(x));
                 requestAnimationFrame(() => {
-                  const frame = document.querySelector(
-                    "#FCL_IFRAME"
-                  ) as HTMLIFrameElement | null;
-                  if (frame) frame.style.pointerEvents = "auto";
+                  const frame = document.querySelector('#FCL_IFRAME') as HTMLIFrameElement | null;
+                  if (frame) frame.style.pointerEvents = 'auto';
                 });
               }}
-              variant="default"
-            >
+              variant="default">
               <LucideLogIn />
               <Typhography>Connect Wallet</Typhography>
             </Button>
@@ -130,7 +127,7 @@ export default function Auth() {
 
         {/* My Events Section */}
         {data && (
-          <div className="flex-1 mt-6 space-y-4">
+          <div className="flex-1 mt-6 space-y-4 mx-4">
             <div className="flex items-center justify-between">
               <Typhography variant="lg" className="font-semibold">
                 My Events
@@ -151,15 +148,14 @@ export default function Auth() {
                 {eventsData.data.map((rawEvent) => {
                   const event = formatEvent(rawEvent);
                   const isCheckedIn = event.participants.some(
-                    (p) => p.userAddress === data.address && p.isCheckedIn
+                    (p) => p.userAddress === data.address && p.isCheckedIn,
                   );
 
                   return (
                     <div
                       key={event.id}
                       className="bg-background/10 backdrop-blur-lg border border-border rounded-lg p-3 space-y-3 cursor-pointer hover:bg-background/20 transition-colors"
-                      onClick={() => handleEventClick(event.id)}
-                    >
+                      onClick={() => handleEventClick(event.id)}>
                       <div className="flex gap-3">
                         <img
                           src={event.image}
@@ -179,14 +175,14 @@ export default function Auth() {
                           <div className="flex items-center gap-1 text-muted-foreground">
                             <LucideMapPin size={12} />
                             <Typhography variant="t3" className="line-clamp-1">
-                              {event.partner?.name || "TBA"}
+                              {event.partner?.name || 'TBA'}
                             </Typhography>
                           </div>
                         </div>
                       </div>
 
                       {/* Check-in Button */}
-                      {!isCheckedIn && event.statusLabel === "Active" && (
+                      {!isCheckedIn && event.statusLabel === 'Active' && (
                         <Button
                           size="sm"
                           className="w-full"
@@ -194,8 +190,7 @@ export default function Auth() {
                             e.stopPropagation();
                             handleCheckIn(event.eventId, event.brandAddress);
                           }}
-                          disabled={isCheckingIn}
-                        >
+                          disabled={isCheckingIn}>
                           {isCheckingIn ? (
                             <>
                               <Spinner />
@@ -219,7 +214,7 @@ export default function Auth() {
                         </div>
                       )}
 
-                      {event.statusLabel !== "Active" && !isCheckedIn && (
+                      {event.statusLabel !== 'Active' && !isCheckedIn && (
                         <Badge variant="secondary" className="w-full justify-center">
                           <Typhography variant="t2">{event.statusLabel}</Typhography>
                         </Badge>
@@ -243,9 +238,8 @@ export default function Auth() {
                   size="sm"
                   onClick={() => {
                     setOpen(false);
-                    navigate({ to: "/" });
-                  }}
-                >
+                    navigate({ to: '/' });
+                  }}>
                   <Typhography variant="t2">Browse Events</Typhography>
                 </Button>
               </div>
