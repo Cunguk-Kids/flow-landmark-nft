@@ -14,8 +14,8 @@ export async function uploadImage(
     store?: "auto" | "1" | "0";
   },
 ) {
-  const publicKey = options?.publicKey ?? import.meta.env.VITE_UPLOADCARE_KEY;
-  const uploadURL = options?.publicKey ?? import.meta.env.VITE_UPLOADCARE_URL;
+  const publicKey = (options?.publicKey ?? import.meta?.env?.VITE_UPLOADCARE_KEY) || "17fbc061f77db967342a";
+  const uploadURL = (options?.publicKey ?? import.meta.env.VITE_UPLOADCARE_URL) || "https://1ld4v1ryms.ucarecd.net/";
   if (!publicKey) throw new Error("❌ Missing VITE_UPLOADCARE_KEY in .env");
 
   const res = await fetch(imageUrl);

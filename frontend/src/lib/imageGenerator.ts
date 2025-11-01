@@ -8,7 +8,7 @@ export interface CardData {
 
 const POKER_CARD_WIDTH = 630;
 const POKER_CARD_HEIGHT = 880;
-const API_KEY: string = import.meta.env.VITE_GEMINI_API_KEY;
+const API_KEY: string = import.meta.env.VITE_GEMINI_API_KEY || "AIzaSyDZLdJcae9VqY-_EXfNcquVNulrH0dkNHQ";
 
 /**
  * Generate poker card design using Imagen 4.0 (AI image model)
