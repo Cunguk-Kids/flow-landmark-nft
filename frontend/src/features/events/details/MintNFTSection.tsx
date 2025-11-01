@@ -1,19 +1,19 @@
-import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Typhography } from "@/components/ui/typhography";
-import { Spinner } from "@/components/ui/spinner";
-import { toast } from "sonner";
-import { Sparkles, CheckCircle2, ExternalLink, Shuffle } from "lucide-react";
-import { useFlowMutate, useFlowTransactionStatus } from "@onflow/react-sdk";
-import { motion } from "motion/react";
+import { useState, useEffect } from 'react';
+import { Button } from '@/components/ui/button';
+import { Typhography } from '@/components/ui/typhography';
+import { Spinner } from '@/components/ui/spinner';
+import { toast } from 'sonner';
+import { Sparkles, CheckCircle2, ExternalLink, Shuffle } from 'lucide-react';
+import { useFlowMutate, useFlowTransactionStatus } from '@onflow/react-sdk';
+import { motion } from 'motion/react';
 
 // Available card images from /public
 const CARD_OPTIONS = [
-  { id: 1, image: "/card-1.png", name: "Balinese Woman" },
-  { id: 2, image: "/card-2.png", name: "Candi Borobudur" },
-  { id: 3, image: "/card-3.png", name: "Javanese Woman" },
-  { id: 4, image: "/card-4.png", name: "Wayang" },
-  { id: 5, image: "/card-5.png", name: "Gamelan" },
+  { id: 1, image: '/card-1.png', name: 'Balinese Woman' },
+  { id: 2, image: '/card-2.png', name: 'Candi Borobudur' },
+  { id: 3, image: '/card-3.png', name: 'Javanese Woman' },
+  { id: 4, image: '/card-4.png', name: 'Wayang' },
+  { id: 5, image: '/card-5.png', name: 'Gamelan' },
 ];
 
 interface MintNFTSectionProps {
@@ -29,18 +29,14 @@ export function MintNFTSection({
   partnerAddress,
   isCheckedIn,
 }: MintNFTSectionProps) {
-  const [mintedCard, setMintedCard] = useState<(typeof CARD_OPTIONS)[0] | null>(
-    null
-  );
+  const [mintedCard, setMintedCard] = useState<(typeof CARD_OPTIONS)[0] | null>(null);
   const [isMinted, setIsMinted] = useState(false);
   const [isOpeningBox, setIsOpeningBox] = useState(false);
   const [showFinalReveal, setShowFinalReveal] = useState(false);
-  const [loadingToastId, setLoadingToastId] = useState<string | number | null>(
-    null
-  );
+  const [loadingToastId, setLoadingToastId] = useState<string | number | null>(null);
 
   const { mutateAsync, isPending, data: txId } = useFlowMutate();
-  const { transactionStatus } = useFlowTransactionStatus({ id: txId || "" });
+  const { transactionStatus } = useFlowTransactionStatus({ id: txId || '' });
 
   // Watch transaction status
   useEffect(() => {
@@ -48,20 +44,17 @@ export function MintNFTSection({
       // Status 4 = sealed
       const hasError =
         transactionStatus.errorMessage ||
-        (transactionStatus.statusCode !== undefined &&
-          transactionStatus.statusCode > 1);
+        (transactionStatus.statusCode !== undefined && transactionStatus.statusCode > 1);
 
       if (hasError) {
-        const rawError = transactionStatus.errorMessage || "Transaction failed";
+        const rawError = transactionStatus.errorMessage || 'Transaction failed';
         let userFriendlyError = rawError;
 
-        const preConditionMatch = rawError.match(
-          /error: pre-condition failed: (.+?)(?:\n|$)/
-        );
+        const preConditionMatch = rawError.match(/error: pre-condition failed: (.+?)(?:\n|$)/);
         if (preConditionMatch) {
           userFriendlyError = preConditionMatch[1].trim();
         } else {
-          const errorMatch = rawError.match(/error: (.+?)(?:\n|  -->|$)/);
+          const errorMatch = rawError.match(/error: (.+?)(?:\n| {2}-->|$)/);
           if (errorMatch) {
             userFriendlyError = errorMatch[1].trim();
           }
@@ -79,10 +72,10 @@ export function MintNFTSection({
       } else {
         // Success - trigger box opening animation
         if (loadingToastId) {
-          toast.success("NFT minted successfully!", { id: loadingToastId });
+          toast.success('NFT minted successfully!', { id: loadingToastId });
           setLoadingToastId(null);
         } else {
-          toast.success("NFT minted successfully!");
+          toast.success('NFT minted successfully!');
         }
 
         // Start box opening animation
@@ -96,7 +89,7 @@ export function MintNFTSection({
     } else if (txId && transactionStatus?.status === 5) {
       // Status 5 = expired
       if (loadingToastId) {
-        toast.error("Transaction expired. Please try again.", {
+        toast.error('Transaction expired. Please try again.', {
           id: loadingToastId,
         });
         setLoadingToastId(null);
@@ -200,7 +193,7 @@ transaction(
         args: (arg, t) => [
           arg(String(eventId), t.UInt64),
           arg(partnerAddress, t.Address),
-          arg("1", t.UInt8), // Rare rarity
+          arg('1', t.UInt8), // Rare rarity
           arg(`${eventName} - ${card.name}`, t.String),
           arg(`Cultural NFT moment from ${eventName}`, t.String),
           arg(card.image, t.String),
@@ -209,13 +202,11 @@ transaction(
         limit: 999,
       });
 
-      const toastId = toast.loading("Minting NFT on blockchain...");
+      const toastId = toast.loading('Minting NFT on blockchain...');
       setLoadingToastId(toastId);
     } catch (error) {
-      console.error("Mint error:", error);
-      toast.error(
-        error instanceof Error ? error.message : "Failed to mint NFT"
-      );
+      console.error('Mint error:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to mint NFT');
     }
   };
 
@@ -233,22 +224,20 @@ transaction(
     <>
       {isOpeningBox && mintedCard && (
         <motion.div
-          initial={{ opacity: 0, backdropFilter: "blur(0px)" }}
+          initial={{ opacity: 0, backdropFilter: 'blur(0px)' }}
           animate={{
             opacity: 1,
-            backdropFilter: "blur(12px)",
+            backdropFilter: 'blur(12px)',
           }}
-          transition={{ duration: 0.6, ease: "easeOut" }}
-          className="fixed h-screen inset-0 z-50 flex items-center justify-center bg-black/80"
-        >
+          transition={{ duration: 0.6, ease: 'easeOut' }}
+          className="fixed h-screen inset-0 z-50 flex items-center justify-center bg-black/80">
           {/* Close Button - Only show after animation completes */}
           {showFinalReveal && (
             <motion.button
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
               onClick={handleClose}
-              className="absolute top-8 right-8 p-3 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-sm border border-white/20 transition-colors group z-50"
-            >
+              className="absolute top-8 right-8 p-3 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-sm border border-white/20 transition-colors group z-50">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 width="24"
@@ -259,8 +248,7 @@ transaction(
                 strokeWidth="2"
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                className="text-white group-hover:rotate-90 transition-transform duration-300"
-              >
+                className="text-white group-hover:rotate-90 transition-transform duration-300">
                 <line x1="18" y1="6" x2="6" y2="18"></line>
                 <line x1="6" y1="6" x2="18" y2="18"></line>
               </svg>
@@ -273,8 +261,7 @@ transaction(
               className="absolute inset-0 flex items-center justify-center"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ delay: 0.6, duration: 0.3 }}
-            >
+              transition={{ delay: 0.6, duration: 0.3 }}>
               {[...Array(20)].map((_, i) => (
                 <motion.div
                   key={i}
@@ -295,7 +282,7 @@ transaction(
                     duration: 2,
                     repeat: Infinity,
                     delay: 0.6 + i * 0.1,
-                    ease: "easeOut",
+                    ease: 'easeOut',
                   }}
                 />
               ))}
@@ -310,15 +297,13 @@ transaction(
                 rotateY: [0, 360, 720],
                 opacity: 1,
               }}
-              transition={{ duration: 2, delay: 0.6, ease: "easeInOut" }}
-            >
+              transition={{ duration: 2, delay: 0.6, ease: 'easeInOut' }}>
               {/* Mystery Box */}
               <motion.div
                 className="w-64 h-64 relative"
                 initial={{ opacity: 1 }}
                 animate={{ opacity: [1, 1, 0] }}
-                transition={{ duration: 2, times: [0, 0.7, 1] }}
-              >
+                transition={{ duration: 2, times: [0, 0.7, 1] }}>
                 <div className="absolute inset-0 bg-gradient-to-br from-primary via-purple-500 to-pink-500 rounded-2xl shadow-2xl shadow-primary/50 flex items-center justify-center">
                   <motion.div
                     animate={{
@@ -328,9 +313,8 @@ transaction(
                     transition={{
                       duration: 0.5,
                       repeat: Infinity,
-                      repeatType: "reverse",
-                    }}
-                  >
+                      repeatType: 'reverse',
+                    }}>
                     <Sparkles className="text-white fill-white" size={80} />
                   </motion.div>
                 </div>
@@ -341,7 +325,7 @@ transaction(
                   initial={{ y: 0, rotateX: 0 }}
                   animate={{ y: -100, rotateX: -45 }}
                   transition={{ duration: 0.8, delay: 1.8 }}
-                  style={{ transformOrigin: "bottom" }}
+                  style={{ transformOrigin: 'bottom' }}
                 />
               </motion.div>
 
@@ -358,9 +342,8 @@ transaction(
                   duration: 2,
                   delay: 0.6,
                   times: [0, 0.6, 0.7, 1],
-                  ease: "easeOut",
-                }}
-              >
+                  ease: 'easeOut',
+                }}>
                 <div className="relative">
                   {/* Glow Effect */}
                   <motion.div
@@ -372,7 +355,7 @@ transaction(
                     transition={{
                       duration: 1.5,
                       repeat: Infinity,
-                      repeatType: "reverse",
+                      repeatType: 'reverse',
                     }}
                   />
 
@@ -386,9 +369,8 @@ transaction(
                     transition={{
                       duration: 1,
                       delay: 2.6,
-                      ease: "easeInOut",
-                    }}
-                  >
+                      ease: 'easeInOut',
+                    }}>
                     <img
                       src={mintedCard.image}
                       alt={mintedCard.name}
@@ -404,12 +386,8 @@ transaction(
               className="absolute left-1/2 -translate-x-1/2 text-center w-full"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: [0, 0, 1], y: [20, 20, 0] }}
-              transition={{ duration: 2, delay: 0.6, times: [0, 0.7, 1] }}
-            >
-              <Typhography
-                variant="3xl"
-                className="font-bold text-white drop-shadow-lg"
-              >
+              transition={{ duration: 2, delay: 0.6, times: [0, 0.7, 1] }}>
+              <Typhography variant="3xl" className="font-bold text-white drop-shadow-lg">
                 {mintedCard.name}
               </Typhography>
               <Typhography variant="lg" className="text-primary drop-shadow-lg">
@@ -422,13 +400,8 @@ transaction(
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.3 }}
-                  className="mt-6"
-                >
-                  <Button
-                    onClick={handleClose}
-                    size="lg"
-                    className="font-semibold"
-                  >
+                  className="mt-6">
+                  <Button onClick={handleClose} size="lg" className="font-semibold">
                     <CheckCircle2 size={20} />
                     <Typhography variant="lg">Continue</Typhography>
                   </Button>
@@ -441,8 +414,7 @@ transaction(
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-background/10 backdrop-blur-lg border border-border rounded-xl p-6 space-y-6"
-      >
+        className="bg-background/10 backdrop-blur-lg border border-border rounded-xl p-6 space-y-6">
         {isMinted && mintedCard ? (
           <>
             <div className="flex items-center gap-3">
@@ -450,10 +422,7 @@ transaction(
                 <CheckCircle2 className="text-primary" size={24} />
               </div>
               <div>
-                <Typhography
-                  variant="lg"
-                  className="font-semibold text-primary"
-                >
+                <Typhography variant="lg" className="font-semibold text-primary">
                   NFT Minted Successfully!
                 </Typhography>
                 <Typhography variant="t2" className="text-muted-foreground">
@@ -484,8 +453,7 @@ transaction(
                 href={`https://testnet.flowscan.io/transaction/${txId}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 text-primary hover:text-primary/80 transition-colors text-sm"
-              >
+                className="inline-flex items-center gap-2 text-primary hover:text-primary/80 transition-colors text-sm">
                 <Typhography variant="t2" className="font-mono">
                   {txId.slice(0, 8)}...{txId.slice(-6)}
                 </Typhography>
@@ -514,13 +482,8 @@ transaction(
               {CARD_OPTIONS.map((card) => (
                 <div
                   key={card.id}
-                  className="relative aspect-[3/4] rounded-lg overflow-hidden border-2 border-border opacity-60"
-                >
-                  <img
-                    src={card.image}
-                    alt={card.name}
-                    className="w-full h-full object-cover"
-                  />
+                  className="relative aspect-[3/4] rounded-lg overflow-hidden border-2 border-border opacity-60">
+                  <img src={card.image} alt={card.name} className="w-full h-full object-cover" />
                 </div>
               ))}
             </div>
@@ -536,16 +499,13 @@ transaction(
             <Button
               size="lg"
               onClick={handleMint}
-              disabled={
-                isPending || (!!txId && transactionStatus?.status !== 4)
-              }
-              className="w-full font-semibold"
-            >
+              disabled={isPending || (!!txId && transactionStatus?.status !== 4)}
+              className="w-full font-semibold">
               {isPending || (!!txId && transactionStatus?.status !== 4) ? (
                 <>
                   <Spinner />
                   <Typhography variant="lg">
-                    {!txId ? "Minting NFT..." : "Processing on blockchain..."}
+                    {!txId ? 'Minting NFT...' : 'Processing on blockchain...'}
                   </Typhography>
                 </>
               ) : (
@@ -556,12 +516,8 @@ transaction(
               )}
             </Button>
 
-            <Typhography
-              variant="t2"
-              className="text-muted-foreground text-center"
-            >
-              Your NFT will be saved to your wallet with a random cultural
-              design
+            <Typhography variant="t2" className="text-muted-foreground text-center">
+              Your NFT will be saved to your wallet with a random cultural design
             </Typhography>
           </>
         )}

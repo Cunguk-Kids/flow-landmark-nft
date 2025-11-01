@@ -15,6 +15,7 @@ import { DynamicRadiusMarkers } from './components/DynamicRadiusMarkers';
 import { twMerge } from 'tailwind-merge';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import MapZoomInfo from './components/MapZoomInfo';
+import MyListNft from './components/MyListNft';
 
 async function getCurrentLocation() {
   return new Promise<GeolocationPosition>((resolve, reject) => {
@@ -130,6 +131,10 @@ const SandboxMap: React.FC = () => {
         <TooltipContent side="left" className="text-xs font-medium">
           Show all radius <br /> (available at zoom level 10)
         </TooltipContent>
+
+        <div className="absolute top-24 left-2 z-40">
+          <MyListNft />
+        </div>
       </Tooltip>
     </div>
   );
