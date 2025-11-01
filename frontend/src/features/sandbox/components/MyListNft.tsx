@@ -12,27 +12,58 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ImageOff, Gem, Image, X, LucideLogIn } from 'lucide-react';
 import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
-import { useNFTList } from '@/hooks';
+import { useNFTList, type NFT } from '@/hooks';
 import { useAccount } from '@/hooks/useAccount';
 import { cleanImageURL } from '@/lib/cleanImageURL';
-import { memo, useMemo, useState } from 'react';
+import { memo, useEffect, useMemo, useState } from 'react';
 import { isEmpty } from 'lodash';
 import { useFlowCurrentUser } from '@onflow/react-sdk';
 import { Typhography } from '@/components/ui/typhography';
 
 function MyListNftComponent() {
   const { data: account } = useAccount();
-  const { data: nfts } = useNFTList({
-    eventId: '',
-    userAddress: account?.address,
-    limit: 10,
-    page: 1,
-  });
-
+  const [pagination, setPagination] = useState({ page: 1, limit: 10 });
+  const [isFetchingMore, setIsFetchingMore] = useState(false);
+  const [nftList, setNftList] = useState<NFT[]>([]);
   const [openImage, setOpenImage] = useState<string | null>(null);
   const { authenticate } = useFlowCurrentUser();
 
-  const nftList = useMemo(() => nfts?.data ?? [], [nfts]);
+  const { data: nfts, refetch } = useNFTList({
+    eventId: '',
+    userAddress: account?.address,
+    limit: pagination.limit,
+    page: pagination.page,
+  });
+
+  useEffect(() => {
+    if (nfts?.data) {
+      setNftList((prev) => {
+        const ids = new Set(prev.map((x) => x.nft_id));
+        const newOnes = nfts.data.filter((x) => !ids.has(x.nft_id));
+        return [...prev, ...newOnes];
+      });
+    }
+  }, [nfts]);
+
+  const handleScroll = async (e: React.UIEvent<HTMLDivElement>) => {
+    const el = e.currentTarget;
+    const isBottom = el.scrollHeight - el.scrollTop <= el.clientHeight + 50;
+
+    if ((isBottom && !isFetchingMore && nfts?.pagination?.totalPages) || 1 > pagination.page) {
+      setIsFetchingMore(true);
+      await new Promise((r) => setTimeout(r, 600));
+      setPagination((p) => ({ ...p, page: p.page + 1 }));
+      setIsFetchingMore(false);
+    }
+  };
+
+  const handleRefresh = async () => {
+    setPagination({ page: 1, limit: 10 });
+    setNftList([]);
+    await refetch();
+  };
+
+  const nftData = useMemo(() => nftList ?? [], [nftList]);
 
   return (
     <div className="pointer-events-auto">
@@ -63,7 +94,7 @@ function MyListNftComponent() {
           </SheetHeader>
 
           {/* NFT List */}
-          <ScrollArea className="h-[calc(100vh-64px)] px-4 py-3 space-y-3">
+          <ScrollArea className="h-[calc(100vh-64px)] px-4 py-3 space-y-3" onScroll={handleScroll}>
             {isEmpty(account?.address) ? (
               <>
                 <Button
@@ -84,18 +115,19 @@ function MyListNftComponent() {
               </>
             ) : (
               <>
-                {nftList.length === 0 ? (
+                {nftData.length === 0 ? (
                   <p className="text-sm text-muted-foreground text-center mt-10">
-                    You don`t own any NFTs yet.
+                    You don’t own any NFTs yet.
                   </p>
                 ) : (
-                  nftList.map((nft) => {
-                    const imageUrl = `${cleanImageURL(nft.metadata.imageURL)}`;
+                  nftData.map((nft) => {
+                    const imageUrl = cleanImageURL(nft.metadata.imageURL);
 
                     return (
                       <Card
                         key={nft.nft_id}
-                        className="p-3 flex gap-3 items-start hover:bg-accent/40 transition-colors">
+                        className="p-3 flex gap-3 items-start hover:bg-accent/40 transition-colors mb-4">
+                        {/* Dialog Image */}
                         <Dialog
                           open={openImage === imageUrl}
                           onOpenChange={(open) => setOpenImage(open ? imageUrl : null)}>
@@ -105,7 +137,6 @@ function MyListNftComponent() {
                                 src={imageUrl}
                                 alt={nft.metadata.title}
                                 className="w-20 h-20 object-cover rounded-md border cursor-pointer hover:opacity-80"
-                                // onError={(e) => (e.currentTarget.src = '/placeholder.jpg')}
                               />
                             ) : (
                               <div className="w-20 h-20 flex items-center justify-center border rounded-md bg-muted">
@@ -123,6 +154,7 @@ function MyListNftComponent() {
                           </DialogContent>
                         </Dialog>
 
+                        {/* NFT Info */}
                         <div className="flex-1 space-y-1">
                           <div className="flex items-center justify-between">
                             <h3 className="text-sm font-semibold line-clamp-1">
@@ -149,14 +181,20 @@ function MyListNftComponent() {
                     );
                   })
                 )}
+
+                {isFetchingMore && (
+                  <div className="flex justify-center py-4 text-xs text-muted-foreground">
+                    Loading more NFTs...
+                  </div>
+                )}
               </>
             )}
           </ScrollArea>
 
           {/* Footer */}
           <div className="sticky bottom-0 bg-background z-10 py-2 flex justify-between items-center px-4 border-t border-border">
-            <span className="text-sm text-muted-foreground">Total NFTs: {nftList.length}</span>
-            <Button size="sm" variant="outline">
+            <span className="text-sm text-muted-foreground">Total NFTs: {nftData.length}</span>
+            <Button size="sm" variant="outline" onClick={handleRefresh}>
               Refresh
             </Button>
           </div>
