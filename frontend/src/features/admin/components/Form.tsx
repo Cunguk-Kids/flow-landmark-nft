@@ -13,6 +13,14 @@ import { Calendar } from '@/components/ui/calendar';
 import BackButton from '@/components/BackButton';
 import type { Event } from '@/types/api';
 import { useRouter } from '@tanstack/react-router';
+import { usePartnerList } from '@/hooks';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 export interface EventPayload {
   brand: string;
@@ -39,7 +47,12 @@ export default function EventFormPage({ event, handleSubmit }: EventFormPageProp
   const [openEndPicker, setOpenEndPicker] = useState(false);
   const [editingEvent, setEditingEvent] = useState<typeof event | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [brandPagination, setBrandPagination] = useState({
+    limit: 10,
+    page: 1,
+  });
 
+  const { data: partnerBrand } = usePartnerList(brandPagination);
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
@@ -197,11 +210,41 @@ export default function EventFormPage({ event, handleSubmit }: EventFormPageProp
           {/* Brand */}
           <Field>
             <Label>Event Brand</Label>
-            <Input
+            <Select
               value={formData.brand}
-              onChange={(e) => setFormData({ ...formData, brand: e.target.value })}
-              placeholder="Enter event brand"
-            />
+              onValueChange={(value) => setFormData((prev) => ({ ...prev, brand: value }))}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select Brand" />
+              </SelectTrigger>
+
+              <SelectContent
+                className="max-h-60 overflow-y-auto"
+                onScrollCapture={(e) => {
+                  const el = e.currentTarget;
+                  const isBottom = el.scrollHeight - el.scrollTop <= el.clientHeight + 5;
+                  if (
+                    (isBottom && partnerBrand?.pagination?.totalItems) ||
+                    0 >= brandPagination.limit
+                  ) {
+                    setBrandPagination((old) => ({
+                      ...old,
+                      page: old.page + 1,
+                    }));
+                  }
+                }}>
+                {partnerBrand?.data?.map((brand) => (
+                  <SelectItem key={brand.address} value={brand.address}>
+                    {brand.name?.replace(/^"|"$/g, '')}
+                  </SelectItem>
+                ))}
+
+                {!partnerBrand?.data?.length && (
+                  <div className="text-center text-sm text-muted-foreground py-2">
+                    No brand found
+                  </div>
+                )}
+              </SelectContent>
+            </Select>
           </Field>
 
           {/* Title */}
