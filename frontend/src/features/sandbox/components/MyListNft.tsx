@@ -15,55 +15,45 @@ import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
 import { useNFTList, type NFT } from '@/hooks';
 import { useAccount } from '@/hooks/useAccount';
 import { cleanImageURL } from '@/lib/cleanImageURL';
-import { memo, useEffect, useMemo, useState } from 'react';
+import { memo, useMemo, useState } from 'react';
 import { isEmpty } from 'lodash';
 import { useFlowCurrentUser } from '@onflow/react-sdk';
 import { Typhography } from '@/components/ui/typhography';
 
 function MyListNftComponent() {
   const { data: account } = useAccount();
-  const [pagination, setPagination] = useState({ page: 1, limit: 10 });
-  const [isFetchingMore, setIsFetchingMore] = useState(false);
-  const [nftList, setNftList] = useState<NFT[]>([]);
-  const [openImage, setOpenImage] = useState<string | null>(null);
   const { authenticate } = useFlowCurrentUser();
 
+  const [pagination, setPagination] = useState({ page: 1, limit: 10 });
+  const [openImage, setOpenImage] = useState<string | null>(null);
+
   const { data: nfts, refetch } = useNFTList({
-    eventId: '',
     userAddress: account?.address,
     limit: pagination.limit,
     page: pagination.page,
   });
 
-  useEffect(() => {
-    if (nfts?.data) {
-      setNftList((prev) => {
-        const ids = new Set(prev.map((x) => x.nft_id));
-        const newOnes = nfts.data.filter((x) => !ids.has(x.nft_id));
-        return [...prev, ...newOnes];
-      });
-    }
-  }, [nfts]);
+  const nftList = useMemo(() => {
+    if (!nfts?.data) return [];
+    const allPages: NFT[] = [];
 
-  const handleScroll = async (e: React.UIEvent<HTMLDivElement>) => {
+    allPages.push(...nfts.data);
+    return allPages;
+  }, [nfts?.data, pagination.page]);
+
+  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
     const el = e.currentTarget;
     const isBottom = el.scrollHeight - el.scrollTop <= el.clientHeight + 50;
 
-    if ((isBottom && !isFetchingMore && nfts?.pagination?.totalPages) || 1 > pagination.page) {
-      setIsFetchingMore(true);
-      await new Promise((r) => setTimeout(r, 600));
+    if (isBottom && nfts?.pagination?.totalPages && pagination.page < nfts.pagination.totalPages) {
       setPagination((p) => ({ ...p, page: p.page + 1 }));
-      setIsFetchingMore(false);
     }
   };
 
   const handleRefresh = async () => {
     setPagination({ page: 1, limit: 10 });
-    setNftList([]);
     await refetch();
   };
-
-  const nftData = useMemo(() => nftList ?? [], [nftList]);
 
   return (
     <div className="pointer-events-auto">
@@ -96,104 +86,88 @@ function MyListNftComponent() {
           {/* NFT List */}
           <ScrollArea className="h-[calc(100vh-64px)] px-4 py-3 space-y-3" onScroll={handleScroll}>
             {isEmpty(account?.address) ? (
-              <>
-                <Button
-                  className="w-full"
-                  onClick={() => {
-                    authenticate().then((x) => console.log(x));
-                    requestAnimationFrame(() => {
-                      const frame = document.querySelector(
-                        '#FCL_IFRAME',
-                      ) as HTMLIFrameElement | null;
-                      if (frame) frame.style.pointerEvents = 'auto';
-                    });
-                  }}
-                  variant="default">
-                  <LucideLogIn />
-                  <Typhography>Connect Wallet</Typhography>
-                </Button>
-              </>
+              <Button
+                className="w-full"
+                onClick={() => {
+                  authenticate().then((x) => console.log(x));
+                  requestAnimationFrame(() => {
+                    const frame = document.querySelector('#FCL_IFRAME') as HTMLIFrameElement | null;
+                    if (frame) frame.style.pointerEvents = 'auto';
+                  });
+                }}
+                variant="default">
+                <LucideLogIn />
+                <Typhography>Connect Wallet</Typhography>
+              </Button>
+            ) : nftList.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center mt-10">
+                You don’t own any NFTs yet.
+              </p>
             ) : (
-              <>
-                {nftData.length === 0 ? (
-                  <p className="text-sm text-muted-foreground text-center mt-10">
-                    You don’t own any NFTs yet.
-                  </p>
-                ) : (
-                  nftData.map((nft) => {
-                    const imageUrl = cleanImageURL(nft.metadata.imageURL);
-
-                    return (
-                      <Card
-                        key={nft.nft_id}
-                        className="p-3 flex gap-3 items-start hover:bg-accent/40 transition-colors mb-4">
-                        {/* Dialog Image */}
-                        <Dialog
-                          open={openImage === imageUrl}
-                          onOpenChange={(open) => setOpenImage(open ? imageUrl : null)}>
-                          <DialogTrigger asChild>
-                            {nft.metadata.imageURL ? (
-                              <img
-                                src={imageUrl}
-                                alt={nft.metadata.title}
-                                className="w-20 h-20 object-cover rounded-md border cursor-pointer hover:opacity-80"
-                              />
-                            ) : (
-                              <div className="w-20 h-20 flex items-center justify-center border rounded-md bg-muted">
-                                <ImageOff className="text-muted-foreground w-5 h-5" />
-                              </div>
-                            )}
-                          </DialogTrigger>
-
-                          <DialogContent className="max-w-3xl bg-transparent border-none shadow-none p-0 flex justify-center items-center">
-                            <img
-                              src={imageUrl}
-                              alt={nft.metadata.title}
-                              className="max-h-[80vh] max-w-full rounded-lg shadow-xl"
-                            />
-                          </DialogContent>
-                        </Dialog>
-
-                        {/* NFT Info */}
-                        <div className="flex-1 space-y-1">
-                          <div className="flex items-center justify-between">
-                            <h3 className="text-sm font-semibold line-clamp-1">
-                              {nft.metadata.title || 'Untitled NFT'}
-                            </h3>
-                            <Badge variant="outline" className="capitalize">
-                              <Gem className="w-3 h-3 mr-1" />
-                              {nft.rarity || 'common'}
-                            </Badge>
+              nftList.map((nft) => {
+                const imageUrl = cleanImageURL(nft.metadata.imageURL);
+                return (
+                  <Card
+                    key={nft.nft_id}
+                    className="p-3 flex gap-3 items-start hover:bg-accent/40 transition-colors mb-4">
+                    {/* Dialog Image */}
+                    <Dialog
+                      open={openImage === imageUrl}
+                      onOpenChange={(open) => setOpenImage(open ? imageUrl : null)}>
+                      <DialogTrigger asChild>
+                        {nft.metadata.imageURL ? (
+                          <img
+                            src={imageUrl}
+                            alt={nft.metadata.title}
+                            className="w-20 h-20 object-cover rounded-md border cursor-pointer hover:opacity-80"
+                          />
+                        ) : (
+                          <div className="w-20 h-20 flex items-center justify-center border rounded-md bg-muted">
+                            <ImageOff className="text-muted-foreground w-5 h-5" />
                           </div>
+                        )}
+                      </DialogTrigger>
 
-                          <p className="text-xs text-muted-foreground line-clamp-2">
-                            {nft.metadata.description || 'No description available'}
-                          </p>
+                      <DialogContent className="max-w-3xl bg-transparent border-none shadow-none p-0 flex justify-center items-center">
+                        <img
+                          src={imageUrl}
+                          alt={nft.metadata.title}
+                          className="max-h-[80vh] max-w-full rounded-lg shadow-xl"
+                        />
+                      </DialogContent>
+                    </Dialog>
 
-                          {nft.edges?.event?.eventName && (
-                            <p className="text-xs text-muted-foreground mt-1">
-                              Event:{' '}
-                              <span className="font-medium">{nft.edges.event.eventName}</span>
-                            </p>
-                          )}
-                        </div>
-                      </Card>
-                    );
-                  })
-                )}
+                    {/* NFT Info */}
+                    <div className="flex-1 space-y-1">
+                      <div className="flex items-center justify-between">
+                        <h3 className="text-sm font-semibold line-clamp-1">
+                          {nft.metadata.title || 'Untitled NFT'}
+                        </h3>
+                        <Badge variant="outline" className="capitalize">
+                          <Gem className="w-3 h-3 mr-1" />
+                          {nft.rarity || 'common'}
+                        </Badge>
+                      </div>
 
-                {isFetchingMore && (
-                  <div className="flex justify-center py-4 text-xs text-muted-foreground">
-                    Loading more NFTs...
-                  </div>
-                )}
-              </>
+                      <p className="text-xs text-muted-foreground line-clamp-2">
+                        {nft.metadata.description || 'No description available'}
+                      </p>
+
+                      {nft.edges?.event?.eventName && (
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Event: <span className="font-medium">{nft.edges.event.eventName}</span>
+                        </p>
+                      )}
+                    </div>
+                  </Card>
+                );
+              })
             )}
           </ScrollArea>
 
           {/* Footer */}
           <div className="sticky bottom-0 bg-background z-10 py-2 flex justify-between items-center px-4 border-t border-border">
-            <span className="text-sm text-muted-foreground">Total NFTs: {nftData.length}</span>
+            <span className="text-sm text-muted-foreground">Total NFTs: {nftList.length}</span>
             <Button size="sm" variant="outline" onClick={handleRefresh}>
               Refresh
             </Button>
