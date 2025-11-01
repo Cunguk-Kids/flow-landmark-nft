@@ -1,11 +1,11 @@
-import { useState } from "react";
-import { useEventList, formatEvent } from "@/hooks";
-import { useMediaQuery } from "@/hooks/useMediaQuery";
-import { Link } from "@tanstack/react-router";
-import { Typhography } from "./ui/typhography";
-import { Button } from "./ui/button";
-import { Badge } from "./ui/badge";
-import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
+import { useState } from 'react';
+import { useEventList, formatEvent } from '@/hooks';
+import { useMediaQuery } from '@/hooks/useMediaQuery';
+import { Link } from '@tanstack/react-router';
+import { Typhography } from './ui/typhography';
+import { Button } from './ui/button';
+import { Badge } from './ui/badge';
+import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
 import {
   Drawer,
   DrawerContent,
@@ -13,10 +13,10 @@ import {
   DrawerHeader,
   DrawerTitle,
   DrawerDescription,
-} from "./ui/drawer";
-import { Calendar, MapPin, Users, LucidePartyPopper } from "lucide-react";
-import { formatDateTime, cn } from "@/lib/utils";
-import { store } from "@/stores";
+} from './ui/drawer';
+import { Calendar, MapPin, Users, LucidePartyPopper } from 'lucide-react';
+import { formatDateTime, cn } from '@/lib/utils';
+import { store } from '@/stores';
 
 // Shared content component
 const EventListContent = ({ onClose }: { onClose: () => void }) => {
@@ -46,8 +46,7 @@ const EventListContent = ({ onClose }: { onClose: () => void }) => {
             key={event.id}
             to="/events/details/$eventId"
             params={{ eventId: event.id.toString() }}
-            className="block dark"
-          >
+            className="block dark">
             <div className="bg-card hover:bg-accent transition-colors rounded-lg border border-border overflow-hidden cursor-pointer">
               {/* Event Image */}
               <div className="relative h-32 overflow-hidden">
@@ -57,11 +56,7 @@ const EventListContent = ({ onClose }: { onClose: () => void }) => {
                   className="w-full h-full object-cover"
                 />
                 <div className="absolute top-2 right-2">
-                  <Badge
-                    variant={
-                      event.statusLabel === "Active" ? "default" : "secondary"
-                    }
-                  >
+                  <Badge variant={event.statusLabel === 'Active' ? 'default' : 'secondary'}>
                     <Typhography variant="t3">{event.statusLabel}</Typhography>
                   </Badge>
                 </div>
@@ -69,10 +64,7 @@ const EventListContent = ({ onClose }: { onClose: () => void }) => {
 
               {/* Event Details */}
               <div className="p-3 space-y-2">
-                <Typhography
-                  variant="lg"
-                  className="font-semibold line-clamp-1"
-                >
+                <Typhography variant="lg" className="font-semibold line-clamp-1">
                   {event.eventName}
                 </Typhography>
 
@@ -80,25 +72,22 @@ const EventListContent = ({ onClose }: { onClose: () => void }) => {
                   <div className="flex items-center gap-2 text-muted-foreground">
                     <Calendar size={14} />
                     <Typhography variant="t2">
-                      {formatDateTime(
-                        event.startDateTime.toISOString(),
-                        "date"
-                      )}
+                      {formatDateTime(event.startDateTime.toISOString(), 'date')}
                     </Typhography>
                   </div>
 
                   <div className="flex items-center gap-2 text-muted-foreground">
                     <MapPin size={14} />
                     <Typhography variant="t2" className="line-clamp-1">
-                      {event.partner?.name || "Unknown Location"}
+                      {event.partner?.name || 'Unknown Location'}
                     </Typhography>
                   </div>
 
                   <div className="flex items-center gap-2 text-muted-foreground">
                     <Users size={14} />
                     <Typhography variant="t2">
-                      {event.participantCount}/{event.quota}{" "}
-                      {event.isFull ? "(Full)" : "spots"}
+                      {event?.participantCount || 0}/{event.quota}{' '}
+                      {event.isFull ? '(Full)' : 'spots'}
                     </Typhography>
                   </div>
                 </div>
@@ -107,18 +96,15 @@ const EventListContent = ({ onClose }: { onClose: () => void }) => {
                   <Button
                     size="sm"
                     variant={
-                      event.statusLabel === "Active" && !event.isFull
-                        ? "default"
-                        : "secondary"
+                      event.statusLabel === 'Active' && !event.isFull ? 'default' : 'secondary'
                     }
-                    disabled={event.statusLabel !== "Active" || event.isFull}
-                    className="flex-1"
-                  >
+                    disabled={event.statusLabel !== 'Active' || event.isFull}
+                    className="flex-1">
                     <Typhography variant="t2">
                       {event.isFull
-                        ? "Full"
-                        : event.statusLabel === "Active"
-                          ? "Register"
+                        ? 'Full'
+                        : event.statusLabel === 'Active'
+                          ? 'Register'
                           : event.statusLabel}
                     </Typhography>
                   </Button>
@@ -134,8 +120,7 @@ const EventListContent = ({ onClose }: { onClose: () => void }) => {
                         essential: true,
                       });
                       onClose();
-                    }}
-                  >
+                    }}>
                     <MapPin size={16} />
                   </Button>
                 </div>
@@ -160,7 +145,7 @@ const EventListContent = ({ onClose }: { onClose: () => void }) => {
 };
 
 const EventListPopup = () => {
-  const isDesktop = useMediaQuery("(min-width: 768px)");
+  const isDesktop = useMediaQuery('(min-width: 768px)');
   const [open, setOpen] = useState(false);
 
   const handleClose = () => setOpen(false);
@@ -179,12 +164,10 @@ const EventListPopup = () => {
           side="bottom"
           align="end"
           sideOffset={12}
-          className={cn(
-            "w-80 md:w-96 h-[calc(100vh-8rem)] p-0 overflow-hidden dark"
-          )}
-        >
+          className={cn('w-80 md:w-96 h-[calc(100vh-8rem)] p-0 overflow-hidden dark')}>
           <div className="h-full flex flex-col">
-            {/* Header */} <div className="p-4 border-b border-border flex flex-col">
+            {/* Header */}{' '}
+            <div className="p-4 border-b border-border flex flex-col">
               <Typhography variant="2xl" className="font-bold">
                 Events Near You
               </Typhography>
@@ -192,7 +175,6 @@ const EventListPopup = () => {
                 Discover cultural moments
               </Typhography>
             </div>
-
             {/* Event List */}
             <div className="flex-1 overflow-y-auto p-4 space-y-3">
               <EventListContent onClose={handleClose} />
