@@ -1,29 +1,23 @@
-import { Link, useLoaderData } from "@tanstack/react-router";
-import { useState } from "react";
-import { formatDateTime } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Typhography } from "@/components/ui/typhography";
-import { Spinner } from "@/components/ui/spinner";
-import {
-  Calendar,
-  MapPin,
-  Users,
-  Clock,
-  LucideCheckCircle,
-} from "lucide-react";
-import { motion } from "motion/react";
-import { formatEvent, useCheckIn } from "@/hooks";
-import { useAccount } from "@/hooks/useAccount";
-import { toast } from "sonner";
+import { Link, useLoaderData } from '@tanstack/react-router';
+import { useState } from 'react';
+import { formatDateTime } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Typhography } from '@/components/ui/typhography';
+import { Spinner } from '@/components/ui/spinner';
+import { Calendar, MapPin, Users, Clock, LucideCheckCircle } from 'lucide-react';
+import { motion } from 'motion/react';
+import { formatEvent, useCheckIn } from '@/hooks';
+import { useAccount } from '@/hooks/useAccount';
+import { toast } from 'sonner';
 
-import Galaxy from "@/components/Galaxy";
-import { PageHeader } from "@/components/PageHeader";
-import { MintNFTSection } from "./MintNFTSection";
+import Galaxy from '@/components/Galaxy';
+import { PageHeader } from '@/components/PageHeader';
+import { MintNFTSection } from './MintNFTSection';
 
 const EventsDetailsPage = () => {
   const { event: rawEvent } = useLoaderData({
-    from: "/events/details/$eventId",
+    from: '/events/details/$eventId',
   });
   const event = rawEvent ? formatEvent(rawEvent) : null;
   const { data: accountData } = useAccount();
@@ -40,15 +34,13 @@ const EventsDetailsPage = () => {
     );
 
   // Check if current user is registered for this event
-  const userParticipant = event.participants.find(
-    (p) => p.userAddress === accountData?.address
-  );
+  const userParticipant = event.participants.find((p) => p.userAddress === accountData?.address);
   const isUserRegistered = !!userParticipant;
   const isUserCheckedIn = userParticipant?.isCheckedIn || isCheckInSuccess;
 
   const handleCheckIn = () => {
     if (!accountData?.address) {
-      toast.error("Please connect your wallet first!");
+      toast.error('Please connect your wallet first!');
       return;
     }
 
@@ -60,15 +52,13 @@ const EventsDetailsPage = () => {
       },
       {
         onSuccess: () => {
-          toast.success("Checked in successfully!");
+          toast.success('Checked in successfully!');
           setIsCheckInSuccess(true);
         },
         onError: (error) => {
-          toast.error(
-            error instanceof Error ? error.message : "Check-in failed"
-          );
+          toast.error(error instanceof Error ? error.message : 'Check-in failed');
         },
-      }
+      },
     );
   };
 
@@ -76,8 +66,7 @@ const EventsDetailsPage = () => {
     <motion.div
       animate={{ opacity: 1 }}
       initial={{ opacity: 0 }}
-      className="min-h-screen bg-background relative isolate"
-    >
+      className="min-h-screen bg-background relative isolate">
       <div className="fixed inset-0 -z-1">
         <Galaxy />
       </div>
@@ -109,28 +98,19 @@ const EventsDetailsPage = () => {
                   <div className="flex items-center gap-2 text-sm">
                     <Calendar size={16} />
                     <Typhography variant="t1">
-                      {formatDateTime(
-                        event.startDateTime.toISOString(),
-                        "date"
-                      )}
+                      {formatDateTime(event.startDateTime.toISOString(), 'date')}
                     </Typhography>
                   </div>
 
                   <div className="flex items-center gap-2 text-sm">
                     <MapPin size={16} />
-                    <Typhography variant="t1">
-                      {event.partner?.name || "Location TBA"}
-                    </Typhography>
+                    <Typhography variant="t1">{event.partner?.name || 'Location TBA'}</Typhography>
                   </div>
                 </div>
 
                 {/* Status badge */}
                 <div className="absolute top-4 right-4">
-                  <Badge
-                    variant={
-                      event.statusLabel === "Active" ? "default" : "secondary"
-                    }
-                  >
+                  <Badge variant={event.statusLabel === 'Active' ? 'default' : 'secondary'}>
                     <Typhography variant="t2">{event.statusLabel}</Typhography>
                   </Badge>
                 </div>
@@ -139,18 +119,12 @@ const EventsDetailsPage = () => {
 
             {/* Hosted By Section */}
             <div className="bg-background/10 backdrop-blur-lg border border-border rounded-xl p-6 space-y-4">
-              <Typhography
-                variant="lg"
-                className="font-semibold text-muted-foreground"
-              >
+              <Typhography variant="lg" className="font-semibold text-muted-foreground">
                 Hosted By
               </Typhography>
 
               {event.partner && (
-                <Link
-                  to="/partners/details/$address"
-                  params={{ address: event.partner.address }}
-                >
+                <Link to="/partners/details/$address" params={{ address: event.partner.address }}>
                   <div className="flex items-center gap-3 mt-2 cursor-pointer hover:bg-background/10 rounded-lg p-2 -m-2 transition-colors">
                     <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary/20 to-purple-500/20 flex items-center justify-center">
                       {event.partner.image ? (
@@ -169,10 +143,7 @@ const EventsDetailsPage = () => {
                       <Typhography variant="lg" className="font-semibold">
                         {event.partner.name}
                       </Typhography>
-                      <Typhography
-                        variant="t2"
-                        className="text-muted-foreground line-clamp-1"
-                      >
+                      <Typhography variant="t2" className="text-muted-foreground line-clamp-1">
                         {event.partner.description}
                       </Typhography>
                     </div>
@@ -195,9 +166,7 @@ const EventsDetailsPage = () => {
                   {/* Show first 5 participants as avatars */}
                   <div className="flex -space-x-2">
                     {event.participants?.slice(0, 5).map((participant) => {
-                      const accountData = useAccount.fetch(
-                        participant.userAddress
-                      );
+                      const accountData = useAccount.fetch(participant.userAddress);
                       return (
                         <img
                           key={participant.id}
@@ -209,10 +178,7 @@ const EventsDetailsPage = () => {
                     })}
                   </div>
                   {event.participantCount > 5 && (
-                    <Typhography
-                      variant="t2"
-                      className="text-muted-foreground ml-2"
-                    >
+                    <Typhography variant="t2" className="text-muted-foreground ml-2">
                       and {event.participantCount - 5} others
                     </Typhography>
                   )}
@@ -234,33 +200,20 @@ const EventsDetailsPage = () => {
             <div className="bg-background/10 backdrop-blur-lg border border-border rounded-xl p-6 space-y-4">
               <div className="flex items-start gap-4">
                 <div className="flex flex-col items-center justify-center bg-primary/10 backdrop-blur-sm rounded-lg p-3 min-w-[60px]">
-                  <Typhography
-                    variant="t1"
-                    className="text-primary font-semibold uppercase"
-                  >
-                    {
-                      formatDateTime(
-                        event.startDateTime.toISOString(),
-                        "date"
-                      ).split(" ")[0]
-                    }
+                  <Typhography variant="t1" className="text-primary font-semibold uppercase">
+                    {formatDateTime(event.startDateTime.toISOString(), 'date').split(' ')[0]}
                   </Typhography>
                   <Typhography variant="2xl" className="text-primary font-bold">
-                    {
-                      formatDateTime(
-                        event.startDateTime.toISOString(),
-                        "date"
-                      ).split(" ")[1]
-                    }
+                    {formatDateTime(event.startDateTime.toISOString(), 'date').split(' ')[1]}
                   </Typhography>
                 </div>
                 <div className="flex flex-col">
                   <Typhography variant="lg" className="font-semibold mb-1">
-                    {formatDateTime(event.startDateTime.toISOString(), "date")}
+                    {formatDateTime(event.startDateTime.toISOString(), 'date')}
                   </Typhography>
                   <Typhography variant="t1" className="text-muted-foreground">
-                    {formatDateTime(event.startDateTime.toISOString(), "time")}{" "}
-                    - {formatDateTime(event.endDateTime.toISOString(), "time")}
+                    {formatDateTime(event.startDateTime.toISOString(), 'time')} -{' '}
+                    {formatDateTime(event.endDateTime.toISOString(), 'time')}
                   </Typhography>
                 </div>
               </div>
@@ -285,22 +238,13 @@ const EventsDetailsPage = () => {
                   <MapPin className="text-white drop-shadow-lg" size={20} />
                 </div>
                 <div className="flex flex-col text-white drop-shadow-lg">
-                  <Typhography
-                    variant="lg"
-                    className="font-semibold mb-1 drop-shadow-md"
-                  >
+                  <Typhography variant="lg" className="font-semibold mb-1 drop-shadow-md">
                     Location
                   </Typhography>
-                  <Typhography
-                    variant="t1"
-                    className="font-medium drop-shadow-md"
-                  >
-                    {event.partner?.name || "TBA"}
+                  <Typhography variant="t1" className="font-medium drop-shadow-md">
+                    {event.partner?.name || 'TBA'}
                   </Typhography>
-                  <Typhography
-                    variant="t2"
-                    className="opacity-90 mt-1 drop-shadow-md"
-                  >
+                  <Typhography variant="t2" className="opacity-90 mt-1 drop-shadow-md">
                     Within {event.radius}m radius
                   </Typhography>
                 </div>
@@ -313,7 +257,7 @@ const EventsDetailsPage = () => {
                 Registration
               </Typhography>
 
-              {event.statusLabel === "Pending" && (
+              {event.statusLabel === 'Pending' && (
                 <div className="bg-muted/30 backdrop-blur-sm rounded-lg p-4 flex items-center gap-3">
                   <Clock className="text-muted-foreground" size={20} />
                   <div className="flex flex-col">
@@ -327,7 +271,7 @@ const EventsDetailsPage = () => {
                 </div>
               )}
 
-              {event.statusLabel === "Ended" && (
+              {event.statusLabel === 'Ended' && (
                 <div className="bg-muted/30 backdrop-blur-sm rounded-lg p-4 flex items-center gap-3">
                   <Calendar className="text-muted-foreground" size={20} />
                   <div>
@@ -356,30 +300,23 @@ const EventsDetailsPage = () => {
               )}
 
               {/* Show different messages based on user state */}
-              {!isUserRegistered &&
-                event.statusLabel === "Active" &&
-                !event.isFull && (
-                  <Typhography variant="t1" className="text-muted-foreground">
-                    Welcome! To join the event, please register below.
-                  </Typhography>
-                )}
+              {!isUserRegistered && event.statusLabel === 'Active' && !event.isFull && (
+                <Typhography variant="t1" className="text-muted-foreground">
+                  Welcome! To join the event, please register below.
+                </Typhography>
+              )}
 
-              {isUserRegistered &&
-                !isUserCheckedIn &&
-                event.statusLabel === "Active" && (
-                  <Typhography variant="t1" className="text-muted-foreground">
-                    You're registered! Check in to confirm your attendance.
-                  </Typhography>
-                )}
+              {isUserRegistered && !isUserCheckedIn && event.statusLabel === 'Active' && (
+                <Typhography variant="t1" className="text-muted-foreground">
+                  You're registered! Check in to confirm your attendance.
+                </Typhography>
+              )}
 
               {isUserCheckedIn && (
                 <div className="bg-primary/10 backdrop-blur-sm rounded-lg p-4 flex items-center gap-3">
                   <LucideCheckCircle className="text-primary" size={20} />
                   <div>
-                    <Typhography
-                      variant="t1"
-                      className="font-semibold text-primary"
-                    >
+                    <Typhography variant="t1" className="font-semibold text-primary">
                       Checked In
                     </Typhography>
                     <Typhography variant="t2" className="text-muted-foreground">
@@ -394,34 +331,27 @@ const EventsDetailsPage = () => {
                 <Button
                   asChild
                   size="lg"
-                  disabled={event.statusLabel !== "Active" || event.isFull}
+                  disabled={event.statusLabel !== 'Active' || event.isFull}
                   variant={
-                    event.statusLabel === "Active" && !event.isFull
-                      ? "default"
-                      : "secondary"
+                    event.statusLabel === 'Active' && !event.isFull ? 'default' : 'secondary'
                   }
-                  className="w-full font-semibold"
-                >
-                  <Link
-                    to="/events/form/$eventId"
-                    params={{ eventId: event.id.toString() }}
-                  >
+                  className="w-full font-semibold">
+                  <Link to="/events/form/$eventId" params={{ eventId: event.id.toString() }}>
                     <Typhography variant="lg">
                       {event.isFull
-                        ? "Event Full"
-                        : event.statusLabel === "Active"
-                          ? "Request to Join"
+                        ? 'Event Full'
+                        : event.statusLabel === 'Active'
+                          ? 'Request to Join'
                           : event.statusLabel}
                     </Typhography>
                   </Link>
                 </Button>
-              ) : !isUserCheckedIn && event.statusLabel === "Active" ? (
+              ) : !isUserCheckedIn && event.statusLabel === 'Active' ? (
                 <Button
                   size="lg"
                   onClick={handleCheckIn}
                   disabled={isCheckingIn}
-                  className="w-full font-semibold"
-                >
+                  className="w-full font-semibold">
                   {isCheckingIn ? (
                     <>
                       <Spinner />
@@ -435,26 +365,14 @@ const EventsDetailsPage = () => {
                   )}
                 </Button>
               ) : isUserCheckedIn ? (
-                <Button
-                  size="lg"
-                  disabled
-                  variant="secondary"
-                  className="w-full font-semibold"
-                >
+                <Button size="lg" disabled variant="secondary" className="w-full font-semibold">
                   <LucideCheckCircle size={20} />
                   <Typhography variant="lg">Checked In</Typhography>
                 </Button>
               ) : (
-                <Button
-                  size="lg"
-                  disabled
-                  variant="secondary"
-                  className="w-full font-semibold"
-                >
+                <Button size="lg" disabled variant="secondary" className="w-full font-semibold">
                   <Typhography variant="lg">
-                    {event.statusLabel === "Pending"
-                      ? "Not Started"
-                      : "Event Ended"}
+                    {event.statusLabel === 'Pending' ? 'Not Started' : 'Event Ended'}
                   </Typhography>
                 </Button>
               )}
@@ -466,15 +384,13 @@ const EventsDetailsPage = () => {
               eventName={event.eventName}
               partnerAddress={event.brandAddress}
               isCheckedIn={isUserCheckedIn}
+              event={event}
             />
 
             {/* Event Stats */}
             <div className="grid grid-cols-2 gap-4">
               <div className="bg-background/10 backdrop-blur-lg border border-border rounded-xl p-4 flex flex-col">
-                <Typhography
-                  variant="t2"
-                  className="text-muted-foreground mb-1"
-                >
+                <Typhography variant="t2" className="text-muted-foreground mb-1">
                   Capacity
                 </Typhography>
                 <Typhography variant="2xl" className="font-bold">
@@ -482,10 +398,7 @@ const EventsDetailsPage = () => {
                 </Typhography>
               </div>
               <div className="bg-background/10 backdrop-blur-lg border border-border rounded-xl p-4 flex flex-col">
-                <Typhography
-                  variant="t2"
-                  className="text-muted-foreground mb-1"
-                >
+                <Typhography variant="t2" className="text-muted-foreground mb-1">
                   Rare NFTs
                 </Typhography>
                 <Typhography variant="2xl" className="font-bold">
@@ -499,10 +412,7 @@ const EventsDetailsPage = () => {
               <Typhography variant="lg" className="font-semibold">
                 About Event
               </Typhography>
-              <Typhography
-                variant="t1"
-                className="text-muted-foreground leading-relaxed"
-              >
+              <Typhography variant="t1" className="text-muted-foreground leading-relaxed">
                 {event.description}
               </Typhography>
             </div>

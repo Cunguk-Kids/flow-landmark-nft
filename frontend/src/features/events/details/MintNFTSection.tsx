@@ -6,14 +6,17 @@ import { toast } from 'sonner';
 import { Sparkles, CheckCircle2, ExternalLink, Shuffle } from 'lucide-react';
 import { useFlowMutate, useFlowTransactionStatus } from '@onflow/react-sdk';
 import { motion } from 'motion/react';
+import { generateImageCard } from '@/lib/imageGeneratorHG';
+import { uploadImage } from '@/lib/uploadCare';
+import type { Event } from '@/types/api';
 
 // Available card images from /public
 const CARD_OPTIONS = [
-  { id: 1, image: '/card-1.png', name: 'Balinese Woman' },
-  { id: 2, image: '/card-2.png', name: 'Candi Borobudur' },
-  { id: 3, image: '/card-3.png', name: 'Javanese Woman' },
-  { id: 4, image: '/card-4.png', name: 'Wayang' },
-  { id: 5, image: '/card-5.png', name: 'Gamelan' },
+  { id: '1', image: '/card-1.png', name: 'Balinese Woman' },
+  { id: '2', image: '/card-2.png', name: 'Candi Borobudur' },
+  { id: '3', image: '/card-3.png', name: 'Javanese Woman' },
+  { id: '4', image: '/card-4.png', name: 'Wayang' },
+  { id: '5', image: '/card-5.png', name: 'Gamelan' },
 ];
 
 interface MintNFTSectionProps {
@@ -21,6 +24,7 @@ interface MintNFTSectionProps {
   eventName: string;
   partnerAddress: string;
   isCheckedIn: boolean;
+  event: Event;
 }
 
 export function MintNFTSection({
@@ -28,6 +32,7 @@ export function MintNFTSection({
   eventName,
   partnerAddress,
   isCheckedIn,
+  event,
 }: MintNFTSectionProps) {
   const [mintedCard, setMintedCard] = useState<(typeof CARD_OPTIONS)[0] | null>(null);
   const [isMinted, setIsMinted] = useState(false);
@@ -99,10 +104,19 @@ export function MintNFTSection({
 
   const handleMint = async () => {
     // Randomly select a card
-    const randomIndex = Math.floor(Math.random() * CARD_OPTIONS.length);
-    const card = CARD_OPTIONS[randomIndex];
+    // const randomIndex = Math.floor(Math.random() * CARD_OPTIONS.length);
+    // const card = CARD_OPTIONS[randomIndex];
+    const toastId = toast.loading('Minting NFT on blockchain...');
 
-    setMintedCard(card);
+    const url = await generateImageCard({
+      brand: event.eventName,
+      description: event.description,
+      count: event.counter,
+    });
+
+    const uploadedData = await uploadImage(url);
+
+    setMintedCard(uploadedData);
 
     try {
       await mutateAsync({
@@ -194,15 +208,14 @@ transaction(
           arg(String(eventId), t.UInt64),
           arg(partnerAddress, t.Address),
           arg('1', t.UInt8), // Rare rarity
-          arg(`${eventName} - ${card.name}`, t.String),
+          arg(`${eventName} - ${uploadedData.name}`, t.String),
           arg(`Cultural NFT moment from ${eventName}`, t.String),
-          arg(card.image, t.String),
+          arg(uploadedData.image, t.String),
           arg(String(Date.now() / 1000), t.UFix64),
         ],
         limit: 999,
       });
 
-      const toastId = toast.loading('Minting NFT on blockchain...');
       setLoadingToastId(toastId);
     } catch (error) {
       console.error('Mint error:', error);

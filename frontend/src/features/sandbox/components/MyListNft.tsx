@@ -90,10 +90,7 @@ function MyListNftComponent() {
                   </p>
                 ) : (
                   nftList.map((nft) => {
-                    const imageUrl = `${import.meta.env.VITE_APP_URL.replace(
-                      /\/$/,
-                      '',
-                    )}/${cleanImageURL(nft.metadata.imageURL)}`;
+                    const imageUrl = `${cleanImageURL(nft.metadata.imageURL)}`;
 
                     return (
                       <Card
@@ -108,7 +105,7 @@ function MyListNftComponent() {
                                 src={imageUrl}
                                 alt={nft.metadata.title}
                                 className="w-20 h-20 object-cover rounded-md border cursor-pointer hover:opacity-80"
-                                onError={(e) => (e.currentTarget.src = '/placeholder.jpg')}
+                                // onError={(e) => (e.currentTarget.src = '/placeholder.jpg')}
                               />
                             ) : (
                               <div className="w-20 h-20 flex items-center justify-center border rounded-md bg-muted">
