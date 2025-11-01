@@ -45,7 +45,7 @@ const EventListContent = ({ onClose }: { onClose: () => void }) => {
           <Link
             key={event.id}
             to="/events/details/$eventId"
-            params={{ eventId: event.id.toString() }}
+            params={{ eventId: event.eventId.toString() }}
             className="block dark">
             <div className="bg-card hover:bg-accent transition-colors rounded-lg border border-border overflow-hidden cursor-pointer">
               {/* Event Image */}

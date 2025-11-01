@@ -394,7 +394,7 @@ const EventsDetailsPage = () => {
                   Capacity
                 </Typhography>
                 <Typhography variant="2xl" className="font-bold">
-                  {event.participantCount} / {event.quota}
+                  {event?.participantCount || 0} / {event.quota}
                 </Typhography>
               </div>
               <div className="bg-background/10 backdrop-blur-lg border border-border rounded-xl p-4 flex flex-col">
