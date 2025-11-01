@@ -23,56 +23,59 @@ import {
   AlertDialogCancel,
 } from '@/components/ui/alert-dialog';
 import { Link } from '@tanstack/react-router';
-import type { EventForm } from './types';
+import { has } from 'lodash';
+import { useEventList } from '@/hooks';
 
 export default function AdminPage() {
-  const [events, setEvents] = useState<EventForm[]>([
-    {
-      image: '',
-      id: '1',
-      title: 'Tech Conference 2025',
-      description: 'Annual technology conference featuring latest innovations',
-      date: undefined,
-      time: '19:00:00',
-      latitude: -6.2088,
-      longitude: 106.8456,
-      capacity: 500,
-      registered: 342,
-      rareNft: 50,
-    },
-    {
-      image: '',
-      id: '2',
-      title: 'Workshop: React Fundamentals',
-      description: 'Hands-on workshop for learning React basics',
-      date: undefined,
-      time: '12:00:00',
-      latitude: -6.1751,
-      longitude: 106.865,
-      capacity: 100,
-      registered: 78,
-      rareNft: 20,
-    },
-  ]);
+  // const [events, setEvents] = useState<EventForm[]>([
+  //   {
+  //     image: '',
+  //     id: '1',
+  //     title: 'Tech Conference 2025',
+  //     description: 'Annual technology conference featuring latest innovations',
+  //     date: undefined,
+  //     time: '19:00:00',
+  //     latitude: -6.2088,
+  //     longitude: 106.8456,
+  //     capacity: 500,
+  //     registered: 342,
+  //     rareNft: 50,
+  //   },
+  //   {
+  //     image: '',
+  //     id: '2',
+  //     title: 'Workshop: React Fundamentals',
+  //     description: 'Hands-on workshop for learning React basics',
+  //     date: undefined,
+  //     time: '12:00:00',
+  //     latitude: -6.1751,
+  //     longitude: 106.865,
+  //     capacity: 100,
+  //     registered: 78,
+  //     rareNft: 20,
+  //   },
+  // ]);
+
+  const { data: events } = useEventList();
+
+  console.log(events, '======== events ==========');
 
   const [alert, setAlert] = useState<{
     type: 'success' | 'error';
     message: string;
   } | null>(null);
 
-  const handleDelete = (id: string) => {
-    setEvents(events.filter((evt) => evt.id !== id));
-    setAlert({ type: 'success', message: 'Event deleted!' });
-    setTimeout(() => setAlert(null), 3000);
+  const handleDelete = (id: number) => {
+    // setEvents(events?.data.filter((evt) => evt.id !== id));
+    setAlert({ type: 'success', message: `${id} Event deleted!` });
+    // setTimeout(() => setAlert(null), 3000);
   };
 
   return (
     <div className="min-h-screen ">
       <div className="container mx-auto p-4 md:p-6 lg:p-8 max-w-7xl">
         <div className="mb-6">
-          <Typhography className="text-3xl font-bold text-gray-900 mb-2">
-            Event Management
-          </Typhography>
+          <Typhography className="text-3xl font-bold  mb-2">Event Management</Typhography>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
@@ -81,7 +84,7 @@ export default function AdminPage() {
               <CardTitle className="text-sm font-medium">Total Events</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{events.length}</div>
+              <div className="text-2xl font-bold">{events?.data.length}</div>
             </CardContent>
           </Card>
           <Card>
@@ -90,7 +93,7 @@ export default function AdminPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {events.reduce((sum, e) => sum + e.capacity, 0)}
+                {events?.data.reduce((sum, e) => sum + e.quota, 0)}
               </div>
             </CardContent>
           </Card>
@@ -100,7 +103,7 @@ export default function AdminPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {events.reduce((sum, e) => sum + e.registered, 0)}
+                {events?.data.reduce((sum, e) => sum + (e.edges?.participants?.length ?? 0), 0)}
               </div>
             </CardContent>
           </Card>
@@ -141,27 +144,27 @@ export default function AdminPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {events.length === 0 ? (
+                  {events?.data.length === 0 ? (
                     <TableRow>
                       <TableCell colSpan={5} className="text-center py-8">
                         <EmptyList />
                       </TableCell>
                     </TableRow>
                   ) : (
-                    events.map((event) => (
+                    events?.data.map((event) => (
                       <TableRow key={event.id}>
                         <TableCell>
                           <div>
-                            <div className="font-medium">{event.title}</div>
+                            <div className="font-medium">{event.eventName}</div>
                             <div className="text-sm line-clamp-1 md:hidden mt-1">
-                              {new Date(event.date).toLocaleDateString()}
+                              {new Date(event.startDate).toLocaleDateString()}
                             </div>
                           </div>
                         </TableCell>
                         <TableCell className="hidden md:table-cell">
                           <div className="flex items-center text-sm">
                             <CalendarDays className="mr-2 h-4 w-4 text-gray-400" />
-                            {new Date(event.date).toLocaleDateString('id-ID')}
+                            {new Date(event.endDate).toLocaleDateString('id-ID')}
                           </div>
                         </TableCell>
                         <TableCell className="hidden lg:table-cell">
@@ -169,7 +172,7 @@ export default function AdminPage() {
                             <MapPin className="mr-2 h-4 w-4 text-gray-400" />
                             <div>
                               <div className="text-xs text-gray-400">
-                                {event.latitude.toFixed(4)}, {event.longitude.toFixed(4)}
+                                {event.lat.toFixed(4)}, {event.long.toFixed(4)}
                               </div>
                             </div>
                           </div>
@@ -177,7 +180,7 @@ export default function AdminPage() {
                         <TableCell className="hidden sm:table-cell">
                           <div className="flex items-center text-sm">
                             <Users className="mr-2 h-4 w-4 text-gray-400" />
-                            {event.registered}/{event.capacity}
+                            {event.edges?.participants?.length ?? 0}/{event.quota}
                           </div>
                         </TableCell>
                         <TableCell className="text-right">
@@ -192,7 +195,7 @@ export default function AdminPage() {
                                 <Button
                                   variant="ghost"
                                   size="sm"
-                                  className="text-red-600 hover:text-red-700 hover:bg-red-50">
+                                  className="text-red-600 hover:text-red-700 hover:bg-red-50 hidden">
                                   <Trash2 className="h-4 w-4" />
                                 </Button>
                               </AlertDialogTrigger>
