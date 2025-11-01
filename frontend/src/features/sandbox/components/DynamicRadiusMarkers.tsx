@@ -11,12 +11,14 @@ import type { MapRef } from 'react-map-gl/maplibre';
 export const DynamicRadiusMarkers = ({
   mapRef,
   eventList,
+  showRadius,
 }: {
   mapRef: MapRef | null;
   eventList: Event[];
+  showRadius?: boolean;
 }) => {
-  const [zoom, setZoom] = useState(5);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
+  const [zoom, setZoom] = useState(5);
 
   const handleZoom = useCallback(() => {
     const currentZoom = mapRef?.getZoom();
@@ -127,7 +129,7 @@ export const DynamicRadiusMarkers = ({
 
           return (
             <React.Fragment key={event.id}>
-              {(selectedEvent?.id === event.id || zoom >= 10) && (
+              {(selectedEvent?.id === event.id || (showRadius && zoom >= 10)) && (
                 <Source id={`radius-${event.id}`} type="geojson" data={circle}>
                   <Layer
                     id={`fill-${event.id}`}

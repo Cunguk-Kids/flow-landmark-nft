@@ -5,13 +5,16 @@ import 'maplibre-gl/dist/maplibre-gl.css';
 import { useQuery } from '@tanstack/react-query';
 import { useStore } from '@tanstack/react-store';
 import { store } from '@/stores';
-import { LocateFixed } from 'lucide-react';
+import { LocateFixed, Radius } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useEventList } from '@/hooks/useEventList';
 // import { LocateFixed, LucideMapPin } from 'lucide-react';
 // import { EventMarkerContent } from './EventMarkerContent';
 // import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { DynamicRadiusMarkers } from './components/DynamicRadiusMarkers';
+import { twMerge } from 'tailwind-merge';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import MapZoomInfo from './components/MapZoomInfo';
 
 async function getCurrentLocation() {
   return new Promise<GeolocationPosition>((resolve, reject) => {
@@ -25,6 +28,7 @@ async function getCurrentLocation() {
 
 const SandboxMap: React.FC = () => {
   const viewport = useStore(store, (x) => x.mapViewState);
+  const [showRadius, setShowRadius] = React.useState(true);
 
   const setViewport = React.useCallback(
     (viewp: typeof viewport) =>
@@ -71,7 +75,11 @@ const SandboxMap: React.FC = () => {
             <div className="bg-primary w-4 h-4 rounded-full border-2 border-white shadow-lg" />
           </Marker>
         )}
-        <DynamicRadiusMarkers mapRef={store.state.ref} eventList={eventList?.data || []} />
+        <DynamicRadiusMarkers
+          showRadius={showRadius}
+          mapRef={store.state.ref}
+          eventList={eventList?.data || []}
+        />
 
         {/* {eventList?.data.map((event) => (
           <Marker key={event.id} latitude={event.lat} longitude={event.long} anchor="bottom">
@@ -92,6 +100,9 @@ const SandboxMap: React.FC = () => {
           </Marker>
         ))} */}
       </Map>
+      <div className="absolute bottom-0 left-2 z-30">
+        <MapZoomInfo mapRef={store.state.ref} />
+      </div>
       {position?.coords && (
         <Button
           onClick={handleCenterToUser}
@@ -101,6 +112,25 @@ const SandboxMap: React.FC = () => {
           <LocateFixed className="w-8 h-8 text-primary" />
         </Button>
       )}
+
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            onClick={() => setShowRadius((old) => !old)}
+            variant="secondary"
+            size="icon"
+            className={twMerge(
+              'rounded-full shadow-lg bg-white hover:bg-gray-100 absolute bottom-24 right-2 cursor-pointer transition-colors',
+              showRadius && 'bg-primary hover:bg-primary/90',
+            )}>
+            <Radius className={twMerge('w-8 h-8 text-primary', showRadius && 'text-white')} />
+          </Button>
+        </TooltipTrigger>
+
+        <TooltipContent side="left" className="text-xs font-medium">
+          Show all radius <br /> (available at zoom level 15)
+        </TooltipContent>
+      </Tooltip>
     </div>
   );
 };
