@@ -13,10 +13,11 @@ import { Route as LandingRouteImport } from './routes/landing'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as TicketsIndexRouteImport } from './routes/tickets/index'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
-import { Route as AdminFormRouteImport } from './routes/admin/form'
+import { Route as AdminFormIndexRouteImport } from './routes/admin/form/index'
 import { Route as PartnersDetailsAddressRouteImport } from './routes/partners/details.$address'
 import { Route as EventsFormEventIdRouteImport } from './routes/events/form.$eventId'
 import { Route as EventsDetailsEventIdRouteImport } from './routes/events/details.$eventId'
+import { Route as AdminFormEventIdRouteImport } from './routes/admin/form/$eventId'
 
 const LandingRoute = LandingRouteImport.update({
   id: '/landing',
@@ -38,9 +39,9 @@ const AdminIndexRoute = AdminIndexRouteImport.update({
   path: '/admin/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AdminFormRoute = AdminFormRouteImport.update({
-  id: '/admin/form',
-  path: '/admin/form',
+const AdminFormIndexRoute = AdminFormIndexRouteImport.update({
+  id: '/admin/form/',
+  path: '/admin/form/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PartnersDetailsAddressRoute = PartnersDetailsAddressRouteImport.update({
@@ -58,80 +59,92 @@ const EventsDetailsEventIdRoute = EventsDetailsEventIdRouteImport.update({
   path: '/events/details/$eventId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminFormEventIdRoute = AdminFormEventIdRouteImport.update({
+  id: '/admin/form/$eventId',
+  path: '/admin/form/$eventId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/landing': typeof LandingRoute
-  '/admin/form': typeof AdminFormRoute
   '/admin': typeof AdminIndexRoute
   '/tickets': typeof TicketsIndexRoute
+  '/admin/form/$eventId': typeof AdminFormEventIdRoute
   '/events/details/$eventId': typeof EventsDetailsEventIdRoute
   '/events/form/$eventId': typeof EventsFormEventIdRoute
   '/partners/details/$address': typeof PartnersDetailsAddressRoute
+  '/admin/form': typeof AdminFormIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/landing': typeof LandingRoute
-  '/admin/form': typeof AdminFormRoute
   '/admin': typeof AdminIndexRoute
   '/tickets': typeof TicketsIndexRoute
+  '/admin/form/$eventId': typeof AdminFormEventIdRoute
   '/events/details/$eventId': typeof EventsDetailsEventIdRoute
   '/events/form/$eventId': typeof EventsFormEventIdRoute
   '/partners/details/$address': typeof PartnersDetailsAddressRoute
+  '/admin/form': typeof AdminFormIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/landing': typeof LandingRoute
-  '/admin/form': typeof AdminFormRoute
   '/admin/': typeof AdminIndexRoute
   '/tickets/': typeof TicketsIndexRoute
+  '/admin/form/$eventId': typeof AdminFormEventIdRoute
   '/events/details/$eventId': typeof EventsDetailsEventIdRoute
   '/events/form/$eventId': typeof EventsFormEventIdRoute
   '/partners/details/$address': typeof PartnersDetailsAddressRoute
+  '/admin/form/': typeof AdminFormIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
     | '/landing'
-    | '/admin/form'
     | '/admin'
     | '/tickets'
+    | '/admin/form/$eventId'
     | '/events/details/$eventId'
     | '/events/form/$eventId'
     | '/partners/details/$address'
+    | '/admin/form'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/landing'
-    | '/admin/form'
     | '/admin'
     | '/tickets'
+    | '/admin/form/$eventId'
     | '/events/details/$eventId'
     | '/events/form/$eventId'
     | '/partners/details/$address'
+    | '/admin/form'
   id:
     | '__root__'
     | '/'
     | '/landing'
-    | '/admin/form'
     | '/admin/'
     | '/tickets/'
+    | '/admin/form/$eventId'
     | '/events/details/$eventId'
     | '/events/form/$eventId'
     | '/partners/details/$address'
+    | '/admin/form/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   LandingRoute: typeof LandingRoute
-  AdminFormRoute: typeof AdminFormRoute
   AdminIndexRoute: typeof AdminIndexRoute
   TicketsIndexRoute: typeof TicketsIndexRoute
+  AdminFormEventIdRoute: typeof AdminFormEventIdRoute
   EventsDetailsEventIdRoute: typeof EventsDetailsEventIdRoute
   EventsFormEventIdRoute: typeof EventsFormEventIdRoute
   PartnersDetailsAddressRoute: typeof PartnersDetailsAddressRoute
+  AdminFormIndexRoute: typeof AdminFormIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -164,11 +177,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/admin/form': {
-      id: '/admin/form'
+    '/admin/form/': {
+      id: '/admin/form/'
       path: '/admin/form'
       fullPath: '/admin/form'
-      preLoaderRoute: typeof AdminFormRouteImport
+      preLoaderRoute: typeof AdminFormIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/partners/details/$address': {
@@ -192,18 +205,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof EventsDetailsEventIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/form/$eventId': {
+      id: '/admin/form/$eventId'
+      path: '/admin/form/$eventId'
+      fullPath: '/admin/form/$eventId'
+      preLoaderRoute: typeof AdminFormEventIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   LandingRoute: LandingRoute,
-  AdminFormRoute: AdminFormRoute,
   AdminIndexRoute: AdminIndexRoute,
   TicketsIndexRoute: TicketsIndexRoute,
+  AdminFormEventIdRoute: AdminFormEventIdRoute,
   EventsDetailsEventIdRoute: EventsDetailsEventIdRoute,
   EventsFormEventIdRoute: EventsFormEventIdRoute,
   PartnersDetailsAddressRoute: PartnersDetailsAddressRoute,
+  AdminFormIndexRoute: AdminFormIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
