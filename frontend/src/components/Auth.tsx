@@ -127,7 +127,7 @@ export default function Auth() {
 
         {/* My Events Section */}
         {data && (
-          <div className="flex-1 mt-6 space-y-4">
+          <div className="flex-1 mt-6 space-y-4 px-2">
             <div className="flex items-center justify-between">
               <Typhography variant="lg" className="font-semibold">
                 My Events
