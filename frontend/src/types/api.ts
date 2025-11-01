@@ -199,6 +199,7 @@ export interface NFTMetadata {
   description: string;
   category: number;
   imageUrl: string;
+  imageURL: string;
   thumbnailUrl: string;
   weather: string;
   temperature: string;

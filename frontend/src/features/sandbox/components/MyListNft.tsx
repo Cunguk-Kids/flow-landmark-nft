@@ -7,6 +7,7 @@ import { ImageOff, Gem } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useNFTList } from '@/hooks';
 import { useAccount } from '@/hooks/useAccount';
+import { cleanImageURL } from '@/lib/cleanImageURL';
 
 export default function MyListNft() {
   const { data } = useAccount();
@@ -39,16 +40,16 @@ export default function MyListNft() {
           <ScrollArea className="h-[calc(100vh-64px)] px-4 py-3 space-y-3">
             {nfts?.data.length === 0 ? (
               <p className="text-sm text-muted-foreground text-center mt-10">
-                You don’t own any NFTs yet.
+                You don`t own any NFTs yet.
               </p>
             ) : (
               nfts?.data.map((nft) => (
                 <Card
                   key={nft.nft_id}
                   className="p-3 flex gap-3 items-start hover:bg-accent/40 transition-colors">
-                  {nft.metadata.imageUrl ? (
+                  {nft.metadata.imageURL ? (
                     <img
-                      src={nft.metadata.imageUrl}
+                      src={`${import.meta.env.VITE_APP_URL.replace(/\/$/, '')}/${cleanImageURL(nft.metadata.imageURL)}`}
                       alt={nft.metadata.title}
                       className="w-20 h-20 object-cover rounded-md border"
                       onError={(e) => (e.currentTarget.src = '/placeholder.jpg')}
