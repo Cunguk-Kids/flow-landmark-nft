@@ -19,8 +19,8 @@ import (
 // Saya telah menambahkan '0x%s' agar kita bisa menyuntikkan alamat kontrak
 const mintNFTMomentWithEventPassScriptTemplate = `
 import NonFungibleToken from 0x%s
-import NFTMoment from 0x%s
 import MetadataViews from 0x%s
+import NFTMoment from 0x%s
 import EventPass from 0x%s
 
 transaction(
@@ -136,7 +136,7 @@ func MintNFTMomentWithEventPass(
 	// 2. BUAT SKRIP TRANSAKSI
 	// Kita suntikkan alamat minter (yang juga alamat deployer) 2x
 	// 1x untuk 'NFTMoment' dan 1x untuk 'MetadataViews'
-	script := []byte(fmt.Sprintf(mintNFTMomentWithEventPassScriptTemplate, deployerAddress, deployerAddress, deployerAddress, deployerAddress))
+	script := []byte(fmt.Sprintf(mintNFTMomentWithEventPassScriptTemplate, NFTTestnetAddress, NFTTestnetAddress, deployerAddress, deployerAddress))
 
 	// 3. SIAPKAN ARGUMEN (4 Argumen)
 

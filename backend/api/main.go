@@ -6,11 +6,18 @@ import (
 	"log"
 	"os"
 
+	_ "backend/docs"
+
 	"github.com/joho/godotenv"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+	echoSwagger "github.com/swaggo/echo-swagger"
 )
 
+// @title Capt.today API
+// @version 1.0
+// @host localhost:8000
+// @BasePath /
 func main() {
 	err := godotenv.Load()
 	if err != nil {
@@ -34,7 +41,7 @@ func main() {
 	e.Use(middleware.CORS())
 
 	h := &Handler{DB: client}
-
+	e.GET("/swagger/*", echoSwagger.WrapHandler)
 	e.GET("/listings", h.getListings)
 	e.GET("/events", h.getEvents)
 	e.GET("/profiles/:address", h.getUserProfile)
@@ -43,6 +50,7 @@ func main() {
 
 	e.POST("/moment/free", h.freeMintMoment)
 	e.POST("/moment/with-event-pass", h.mintMomentWithEventPass)
+	e.POST("/event/check-in", h.checkInUser)
 
 	log.Println("Server API dimulai di http://localhost:8000")
 	e.Logger.Fatal(e.Start(":8000"))

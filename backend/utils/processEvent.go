@@ -847,8 +847,6 @@ func ListingCompleted(ctx context.Context, ev flow.Event, client *ent.Client) {
 }
 
 func NFTDeposited(ctx context.Context, ev flow.Event, client *ent.Client) {
-	log.Println("Memproses event NonFungibleToken.Deposited...")
-
 	// --- 1. Parsing Event ---
 	var Fields = ev.Value.FieldsMappedByName()
 

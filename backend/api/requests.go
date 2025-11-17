@@ -6,3 +6,8 @@ type MintMomentRequest struct {
 	Description string `json:"description" form:"description" validate:"required"`
 	Thumbnail   string `json:"thumbnail" form:"thumbnail" validate:"required"`
 }
+
+type CheckInRequest struct {
+	UserAddress string `json:"userAddress" form:"userAddress"`
+	EventID     string `json:"eventID"     form:"eventID"`
+}

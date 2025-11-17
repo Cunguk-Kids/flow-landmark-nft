@@ -1,0 +1,644 @@
+basePath: /
+definitions:
+  main.APIResponse:
+    properties:
+      data: {}
+      error:
+        type: string
+      pagination:
+        $ref: '#/definitions/main.Pagination'
+    type: object
+  main.CheckInRequest:
+    properties:
+      eventID:
+        type: string
+      userAddress:
+        type: string
+    type: object
+  main.Pagination:
+    properties:
+      currentPage:
+        type: integer
+      pageSize:
+        type: integer
+      totalItems:
+        type: integer
+      totalPages:
+        type: integer
+    type: object
+  swagdto.CheckInDataResponse:
+    properties:
+      eventID:
+        type: string
+      message:
+        type: string
+      userAddress:
+        type: string
+    type: object
+  swagdto.DTOAccessory:
+    properties:
+      description:
+        type: string
+      edges:
+        allOf:
+        - $ref: '#/definitions/swagdto.DTOAccessoryEdges'
+        description: <-- Menggunakan struct 'edges' bersih
+      id:
+        type: integer
+      name:
+        type: string
+      nft_id:
+        type: integer
+      thumbnail:
+        type: string
+    type: object
+  swagdto.DTOAccessoryEdges:
+    properties:
+      owner:
+        $ref: '#/definitions/swagdto.DTOUser'
+    type: object
+  swagdto.DTOEventPass:
+    properties:
+      edges:
+        $ref: '#/definitions/swagdto.DTOEventPassEdges'
+      id:
+        type: integer
+      is_redeemed:
+        type: boolean
+      pass_id:
+        type: integer
+    type: object
+  swagdto.DTOEventPassEdges:
+    properties:
+      event:
+        $ref: '#/definitions/swagdto.EventResponse'
+      owner:
+        $ref: '#/definitions/swagdto.DTOUser'
+    type: object
+  swagdto.DTOListing:
+    properties:
+      edges:
+        $ref: '#/definitions/swagdto.DTOListingEdges'
+      expiry:
+        type: string
+      id:
+        type: integer
+      listing_id:
+        type: integer
+      payment_vault_type:
+        type: string
+      price:
+        type: number
+    type: object
+  swagdto.DTOListingEdges:
+    properties:
+      nft_accessory:
+        $ref: '#/definitions/swagdto.DTOAccessory'
+      seller:
+        $ref: '#/definitions/swagdto.DTOUser'
+    type: object
+  swagdto.DTOUser:
+    properties:
+      address:
+        type: string
+      id:
+        type: integer
+    type: object
+  swagdto.DTOUserProfile:
+    properties:
+      address:
+        type: string
+      bg_image:
+        type: string
+      bio:
+        type: string
+      edges:
+        allOf:
+        - $ref: '#/definitions/swagdto.DTOUserProfileEdges'
+        description: <-- Menggunakan struct 'edges' bersih
+      highlighted_eventPass_ids:
+        items:
+          type: integer
+        type: array
+      highlighted_moment_id:
+        type: integer
+      id:
+        type: integer
+      nickname:
+        type: string
+      pfp:
+        type: string
+      short_description:
+        type: string
+      socials:
+        additionalProperties:
+          type: string
+        type: object
+    type: object
+  swagdto.DTOUserProfileEdges:
+    properties:
+      accessories:
+        items:
+          $ref: '#/definitions/swagdto.DTOAccessory'
+        type: array
+      event_passes:
+        items:
+          $ref: '#/definitions/swagdto.DTOEventPass'
+        type: array
+      hosted_events:
+        items:
+          $ref: '#/definitions/swagdto.EventResponse'
+        type: array
+      listings:
+        items:
+          $ref: '#/definitions/swagdto.DTOListing'
+        type: array
+      moments:
+        items:
+          $ref: '#/definitions/swagdto.MomentResponse'
+        type: array
+    type: object
+  swagdto.EquippedAccessoryResponse:
+    properties:
+      id:
+        type: integer
+      name:
+        type: string
+      nft_id:
+        type: integer
+      thumbnail:
+        type: string
+    type: object
+  swagdto.EventEdges:
+    properties:
+      host:
+        $ref: '#/definitions/swagdto.HostResponse'
+    type: object
+  swagdto.EventResponse:
+    properties:
+      description:
+        type: string
+      edges:
+        allOf:
+        - $ref: '#/definitions/swagdto.EventEdges'
+        description: <-- Menggunakan struct 'edges' bersih
+      end_date:
+        type: string
+      event_id:
+        type: integer
+      id:
+        type: integer
+      location:
+        type: string
+      name:
+        type: string
+      quota:
+        type: integer
+      start_date:
+        type: string
+      thumbnail:
+        type: string
+    type: object
+  swagdto.GetAccessoriesResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/swagdto.DTOAccessory'
+        type: array
+      pagination:
+        $ref: '#/definitions/swagdto.Pagination'
+    type: object
+  swagdto.GetEventsResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/swagdto.EventResponse'
+        type: array
+      pagination:
+        $ref: '#/definitions/swagdto.Pagination'
+    type: object
+  swagdto.GetListingsResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/swagdto.DTOListing'
+        type: array
+      pagination:
+        $ref: '#/definitions/swagdto.Pagination'
+    type: object
+  swagdto.GetMomentsResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/swagdto.MomentResponse'
+        type: array
+      pagination:
+        $ref: '#/definitions/swagdto.Pagination'
+    type: object
+  swagdto.GetUserProfileResponse:
+    properties:
+      data:
+        allOf:
+        - $ref: '#/definitions/swagdto.DTOUserProfile'
+        description: <-- Sekarang 'data' adalah OBJEK, bukan array
+    type: object
+  swagdto.HostResponse:
+    properties:
+      address:
+        type: string
+      id:
+        type: integer
+    type: object
+  swagdto.MintPassResponse:
+    properties:
+      id:
+        type: integer
+      pass_id:
+        type: integer
+    type: object
+  swagdto.MintResponse:
+    properties:
+      message:
+        example: NFT minted successfully!
+        type: string
+      name:
+        example: Momen Keren
+        type: string
+      recipient:
+        example: "0x1bb6b1e0a5170088"
+        type: string
+      thumbnail:
+        example: ipfs://bafy...
+        type: string
+    type: object
+  swagdto.MomentEdges:
+    properties:
+      equipped_accessories:
+        items:
+          $ref: '#/definitions/swagdto.EquippedAccessoryResponse'
+        type: array
+      minted_with_pass:
+        $ref: '#/definitions/swagdto.MintPassResponse'
+      owner:
+        $ref: '#/definitions/swagdto.OwnerResponse'
+    type: object
+  swagdto.MomentResponse:
+    properties:
+      description:
+        type: string
+      edges:
+        allOf:
+        - $ref: '#/definitions/swagdto.MomentEdges'
+        description: <-- Menggunakan struct 'edges' bersih
+      id:
+        type: integer
+      name:
+        type: string
+      nft_id:
+        type: integer
+      thumbnail:
+        type: string
+    type: object
+  swagdto.OwnerResponse:
+    properties:
+      address:
+        type: string
+      id:
+        type: integer
+    type: object
+  swagdto.Pagination:
+    properties:
+      currentPage:
+        type: integer
+      pageSize:
+        type: integer
+      totalItems:
+        type: integer
+      totalPages:
+        type: integer
+    type: object
+  swagdto.Response404:
+    properties:
+      data:
+        items: {}
+        type: array
+      pagination:
+        $ref: '#/definitions/swagdto.Pagination'
+    type: object
+host: localhost:8000
+info:
+  contact: {}
+  title: Capt.today API
+  version: "1.0"
+paths:
+  /accessories:
+    get:
+      consumes:
+      - application/json
+      description: |-
+        Mengambil daftar NFT Aksesori, mendukung filter berdasarkan pemilik dan pagination.
+        'Eager loading' akan menyertakan data 'owner'.
+      parameters:
+      - description: 'Filter berdasarkan alamat pemilik (misal: 0x...)'
+        in: query
+        name: owner_address
+        type: string
+      - description: 'Nomor Halaman (default: 1)'
+        in: query
+        name: page
+        type: integer
+      - description: 'Jumlah item per halaman (default: 20)'
+        in: query
+        name: pageSize
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Daftar aksesori berhasil diambil
+          schema:
+            $ref: '#/definitions/swagdto.GetAccessoriesResponse'
+        "404":
+          description: 404 Not Found
+          schema:
+            $ref: '#/definitions/swagdto.Response404'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/main.APIResponse'
+      summary: Ambil Daftar NFT Aksesori (Paginated)
+      tags:
+      - Accessories
+  /event/check-in:
+    post:
+      consumes:
+      - application/json
+      - multipart/form-data
+      description: |-
+        Mencatat check-in untuk seorang user di sebuah event. Ini harus dipanggil oleh admin/backend.
+        Menerima 'application/json' ATAU 'multipart/form-data'.
+      parameters:
+      - description: Alamat User dan ID Event
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/main.CheckInRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User berhasil check-in
+          schema:
+            allOf:
+            - $ref: '#/definitions/main.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/swagdto.CheckInDataResponse'
+              type: object
+        "400":
+          description: Input tidak valid
+          schema:
+            $ref: '#/definitions/main.APIResponse'
+        "500":
+          description: 'Internal Server Error (misal: tx gagal)'
+          schema:
+            $ref: '#/definitions/main.APIResponse'
+      summary: Check-in User ke Event (Admin)
+      tags:
+      - Events
+  /events:
+    get:
+      consumes:
+      - application/json
+      description: Mengambil daftar semua event yang ada di platform, dengan pagination
+        dan filter.
+      parameters:
+      - description: Filter berdasarkan Tipe Event (0 = Online, 1 = Offline)
+        in: query
+        name: type
+        type: integer
+      - description: 'Nomor Halaman (default: 1)'
+        in: query
+        name: page
+        type: integer
+      - description: 'Jumlah item per halaman (default: 20)'
+        in: query
+        name: pageSize
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Daftar event berhasil diambil
+          schema:
+            $ref: '#/definitions/swagdto.GetEventsResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/main.APIResponse'
+      summary: Ambil Daftar Event (Paginated)
+      tags:
+      - Events
+  /listings:
+    get:
+      consumes:
+      - application/json
+      description: Mengambil daftar semua NFT yang dijual di marketplace, mendukung
+        pagination dan filter.
+      parameters:
+      - description: 'Filter berdasarkan alamat penjual (misal: 0x...)'
+        in: query
+        name: seller_address
+        type: string
+      - description: 'Nomor Halaman (default: 1)'
+        in: query
+        name: page
+        type: integer
+      - description: 'Jumlah item per halaman (default: 20)'
+        in: query
+        name: pageSize
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Daftar penjualan berhasil diambil
+          schema:
+            $ref: '#/definitions/swagdto.GetListingsResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/main.APIResponse'
+      summary: Ambil Daftar Penjualan (Listings)
+      tags:
+      - Marketplace
+  /moment/free:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Minting 'NFTMoment' (UGC) gratis. Endpoint ini menerima 'multipart/form-data'.
+      parameters:
+      - description: 'Alamat Flow penerima (misal: 0x...)'
+        in: formData
+        name: recipient
+        required: true
+        type: string
+      - description: Nama untuk NFT Moment
+        in: formData
+        name: name
+        required: true
+        type: string
+      - description: Deskripsi untuk NFT Moment
+        in: formData
+        name: description
+        type: string
+      - description: File gambar (JPG/PNG/WEBP) untuk Momen UGC
+        in: formData
+        name: thumbnail
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Minting sukses
+          schema:
+            $ref: '#/definitions/swagdto.MintResponse'
+        "400":
+          description: Input tidak valid (field wajib hilang)
+          schema:
+            $ref: '#/definitions/main.APIResponse'
+        "500":
+          description: Internal Server Error (upload/transaksi gagal)
+          schema:
+            $ref: '#/definitions/main.APIResponse'
+      summary: Mint NFT Moment (Gratis)
+      tags:
+      - Moments
+  /moment/with-event-pass:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Minting 'NFTMoment' (UGC) dengan 'membakar' (menggunakan) 'EventPass'
+        (SBT). Endpoint ini menerima 'multipart/form-data'.
+      parameters:
+      - description: 'Alamat Flow penerima (misal: 0x...)'
+        in: formData
+        name: recipient
+        required: true
+        type: string
+      - description: ID dari EventPass (SBT) yang akan digunakan
+        in: formData
+        name: eventPassID
+        required: true
+        type: string
+      - description: Tingkatan (tier) dari Momen 0 untuk community 1 untuk pro
+        in: formData
+        name: tier
+        type: string
+      - description: Nama untuk NFT Moment
+        in: formData
+        name: name
+        required: true
+        type: string
+      - description: Deskripsi untuk NFT Moment
+        in: formData
+        name: description
+        type: string
+      - description: File gambar (JPG/PNG/WEBP) untuk Momen UGC
+        in: formData
+        name: thumbnail
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Minting sukses
+          schema:
+            $ref: '#/definitions/swagdto.MintResponse'
+        "400":
+          description: Input tidak valid (field wajib hilang)
+          schema:
+            $ref: '#/definitions/main.APIResponse'
+        "500":
+          description: Internal Server Error (upload/transaksi gagal)
+          schema:
+            $ref: '#/definitions/main.APIResponse'
+      summary: Mint NFT Moment (dengan Event Pass)
+      tags:
+      - Moments
+  /moments:
+    get:
+      consumes:
+      - application/json
+      description: |-
+        Mengambil daftar NFT Moment, mendukung filter berdasarkan pemilik dan pagination.
+        'Eager loading' akan menyertakan data 'owner', 'equipped_accessories', dan 'minted_with_pass'.
+      parameters:
+      - description: 'Filter berdasarkan alamat pemilik (misal: 0x...)'
+        in: query
+        name: owner_address
+        type: string
+      - description: 'Nomor Halaman (default: 1)'
+        in: query
+        name: page
+        type: integer
+      - description: 'Jumlah item per halaman (default: 20)'
+        in: query
+        name: pageSize
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Daftar momen berhasil diambil
+          schema:
+            $ref: '#/definitions/swagdto.GetMomentsResponse'
+        "404":
+          description: User (pemilik) tidak ditemukan
+          schema:
+            $ref: '#/definitions/swagdto.Response404'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/main.APIResponse'
+      summary: Ambil Daftar NFT Moment (Paginated)
+      tags:
+      - Moments
+  /profiles/{address}:
+    get:
+      consumes:
+      - application/json
+      description: Mengambil semua data profil untuk satu 'address', termasuk semua
+        aset yang di-'eager load'.
+      parameters:
+      - description: 'Alamat Flow pengguna (misal: 0x...)'
+        in: path
+        name: address
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Profil pengguna berhasil diambil
+          schema:
+            $ref: '#/definitions/swagdto.GetUserProfileResponse'
+        "400":
+          description: Format alamat salah
+          schema:
+            $ref: '#/definitions/main.APIResponse'
+        "404":
+          description: User (pemilik) tidak ditemukan
+          schema:
+            $ref: '#/definitions/main.APIResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/main.APIResponse'
+      summary: Ambil Profil User (Lengkap)
+      tags:
+      - Profiles
+swagger: "2.0"
