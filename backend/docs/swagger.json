@@ -1,78 +1,16 @@
 {
     "swagger": "2.0",
     "info": {
-        "title": "Event Platform API",
+        "title": "Capt.today API",
         "contact": {},
         "version": "1.0"
     },
-    "host": "localhost:6060",
+    "host": "localhost:8000",
     "basePath": "/",
     "paths": {
-        "/event": {
+        "/accessories": {
             "get": {
-                "description": "Mengambil daftar semua event dengan filter opsional (brandAddress, status) dan pagination.",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Events"
-                ],
-                "summary": "Mendapatkan Daftar Event (Pagination)",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "example": "\"0x179b6b1cb6755e31\"",
-                        "description": "Filter berdasarkan Brand Address (Partner)",
-                        "name": "brandAddress",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "example": 1,
-                        "description": "Filter berdasarkan Status Event (0=Pending, 1=Active, 2=Ended)",
-                        "name": "status",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "example": 1,
-                        "description": "Nomor halaman",
-                        "name": "page",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "example": 10,
-                        "description": "Jumlah item per halaman",
-                        "name": "limit",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Daftar event yang dipaginasi",
-                        "schema": {
-                            "$ref": "#/definitions/swagresponse.PaginatedEventsResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Error: Format query param tidak valid",
-                        "schema": {
-                            "$ref": "#/definitions/swagresponse.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Error: Kesalahan server internal",
-                        "schema": {
-                            "$ref": "#/definitions/swagresponse.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/event/create": {
-            "post": {
-                "description": "Mendaftarkan event baru ke platform dan mengirim transaksi on-chain.",
+                "description": "Mengambil daftar NFT Aksesori, mendukung filter berdasarkan pemilik dan pagination.\n'Eager loading' akan menyertakan data 'owner'.",
                 "consumes": [
                     "application/json"
                 ],
@@ -80,325 +18,421 @@
                     "application/json"
                 ],
                 "tags": [
-                    "Events"
+                    "Accessories"
                 ],
-                "summary": "Membuat Event Baru",
-                "parameters": [
-                    {
-                        "description": "Data Event Baru",
-                        "name": "event",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/route.CreateEventRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Pesan sukses",
-                        "schema": {
-                            "$ref": "#/definitions/swagresponse.SuccessCreateResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Error: Invalid request",
-                        "schema": {
-                            "$ref": "#/definitions/swagresponse.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Error: Gagal kirim transaksi",
-                        "schema": {
-                            "$ref": "#/definitions/swagresponse.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/event/update-status": {
-            "post": {
-                "description": "Memicu transaksi on-chain untuk mengevaluasi ulang status event (Pending/Active/Ended) berdasarkan waktu blockchain saat ini.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Events"
-                ],
-                "summary": "Memperbarui Status Event (On-Chain)",
-                "parameters": [
-                    {
-                        "description": "Data Update Status (BrandAddress, EventID)",
-                        "name": "statusRequest",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/route.UpdateStatusRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Status event berhasil diupdate",
-                        "schema": {
-                            "$ref": "#/definitions/swagresponse.UpdateStatusResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Error: Request tidak valid (ID salah, body salah)",
-                        "schema": {
-                            "$ref": "#/definitions/swagresponse.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Error: Transaksi blockchain gagal",
-                        "schema": {
-                            "$ref": "#/definitions/swagresponse.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/event/user": {
-            "get": {
-                "description": "Mengambil daftar event, difilter, dengan status partisipasi user (Available, Registered, CheckedIn, dll.)",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Events"
-                ],
-                "summary": "Mendapatkan Daftar Event (View User)",
+                "summary": "Ambil Daftar NFT Aksesori (Paginated)",
                 "parameters": [
                     {
                         "type": "string",
-                        "example": "\"0x179b6b1cb6755e31\"",
-                        "description": "Alamat user untuk mengecek status partisipasinya",
-                        "name": "userAddress",
-                        "in": "query",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "example": "\"0xf8d6e0a20c7\"",
-                        "description": "Filter berdasarkan Brand Address (Partner)",
-                        "name": "brandAddress",
+                        "description": "Filter berdasarkan alamat pemilik (misal: 0x...)",
+                        "name": "owner_address",
                         "in": "query"
                     },
                     {
                         "type": "integer",
-                        "example": 1,
-                        "description": "Filter berdasarkan Status Event (0=Pending, 1=Active, 2=Ended)",
-                        "name": "status",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "example": 1,
-                        "description": "Nomor halaman",
+                        "description": "Nomor Halaman (default: 1)",
                         "name": "page",
                         "in": "query"
                     },
                     {
                         "type": "integer",
-                        "example": 10,
-                        "description": "Jumlah item per halaman",
-                        "name": "limit",
+                        "description": "Jumlah item per halaman (default: 20)",
+                        "name": "pageSize",
                         "in": "query"
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "Daftar event yang dipaginasi (user view)",
+                        "description": "Daftar aksesori berhasil diambil",
                         "schema": {
-                            "$ref": "#/definitions/route.PaginatedUserEventsResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Error: Format query param tidak valid atau 'userAddress' hilang",
-                        "schema": {
-                            "$ref": "#/definitions/swagresponse.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Error: Kesalahan server internal",
-                        "schema": {
-                            "$ref": "#/definitions/swagresponse.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/event/{id}": {
-            "get": {
-                "description": "Mengambil detail lengkap dari satu event berdasarkan ID-nya, termasuk daftar partisipan dan info partner.",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Events"
-                ],
-                "summary": "Mendapatkan Detail Event",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "example": 1,
-                        "description": "Event ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Detail Event (termasuk relasi Edges.Participants dan Edges.Partner)",
-                        "schema": {
-                            "$ref": "#/definitions/ent.Event"
-                        }
-                    },
-                    "400": {
-                        "description": "Error: Format ID tidak valid",
-                        "schema": {
-                            "$ref": "#/definitions/swagresponse.ErrorResponse"
+                            "$ref": "#/definitions/swagdto.GetAccessoriesResponse"
                         }
                     },
                     "404": {
-                        "description": "Error: Event tidak ditemukan",
+                        "description": "404 Not Found",
                         "schema": {
-                            "$ref": "#/definitions/swagresponse.ErrorResponse"
+                            "$ref": "#/definitions/swagdto.Response404"
                         }
                     },
                     "500": {
-                        "description": "Error: Kesalahan server internal",
+                        "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/swagresponse.ErrorResponse"
+                            "$ref": "#/definitions/main.APIResponse"
                         }
                     }
                 }
             }
         },
-        "/nft": {
-            "get": {
-                "description": "Mengambil daftar semua NFT dengan filter opsional (eventId, userAddress) dan pagination.",
+        "/event/check-in": {
+            "post": {
+                "description": "Mencatat check-in untuk seorang user di sebuah event. Ini harus dipanggil oleh admin/backend.\nMenerima 'application/json' ATAU 'multipart/form-data'.",
+                "consumes": [
+                    "application/json",
+                    "multipart/form-data"
+                ],
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
-                    "NFTs"
+                    "Events"
                 ],
-                "summary": "Mendapatkan Daftar NFT (Pagination \u0026 Filter)",
+                "summary": "Check-in User ke Event (Admin)",
                 "parameters": [
                     {
-                        "type": "integer",
-                        "example": 1,
-                        "description": "Filter berdasarkan Event ID",
-                        "name": "eventId",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "example": "\"0x179b6b1cb6755e31\"",
-                        "description": "Filter berdasarkan Alamat User (Owner)",
-                        "name": "userAddress",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "example": 1,
-                        "description": "Nomor halaman",
-                        "name": "page",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "example": 10,
-                        "description": "Jumlah item per halaman",
-                        "name": "limit",
-                        "in": "query"
+                        "description": "Alamat User dan ID Event",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/main.CheckInRequest"
+                        }
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "Daftar NFT yang dipaginasi",
+                        "description": "User berhasil check-in",
                         "schema": {
-                            "$ref": "#/definitions/swagresponse.PaginatedNFTsResponse"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/main.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/swagdto.CheckInDataResponse"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "400": {
-                        "description": "Error: Format query param tidak valid",
+                        "description": "Input tidak valid",
                         "schema": {
-                            "$ref": "#/definitions/swagresponse.ErrorResponse"
+                            "$ref": "#/definitions/main.APIResponse"
                         }
                     },
                     "500": {
-                        "description": "Error: Kesalahan server internal",
+                        "description": "Internal Server Error (misal: tx gagal)",
                         "schema": {
-                            "$ref": "#/definitions/swagresponse.ErrorResponse"
+                            "$ref": "#/definitions/main.APIResponse"
                         }
                     }
                 }
             }
         },
-        "/partner": {
+        "/events": {
             "get": {
-                "description": "Mengambil daftar semua partner (brand) yang terdaftar di platform, dengan pagination.",
+                "description": "Mengambil daftar semua event yang ada di platform, dengan pagination dan filter.",
+                "consumes": [
+                    "application/json"
+                ],
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
-                    "Partners"
+                    "Events"
                 ],
-                "summary": "Mendapatkan Daftar Partner (Pagination)",
+                "summary": "Ambil Daftar Event (Paginated)",
                 "parameters": [
                     {
                         "type": "integer",
-                        "example": 1,
-                        "description": "Nomor halaman",
+                        "description": "Filter berdasarkan Tipe Event (0 = Online, 1 = Offline)",
+                        "name": "type",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Nomor Halaman (default: 1)",
                         "name": "page",
                         "in": "query"
                     },
                     {
                         "type": "integer",
-                        "example": 10,
-                        "description": "Jumlah item per halaman",
-                        "name": "limit",
+                        "description": "Jumlah item per halaman (default: 20)",
+                        "name": "pageSize",
                         "in": "query"
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "Daftar partner yang dipaginasi",
+                        "description": "Daftar event berhasil diambil",
                         "schema": {
-                            "$ref": "#/definitions/swagresponse.PaginatedPartnersResponse"
+                            "$ref": "#/definitions/swagdto.GetEventsResponse"
                         }
                     },
                     "500": {
-                        "description": "Error: Kesalahan server internal",
+                        "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/swagresponse.ErrorResponse"
+                            "$ref": "#/definitions/main.APIResponse"
                         }
                     }
                 }
             }
         },
-        "/partner/{address}": {
+        "/listings": {
             "get": {
-                "description": "Mengambil detail lengkap dari satu partner (brand) berdasarkan Alamat (Address) blockchain-nya.",
+                "description": "Mengambil daftar semua NFT yang dijual di marketplace, mendukung pagination dan filter.",
+                "consumes": [
+                    "application/json"
+                ],
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
-                    "Partners"
+                    "Marketplace"
                 ],
-                "summary": "Mendapatkan Detail Partner (Brand)",
+                "summary": "Ambil Daftar Penjualan (Listings)",
                 "parameters": [
                     {
                         "type": "string",
-                        "example": "\"0x179b6b1cb6755e31\"",
-                        "description": "Alamat Partner (Brand)",
+                        "description": "Filter berdasarkan alamat penjual (misal: 0x...)",
+                        "name": "seller_address",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Nomor Halaman (default: 1)",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Jumlah item per halaman (default: 20)",
+                        "name": "pageSize",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Daftar penjualan berhasil diambil",
+                        "schema": {
+                            "$ref": "#/definitions/swagdto.GetListingsResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/main.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/moment/free": {
+            "post": {
+                "description": "Minting 'NFTMoment' (UGC) gratis. Endpoint ini menerima 'multipart/form-data'.",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Moments"
+                ],
+                "summary": "Mint NFT Moment (Gratis)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Alamat Flow penerima (misal: 0x...)",
+                        "name": "recipient",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Nama untuk NFT Moment",
+                        "name": "name",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Deskripsi untuk NFT Moment",
+                        "name": "description",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "file",
+                        "description": "File gambar (JPG/PNG/WEBP) untuk Momen UGC",
+                        "name": "thumbnail",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Minting sukses",
+                        "schema": {
+                            "$ref": "#/definitions/swagdto.MintResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Input tidak valid (field wajib hilang)",
+                        "schema": {
+                            "$ref": "#/definitions/main.APIResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error (upload/transaksi gagal)",
+                        "schema": {
+                            "$ref": "#/definitions/main.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/moment/with-event-pass": {
+            "post": {
+                "description": "Minting 'NFTMoment' (UGC) dengan 'membakar' (menggunakan) 'EventPass' (SBT). Endpoint ini menerima 'multipart/form-data'.",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Moments"
+                ],
+                "summary": "Mint NFT Moment (dengan Event Pass)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Alamat Flow penerima (misal: 0x...)",
+                        "name": "recipient",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "ID dari EventPass (SBT) yang akan digunakan",
+                        "name": "eventPassID",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Tingkatan (tier) dari Momen 0 untuk community 1 untuk pro",
+                        "name": "tier",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Nama untuk NFT Moment",
+                        "name": "name",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Deskripsi untuk NFT Moment",
+                        "name": "description",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "file",
+                        "description": "File gambar (JPG/PNG/WEBP) untuk Momen UGC",
+                        "name": "thumbnail",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Minting sukses",
+                        "schema": {
+                            "$ref": "#/definitions/swagdto.MintResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Input tidak valid (field wajib hilang)",
+                        "schema": {
+                            "$ref": "#/definitions/main.APIResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error (upload/transaksi gagal)",
+                        "schema": {
+                            "$ref": "#/definitions/main.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/moments": {
+            "get": {
+                "description": "Mengambil daftar NFT Moment, mendukung filter berdasarkan pemilik dan pagination.\n'Eager loading' akan menyertakan data 'owner', 'equipped_accessories', dan 'minted_with_pass'.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Moments"
+                ],
+                "summary": "Ambil Daftar NFT Moment (Paginated)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Filter berdasarkan alamat pemilik (misal: 0x...)",
+                        "name": "owner_address",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Nomor Halaman (default: 1)",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Jumlah item per halaman (default: 20)",
+                        "name": "pageSize",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Daftar momen berhasil diambil",
+                        "schema": {
+                            "$ref": "#/definitions/swagdto.GetMomentsResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "User (pemilik) tidak ditemukan",
+                        "schema": {
+                            "$ref": "#/definitions/swagdto.Response404"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/main.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/profiles/{address}": {
+            "get": {
+                "description": "Mengambil semua data profil untuk satu 'address', termasuk semua aset yang di-'eager load'.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Profiles"
+                ],
+                "summary": "Ambil Profil User (Lengkap)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Alamat Flow pengguna (misal: 0x...)",
                         "name": "address",
                         "in": "path",
                         "required": true
@@ -406,27 +440,27 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Detail Partner (Brand)",
+                        "description": "Profil pengguna berhasil diambil",
                         "schema": {
-                            "$ref": "#/definitions/ent.Partner"
+                            "$ref": "#/definitions/swagdto.GetUserProfileResponse"
                         }
                     },
                     "400": {
-                        "description": "Error: Alamat (Address) tidak boleh kosong",
+                        "description": "Format alamat salah",
                         "schema": {
-                            "$ref": "#/definitions/swagresponse.ErrorResponse"
+                            "$ref": "#/definitions/main.APIResponse"
                         }
                     },
                     "404": {
-                        "description": "Error: Partner tidak ditemukan",
+                        "description": "User (pemilik) tidak ditemukan",
                         "schema": {
-                            "$ref": "#/definitions/swagresponse.ErrorResponse"
+                            "$ref": "#/definitions/main.APIResponse"
                         }
                     },
                     "500": {
-                        "description": "Error: Kesalahan server internal",
+                        "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/swagresponse.ErrorResponse"
+                            "$ref": "#/definitions/main.APIResponse"
                         }
                     }
                 }
@@ -434,623 +468,512 @@
         }
     },
     "definitions": {
-        "ent.Event": {
+        "main.APIResponse": {
             "type": "object",
             "properties": {
-                "counter": {
-                    "description": "Counter holds the value of the \"counter\" field.",
-                    "type": "integer"
-                },
-                "description": {
-                    "description": "Description holds the value of the \"description\" field.",
+                "data": {},
+                "error": {
                     "type": "string"
                 },
-                "edges": {
-                    "description": "Edges holds the relations/edges for other nodes in the graph.\nThe values are being populated by the EventQuery when eager-loading is set.",
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/ent.EventEdges"
-                        }
-                    ]
-                },
-                "endDate": {
-                    "description": "EndDate holds the value of the \"endDate\" field.",
-                    "type": "number"
-                },
-                "eventId": {
-                    "description": "EventId holds the value of the \"eventId\" field.",
-                    "type": "integer"
-                },
-                "eventName": {
-                    "description": "EventName holds the value of the \"eventName\" field.",
-                    "type": "string"
-                },
-                "id": {
-                    "description": "ID of the ent.",
-                    "type": "integer"
-                },
-                "image": {
-                    "description": "Image holds the value of the \"image\" field.",
-                    "type": "string"
-                },
-                "lat": {
-                    "description": "Lat holds the value of the \"lat\" field.",
-                    "type": "number"
-                },
-                "long": {
-                    "description": "Long holds the value of the \"long\" field.",
-                    "type": "number"
-                },
-                "quota": {
-                    "description": "Quota holds the value of the \"quota\" field.",
-                    "type": "integer"
-                },
-                "radius": {
-                    "description": "Radius holds the value of the \"radius\" field.",
-                    "type": "number"
-                },
-                "startDate": {
-                    "description": "StartDate holds the value of the \"startDate\" field.",
-                    "type": "number"
-                },
-                "status": {
-                    "description": "Status holds the value of the \"status\" field.",
-                    "type": "integer"
-                },
-                "totalRareNFT": {
-                    "description": "TotalRareNFT holds the value of the \"totalRareNFT\" field.",
-                    "type": "integer"
+                "pagination": {
+                    "$ref": "#/definitions/main.Pagination"
                 }
             }
         },
-        "ent.EventEdges": {
+        "main.CheckInRequest": {
             "type": "object",
             "properties": {
-                "nfts": {
-                    "description": "Nfts holds the value of the nfts edge.",
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/ent.Nft"
-                    }
-                },
-                "participants": {
-                    "description": "Participants holds the value of the participants edge.",
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/ent.EventParticipant"
-                    }
-                },
-                "partner": {
-                    "description": "Partner holds the value of the partner edge.",
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/ent.Partner"
-                        }
-                    ]
-                }
-            }
-        },
-        "ent.EventParticipant": {
-            "type": "object",
-            "properties": {
-                "edges": {
-                    "description": "Edges holds the relations/edges for other nodes in the graph.\nThe values are being populated by the EventParticipantQuery when eager-loading is set.",
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/ent.EventParticipantEdges"
-                        }
-                    ]
-                },
-                "id": {
-                    "description": "ID of the ent.",
-                    "type": "integer"
-                },
-                "isCheckedIn": {
-                    "description": "IsCheckedIn holds the value of the \"isCheckedIn\" field.",
-                    "type": "boolean"
+                "eventID": {
+                    "type": "string"
                 },
                 "userAddress": {
-                    "description": "UserAddress holds the value of the \"userAddress\" field.",
                     "type": "string"
                 }
             }
         },
-        "ent.EventParticipantEdges": {
+        "main.Pagination": {
             "type": "object",
             "properties": {
-                "event": {
-                    "description": "Event holds the value of the event edge.",
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/ent.Event"
-                        }
-                    ]
+                "currentPage": {
+                    "type": "integer"
+                },
+                "pageSize": {
+                    "type": "integer"
+                },
+                "totalItems": {
+                    "type": "integer"
+                },
+                "totalPages": {
+                    "type": "integer"
                 }
             }
         },
-        "ent.Nft": {
+        "swagdto.CheckInDataResponse": {
             "type": "object",
             "properties": {
+                "eventID": {
+                    "type": "string"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "userAddress": {
+                    "type": "string"
+                }
+            }
+        },
+        "swagdto.DTOAccessory": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
                 "edges": {
-                    "description": "Edges holds the relations/edges for other nodes in the graph.\nThe values are being populated by the NftQuery when eager-loading is set.",
+                    "description": "\u003c-- Menggunakan struct 'edges' bersih",
                     "allOf": [
                         {
-                            "$ref": "#/definitions/ent.NftEdges"
+                            "$ref": "#/definitions/swagdto.DTOAccessoryEdges"
                         }
                     ]
                 },
                 "id": {
-                    "description": "ID of the ent.",
                     "type": "integer"
                 },
-                "metadata": {
-                    "description": "Metadata holds the value of the \"metadata\" field.",
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/schema.Metadata"
-                        }
-                    ]
-                },
-                "mint_time": {
-                    "description": "MintTime holds the value of the \"mint_time\" field.",
+                "name": {
                     "type": "string"
                 },
                 "nft_id": {
-                    "description": "NftID holds the value of the \"nft_id\" field.",
                     "type": "integer"
                 },
-                "owner_address": {
-                    "description": "OwnerAddress holds the value of the \"owner_address\" field.",
-                    "type": "string"
-                },
-                "rarity": {
-                    "description": "Rarity holds the value of the \"rarity\" field.",
+                "thumbnail": {
                     "type": "string"
                 }
             }
         },
-        "ent.NftEdges": {
+        "swagdto.DTOAccessoryEdges": {
+            "type": "object",
+            "properties": {
+                "owner": {
+                    "$ref": "#/definitions/swagdto.DTOUser"
+                }
+            }
+        },
+        "swagdto.DTOEventPass": {
+            "type": "object",
+            "properties": {
+                "edges": {
+                    "$ref": "#/definitions/swagdto.DTOEventPassEdges"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "is_redeemed": {
+                    "type": "boolean"
+                },
+                "pass_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "swagdto.DTOEventPassEdges": {
             "type": "object",
             "properties": {
                 "event": {
-                    "description": "Event holds the value of the event edge.",
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/ent.Event"
-                        }
-                    ]
+                    "$ref": "#/definitions/swagdto.EventResponse"
+                },
+                "owner": {
+                    "$ref": "#/definitions/swagdto.DTOUser"
                 }
             }
         },
-        "ent.Partner": {
+        "swagdto.DTOListing": {
+            "type": "object",
+            "properties": {
+                "edges": {
+                    "$ref": "#/definitions/swagdto.DTOListingEdges"
+                },
+                "expiry": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "listing_id": {
+                    "type": "integer"
+                },
+                "payment_vault_type": {
+                    "type": "string"
+                },
+                "price": {
+                    "type": "number"
+                }
+            }
+        },
+        "swagdto.DTOListingEdges": {
+            "type": "object",
+            "properties": {
+                "nft_accessory": {
+                    "$ref": "#/definitions/swagdto.DTOAccessory"
+                },
+                "seller": {
+                    "$ref": "#/definitions/swagdto.DTOUser"
+                }
+            }
+        },
+        "swagdto.DTOUser": {
             "type": "object",
             "properties": {
                 "address": {
-                    "description": "Address holds the value of the \"address\" field.",
-                    "type": "string"
-                },
-                "description": {
-                    "description": "Description holds the value of the \"description\" field.",
-                    "type": "string"
-                },
-                "edges": {
-                    "description": "Edges holds the relations/edges for other nodes in the graph.\nThe values are being populated by the PartnerQuery when eager-loading is set.",
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/ent.PartnerEdges"
-                        }
-                    ]
-                },
-                "email": {
-                    "description": "Email holds the value of the \"email\" field.",
                     "type": "string"
                 },
                 "id": {
-                    "description": "ID of the ent.",
                     "type": "integer"
-                },
-                "image": {
-                    "description": "Image holds the value of the \"image\" field.",
-                    "type": "string"
-                },
-                "name": {
-                    "description": "Name holds the value of the \"name\" field.",
-                    "type": "string"
                 }
             }
         },
-        "ent.PartnerEdges": {
+        "swagdto.DTOUserProfile": {
             "type": "object",
             "properties": {
-                "partner_address": {
-                    "description": "PartnerAddress holds the value of the partner_address edge.",
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/ent.Event"
-                    }
-                }
-            }
-        },
-        "route.CreateEventRequest": {
-            "type": "object",
-            "required": [
-                "brandAddress",
-                "endDate",
-                "eventName",
-                "startDate"
-            ],
-            "properties": {
-                "brandAddress": {
+                "address": {
                     "type": "string"
                 },
-                "description": {
+                "bg_image": {
                     "type": "string"
                 },
-                "endDate": {
-                    "type": "string"
-                },
-                "eventName": {
-                    "type": "string"
-                },
-                "image": {
-                    "type": "string"
-                },
-                "lat": {
-                    "type": "number"
-                },
-                "long": {
-                    "type": "number"
-                },
-                "quota": {
-                    "type": "integer",
-                    "minimum": 0
-                },
-                "radius": {
-                    "type": "number",
-                    "minimum": 0
-                },
-                "startDate": {
-                    "type": "string"
-                },
-                "totalRareNFT": {
-                    "type": "integer",
-                    "minimum": 0
-                }
-            }
-        },
-        "route.PaginatedUserEventsResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "description": "Slice dari data event (user view)",
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/route.UserEventView"
-                    }
-                },
-                "pagination": {
-                    "$ref": "#/definitions/swagresponse.PaginationMetadata"
-                }
-            }
-        },
-        "route.UpdateStatusRequest": {
-            "type": "object",
-            "required": [
-                "brandAddress",
-                "eventId"
-            ],
-            "properties": {
-                "brandAddress": {
-                    "type": "string"
-                },
-                "eventId": {
-                    "type": "string"
-                }
-            }
-        },
-        "route.UserEventView": {
-            "description": "Mencatat check-in user di database (off-chain) dan memicu transaksi on-chain (asinkron).",
-            "type": "object",
-            "properties": {
-                "counter": {
-                    "description": "Counter holds the value of the \"counter\" field.",
-                    "type": "integer"
-                },
-                "description": {
-                    "description": "Description holds the value of the \"description\" field.",
+                "bio": {
                     "type": "string"
                 },
                 "edges": {
-                    "description": "Edges holds the relations/edges for other nodes in the graph.\nThe values are being populated by the EventQuery when eager-loading is set.",
+                    "description": "\u003c-- Menggunakan struct 'edges' bersih",
                     "allOf": [
                         {
-                            "$ref": "#/definitions/ent.EventEdges"
+                            "$ref": "#/definitions/swagdto.DTOUserProfileEdges"
                         }
                     ]
                 },
-                "endDate": {
-                    "description": "EndDate holds the value of the \"endDate\" field.",
-                    "type": "number"
-                },
-                "eventId": {
-                    "description": "EventId holds the value of the \"eventId\" field.",
-                    "type": "integer"
-                },
-                "eventName": {
-                    "description": "EventName holds the value of the \"eventName\" field.",
-                    "type": "string"
-                },
-                "id": {
-                    "description": "ID of the ent.",
-                    "type": "integer"
-                },
-                "image": {
-                    "description": "Image holds the value of the \"image\" field.",
-                    "type": "string"
-                },
-                "lat": {
-                    "description": "Lat holds the value of the \"lat\" field.",
-                    "type": "number"
-                },
-                "long": {
-                    "description": "Long holds the value of the \"long\" field.",
-                    "type": "number"
-                },
-                "participants": {
-                    "description": "Daftar partisipan (maks 5)",
+                "highlighted_eventPass_ids": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/ent.EventParticipant"
+                        "type": "integer"
                     }
                 },
-                "quota": {
-                    "description": "Quota holds the value of the \"quota\" field.",
+                "highlighted_moment_id": {
                     "type": "integer"
                 },
-                "radius": {
-                    "description": "Radius holds the value of the \"radius\" field.",
-                    "type": "number"
-                },
-                "startDate": {
-                    "description": "StartDate holds the value of the \"startDate\" field.",
-                    "type": "number"
-                },
-                "status": {
-                    "description": "Status holds the value of the \"status\" field.",
+                "id": {
                     "type": "integer"
                 },
-                "totalRareNFT": {
-                    "description": "TotalRareNFT holds the value of the \"totalRareNFT\" field.",
-                    "type": "integer"
-                },
-                "userStatus": {
-                    "type": "string"
-                }
-            }
-        },
-        "schema.Location": {
-            "type": "object",
-            "properties": {
-                "city": {
+                "nickname": {
                     "type": "string"
                 },
-                "country": {
+                "pfp": {
                     "type": "string"
                 },
-                "latitude": {
-                    "description": "Using float64 for lat/long",
-                    "type": "number"
-                },
-                "longitude": {
-                    "type": "number"
-                },
-                "placeName": {
-                    "description": "Use omitempty for optional fields",
-                    "type": "string"
-                }
-            }
-        },
-        "schema.Metadata": {
-            "type": "object",
-            "properties": {
-                "altitude": {
+                "short_description": {
                     "type": "string"
                 },
-                "attributes": {
-                    "description": "Map for dictionary",
+                "socials": {
                     "type": "object",
                     "additionalProperties": {
                         "type": "string"
                     }
+                }
+            }
+        },
+        "swagdto.DTOUserProfileEdges": {
+            "type": "object",
+            "properties": {
+                "accessories": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/swagdto.DTOAccessory"
+                    }
                 },
-                "audio": {
-                    "description": "Storing enum as string",
+                "event_passes": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/swagdto.DTOEventPass"
+                    }
+                },
+                "hosted_events": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/swagdto.EventResponse"
+                    }
+                },
+                "listings": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/swagdto.DTOListing"
+                    }
+                },
+                "moments": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/swagdto.MomentResponse"
+                    }
+                }
+            }
+        },
+        "swagdto.EquippedAccessoryResponse": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
                     "type": "string"
                 },
-                "border": {
-                    "description": "Storing enum as string",
-                    "type": "string"
+                "nft_id": {
+                    "type": "integer"
                 },
-                "category": {
-                    "description": "Storing enum as string",
+                "thumbnail": {
                     "type": "string"
-                },
+                }
+            }
+        },
+        "swagdto.EventEdges": {
+            "type": "object",
+            "properties": {
+                "host": {
+                    "$ref": "#/definitions/swagdto.HostResponse"
+                }
+            }
+        },
+        "swagdto.EventResponse": {
+            "type": "object",
+            "properties": {
                 "description": {
                     "type": "string"
                 },
-                "filter": {
-                    "description": "Storing enum as string",
-                    "type": "string"
-                },
-                "imageURL": {
-                    "type": "string"
-                },
-                "javaneseText": {
-                    "type": "string"
-                },
-                "location": {
-                    "description": "Pointer for optional struct",
+                "edges": {
+                    "description": "\u003c-- Menggunakan struct 'edges' bersih",
                     "allOf": [
                         {
-                            "$ref": "#/definitions/schema.Location"
+                            "$ref": "#/definitions/swagdto.EventEdges"
                         }
                     ]
                 },
-                "sticker": {
-                    "description": "Storing enum as string",
+                "end_date": {
                     "type": "string"
                 },
-                "tags": {
-                    "description": "Slice for array",
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
+                "event_id": {
+                    "type": "integer"
                 },
-                "temperature": {
+                "id": {
+                    "type": "integer"
+                },
+                "location": {
                     "type": "string"
                 },
-                "thumbnailURL": {
+                "name": {
                     "type": "string"
                 },
-                "timestamp": {
-                    "description": "Using float64 for UFix64 timestamp",
-                    "type": "number"
+                "quota": {
+                    "type": "integer"
                 },
-                "title": {
+                "start_date": {
                     "type": "string"
                 },
-                "weather": {
-                    "type": "string"
-                },
-                "windSpeed": {
+                "thumbnail": {
                     "type": "string"
                 }
             }
         },
-        "swagresponse.ErrorResponse": {
+        "swagdto.GetAccessoriesResponse": {
             "type": "object",
             "properties": {
-                "details": {
-                    "description": "omitempty jika tidak selalu ada",
-                    "type": "string",
-                    "example": "Detail teknis (jika ada)"
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/swagdto.DTOAccessory"
+                    }
                 },
+                "pagination": {
+                    "$ref": "#/definitions/swagdto.Pagination"
+                }
+            }
+        },
+        "swagdto.GetEventsResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/swagdto.EventResponse"
+                    }
+                },
+                "pagination": {
+                    "$ref": "#/definitions/swagdto.Pagination"
+                }
+            }
+        },
+        "swagdto.GetListingsResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/swagdto.DTOListing"
+                    }
+                },
+                "pagination": {
+                    "$ref": "#/definitions/swagdto.Pagination"
+                }
+            }
+        },
+        "swagdto.GetMomentsResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/swagdto.MomentResponse"
+                    }
+                },
+                "pagination": {
+                    "$ref": "#/definitions/swagdto.Pagination"
+                }
+            }
+        },
+        "swagdto.GetUserProfileResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "description": "\u003c-- Sekarang 'data' adalah OBJEK, bukan array",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/swagdto.DTOUserProfile"
+                        }
+                    ]
+                }
+            }
+        },
+        "swagdto.HostResponse": {
+            "type": "object",
+            "properties": {
+                "address": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "swagdto.MintPassResponse": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "pass_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "swagdto.MintResponse": {
+            "type": "object",
+            "properties": {
                 "message": {
                     "type": "string",
-                    "example": "Deskripsi error spesifik"
+                    "example": "NFT minted successfully!"
                 },
-                "status": {
+                "name": {
                     "type": "string",
-                    "example": "error"
+                    "example": "Momen Keren"
+                },
+                "recipient": {
+                    "type": "string",
+                    "example": "0x1bb6b1e0a5170088"
+                },
+                "thumbnail": {
+                    "type": "string",
+                    "example": "ipfs://bafy..."
                 }
             }
         },
-        "swagresponse.PaginatedEventsResponse": {
+        "swagdto.MomentEdges": {
             "type": "object",
             "properties": {
-                "data": {
-                    "description": "Slice dari data event",
+                "equipped_accessories": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/ent.Event"
+                        "$ref": "#/definitions/swagdto.EquippedAccessoryResponse"
                     }
                 },
-                "pagination": {
-                    "$ref": "#/definitions/swagresponse.PaginationMetadata"
+                "minted_with_pass": {
+                    "$ref": "#/definitions/swagdto.MintPassResponse"
+                },
+                "owner": {
+                    "$ref": "#/definitions/swagdto.OwnerResponse"
                 }
             }
         },
-        "swagresponse.PaginatedNFTsResponse": {
+        "swagdto.MomentResponse": {
             "type": "object",
             "properties": {
-                "data": {
-                    "description": "Tipe spesifik: slice dari Nft",
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/ent.Nft"
-                    }
+                "description": {
+                    "type": "string"
                 },
-                "pagination": {
-                    "$ref": "#/definitions/swagresponse.PaginationMetadata"
+                "edges": {
+                    "description": "\u003c-- Menggunakan struct 'edges' bersih",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/swagdto.MomentEdges"
+                        }
+                    ]
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "nft_id": {
+                    "type": "integer"
+                },
+                "thumbnail": {
+                    "type": "string"
                 }
             }
         },
-        "swagresponse.PaginatedPartnersResponse": {
+        "swagdto.OwnerResponse": {
             "type": "object",
             "properties": {
-                "data": {
-                    "description": "Tipe spesifik: slice dari Partner",
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/ent.Partner"
-                    }
+                "address": {
+                    "type": "string"
                 },
-                "pagination": {
-                    "$ref": "#/definitions/swagresponse.PaginationMetadata"
+                "id": {
+                    "type": "integer"
                 }
             }
         },
-        "swagresponse.PaginationMetadata": {
+        "swagdto.Pagination": {
             "type": "object",
             "properties": {
                 "currentPage": {
-                    "type": "integer",
-                    "example": 1
+                    "type": "integer"
                 },
                 "pageSize": {
-                    "type": "integer",
-                    "example": 10
+                    "type": "integer"
                 },
                 "totalItems": {
-                    "type": "integer",
-                    "example": 100
+                    "type": "integer"
                 },
                 "totalPages": {
-                    "type": "integer",
-                    "example": 10
+                    "type": "integer"
                 }
             }
         },
-        "swagresponse.SuccessCreateResponse": {
+        "swagdto.Response404": {
             "type": "object",
             "properties": {
-                "brand": {
-                    "type": "string",
-                    "example": "0x179b6b1cb6755e31"
+                "data": {
+                    "type": "array",
+                    "items": {}
                 },
-                "disclaimer": {
-                    "type": "string",
-                    "example": "Status transaksi final akan terlihat di blockchain/indexer."
-                },
-                "eventName": {
-                    "type": "string",
-                    "example": "Event Keren"
-                },
-                "message": {
-                    "type": "string",
-                    "example": "Permintaan CreateEvent diterima dan transaksi berhasil dikirim."
-                },
-                "status": {
-                    "type": "string",
-                    "example": "success"
-                }
-            }
-        },
-        "swagresponse.UpdateStatusResponse": {
-            "type": "object",
-            "properties": {
-                "eventId": {
-                    "type": "string",
-                    "example": "1"
-                },
-                "message": {
-                    "type": "string",
-                    "example": "Transaksi update status berhasil dikirim dan di-seal."
-                },
-                "status": {
-                    "type": "string",
-                    "example": "success"
+                "pagination": {
+                    "$ref": "#/definitions/swagdto.Pagination"
                 }
             }
         }

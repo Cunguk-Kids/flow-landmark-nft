@@ -3,13 +3,14 @@
 package ent
 
 import (
+	"backend/ent/attendance"
 	"backend/ent/event"
-	"backend/ent/eventparticipant"
-	"backend/ent/nft"
-	"backend/ent/partner"
+	"backend/ent/eventpass"
+	"backend/ent/user"
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
@@ -22,27 +23,15 @@ type EventCreate struct {
 	hooks    []Hook
 }
 
-// SetEventId sets the "eventId" field.
-func (_c *EventCreate) SetEventId(v int) *EventCreate {
-	_c.mutation.SetEventId(v)
+// SetEventID sets the "event_id" field.
+func (_c *EventCreate) SetEventID(v uint64) *EventCreate {
+	_c.mutation.SetEventID(v)
 	return _c
 }
 
-// SetEventName sets the "eventName" field.
-func (_c *EventCreate) SetEventName(v string) *EventCreate {
-	_c.mutation.SetEventName(v)
-	return _c
-}
-
-// SetQuota sets the "quota" field.
-func (_c *EventCreate) SetQuota(v int) *EventCreate {
-	_c.mutation.SetQuota(v)
-	return _c
-}
-
-// SetCounter sets the "counter" field.
-func (_c *EventCreate) SetCounter(v int) *EventCreate {
-	_c.mutation.SetCounter(v)
+// SetName sets the "name" field.
+func (_c *EventCreate) SetName(v string) *EventCreate {
+	_c.mutation.SetName(v)
 	return _c
 }
 
@@ -52,9 +41,21 @@ func (_c *EventCreate) SetDescription(v string) *EventCreate {
 	return _c
 }
 
-// SetImage sets the "image" field.
-func (_c *EventCreate) SetImage(v string) *EventCreate {
-	_c.mutation.SetImage(v)
+// SetThumbnail sets the "thumbnail" field.
+func (_c *EventCreate) SetThumbnail(v string) *EventCreate {
+	_c.mutation.SetThumbnail(v)
+	return _c
+}
+
+// SetEventType sets the "event_type" field.
+func (_c *EventCreate) SetEventType(v uint8) *EventCreate {
+	_c.mutation.SetEventType(v)
+	return _c
+}
+
+// SetLocation sets the "location" field.
+func (_c *EventCreate) SetLocation(v string) *EventCreate {
+	_c.mutation.SetLocation(v)
 	return _c
 }
 
@@ -70,75 +71,63 @@ func (_c *EventCreate) SetLong(v float64) *EventCreate {
 	return _c
 }
 
-// SetRadius sets the "radius" field.
-func (_c *EventCreate) SetRadius(v float64) *EventCreate {
-	_c.mutation.SetRadius(v)
-	return _c
-}
-
-// SetStatus sets the "status" field.
-func (_c *EventCreate) SetStatus(v int) *EventCreate {
-	_c.mutation.SetStatus(v)
-	return _c
-}
-
-// SetStartDate sets the "startDate" field.
-func (_c *EventCreate) SetStartDate(v float64) *EventCreate {
+// SetStartDate sets the "start_date" field.
+func (_c *EventCreate) SetStartDate(v time.Time) *EventCreate {
 	_c.mutation.SetStartDate(v)
 	return _c
 }
 
-// SetEndDate sets the "endDate" field.
-func (_c *EventCreate) SetEndDate(v float64) *EventCreate {
+// SetEndDate sets the "end_date" field.
+func (_c *EventCreate) SetEndDate(v time.Time) *EventCreate {
 	_c.mutation.SetEndDate(v)
 	return _c
 }
 
-// SetTotalRareNFT sets the "totalRareNFT" field.
-func (_c *EventCreate) SetTotalRareNFT(v int) *EventCreate {
-	_c.mutation.SetTotalRareNFT(v)
+// SetQuota sets the "quota" field.
+func (_c *EventCreate) SetQuota(v uint64) *EventCreate {
+	_c.mutation.SetQuota(v)
 	return _c
 }
 
-// AddParticipantIDs adds the "participants" edge to the EventParticipant entity by IDs.
-func (_c *EventCreate) AddParticipantIDs(ids ...int) *EventCreate {
-	_c.mutation.AddParticipantIDs(ids...)
+// SetHostID sets the "host" edge to the User entity by ID.
+func (_c *EventCreate) SetHostID(id int) *EventCreate {
+	_c.mutation.SetHostID(id)
 	return _c
 }
 
-// AddParticipants adds the "participants" edges to the EventParticipant entity.
-func (_c *EventCreate) AddParticipants(v ...*EventParticipant) *EventCreate {
+// SetHost sets the "host" edge to the User entity.
+func (_c *EventCreate) SetHost(v *User) *EventCreate {
+	return _c.SetHostID(v.ID)
+}
+
+// AddPassesIssuedIDs adds the "passes_issued" edge to the EventPass entity by IDs.
+func (_c *EventCreate) AddPassesIssuedIDs(ids ...int) *EventCreate {
+	_c.mutation.AddPassesIssuedIDs(ids...)
+	return _c
+}
+
+// AddPassesIssued adds the "passes_issued" edges to the EventPass entity.
+func (_c *EventCreate) AddPassesIssued(v ...*EventPass) *EventCreate {
 	ids := make([]int, len(v))
 	for i := range v {
 		ids[i] = v[i].ID
 	}
-	return _c.AddParticipantIDs(ids...)
+	return _c.AddPassesIssuedIDs(ids...)
 }
 
-// SetPartnerID sets the "partner" edge to the Partner entity by ID.
-func (_c *EventCreate) SetPartnerID(id int) *EventCreate {
-	_c.mutation.SetPartnerID(id)
+// AddAttendanceIDs adds the "attendances" edge to the Attendance entity by IDs.
+func (_c *EventCreate) AddAttendanceIDs(ids ...int) *EventCreate {
+	_c.mutation.AddAttendanceIDs(ids...)
 	return _c
 }
 
-// SetPartner sets the "partner" edge to the Partner entity.
-func (_c *EventCreate) SetPartner(v *Partner) *EventCreate {
-	return _c.SetPartnerID(v.ID)
-}
-
-// AddNftIDs adds the "nfts" edge to the Nft entity by IDs.
-func (_c *EventCreate) AddNftIDs(ids ...int) *EventCreate {
-	_c.mutation.AddNftIDs(ids...)
-	return _c
-}
-
-// AddNfts adds the "nfts" edges to the Nft entity.
-func (_c *EventCreate) AddNfts(v ...*Nft) *EventCreate {
+// AddAttendances adds the "attendances" edges to the Attendance entity.
+func (_c *EventCreate) AddAttendances(v ...*Attendance) *EventCreate {
 	ids := make([]int, len(v))
 	for i := range v {
 		ids[i] = v[i].ID
 	}
-	return _c.AddNftIDs(ids...)
+	return _c.AddAttendanceIDs(ids...)
 }
 
 // Mutation returns the EventMutation object of the builder.
@@ -175,23 +164,23 @@ func (_c *EventCreate) ExecX(ctx context.Context) {
 
 // check runs all checks and user-defined validators on the builder.
 func (_c *EventCreate) check() error {
-	if _, ok := _c.mutation.EventId(); !ok {
-		return &ValidationError{Name: "eventId", err: errors.New(`ent: missing required field "Event.eventId"`)}
+	if _, ok := _c.mutation.EventID(); !ok {
+		return &ValidationError{Name: "event_id", err: errors.New(`ent: missing required field "Event.event_id"`)}
 	}
-	if _, ok := _c.mutation.EventName(); !ok {
-		return &ValidationError{Name: "eventName", err: errors.New(`ent: missing required field "Event.eventName"`)}
-	}
-	if _, ok := _c.mutation.Quota(); !ok {
-		return &ValidationError{Name: "quota", err: errors.New(`ent: missing required field "Event.quota"`)}
-	}
-	if _, ok := _c.mutation.Counter(); !ok {
-		return &ValidationError{Name: "counter", err: errors.New(`ent: missing required field "Event.counter"`)}
+	if _, ok := _c.mutation.Name(); !ok {
+		return &ValidationError{Name: "name", err: errors.New(`ent: missing required field "Event.name"`)}
 	}
 	if _, ok := _c.mutation.Description(); !ok {
 		return &ValidationError{Name: "description", err: errors.New(`ent: missing required field "Event.description"`)}
 	}
-	if _, ok := _c.mutation.Image(); !ok {
-		return &ValidationError{Name: "image", err: errors.New(`ent: missing required field "Event.image"`)}
+	if _, ok := _c.mutation.Thumbnail(); !ok {
+		return &ValidationError{Name: "thumbnail", err: errors.New(`ent: missing required field "Event.thumbnail"`)}
+	}
+	if _, ok := _c.mutation.EventType(); !ok {
+		return &ValidationError{Name: "event_type", err: errors.New(`ent: missing required field "Event.event_type"`)}
+	}
+	if _, ok := _c.mutation.Location(); !ok {
+		return &ValidationError{Name: "location", err: errors.New(`ent: missing required field "Event.location"`)}
 	}
 	if _, ok := _c.mutation.Lat(); !ok {
 		return &ValidationError{Name: "lat", err: errors.New(`ent: missing required field "Event.lat"`)}
@@ -199,23 +188,17 @@ func (_c *EventCreate) check() error {
 	if _, ok := _c.mutation.Long(); !ok {
 		return &ValidationError{Name: "long", err: errors.New(`ent: missing required field "Event.long"`)}
 	}
-	if _, ok := _c.mutation.Radius(); !ok {
-		return &ValidationError{Name: "radius", err: errors.New(`ent: missing required field "Event.radius"`)}
-	}
-	if _, ok := _c.mutation.Status(); !ok {
-		return &ValidationError{Name: "status", err: errors.New(`ent: missing required field "Event.status"`)}
-	}
 	if _, ok := _c.mutation.StartDate(); !ok {
-		return &ValidationError{Name: "startDate", err: errors.New(`ent: missing required field "Event.startDate"`)}
+		return &ValidationError{Name: "start_date", err: errors.New(`ent: missing required field "Event.start_date"`)}
 	}
 	if _, ok := _c.mutation.EndDate(); !ok {
-		return &ValidationError{Name: "endDate", err: errors.New(`ent: missing required field "Event.endDate"`)}
+		return &ValidationError{Name: "end_date", err: errors.New(`ent: missing required field "Event.end_date"`)}
 	}
-	if _, ok := _c.mutation.TotalRareNFT(); !ok {
-		return &ValidationError{Name: "totalRareNFT", err: errors.New(`ent: missing required field "Event.totalRareNFT"`)}
+	if _, ok := _c.mutation.Quota(); !ok {
+		return &ValidationError{Name: "quota", err: errors.New(`ent: missing required field "Event.quota"`)}
 	}
-	if len(_c.mutation.PartnerIDs()) == 0 {
-		return &ValidationError{Name: "partner", err: errors.New(`ent: missing required edge "Event.partner"`)}
+	if len(_c.mutation.HostIDs()) == 0 {
+		return &ValidationError{Name: "host", err: errors.New(`ent: missing required edge "Event.host"`)}
 	}
 	return nil
 }
@@ -243,29 +226,29 @@ func (_c *EventCreate) createSpec() (*Event, *sqlgraph.CreateSpec) {
 		_node = &Event{config: _c.config}
 		_spec = sqlgraph.NewCreateSpec(event.Table, sqlgraph.NewFieldSpec(event.FieldID, field.TypeInt))
 	)
-	if value, ok := _c.mutation.EventId(); ok {
-		_spec.SetField(event.FieldEventId, field.TypeInt, value)
-		_node.EventId = value
+	if value, ok := _c.mutation.EventID(); ok {
+		_spec.SetField(event.FieldEventID, field.TypeUint64, value)
+		_node.EventID = value
 	}
-	if value, ok := _c.mutation.EventName(); ok {
-		_spec.SetField(event.FieldEventName, field.TypeString, value)
-		_node.EventName = value
-	}
-	if value, ok := _c.mutation.Quota(); ok {
-		_spec.SetField(event.FieldQuota, field.TypeInt, value)
-		_node.Quota = value
-	}
-	if value, ok := _c.mutation.Counter(); ok {
-		_spec.SetField(event.FieldCounter, field.TypeInt, value)
-		_node.Counter = value
+	if value, ok := _c.mutation.Name(); ok {
+		_spec.SetField(event.FieldName, field.TypeString, value)
+		_node.Name = value
 	}
 	if value, ok := _c.mutation.Description(); ok {
 		_spec.SetField(event.FieldDescription, field.TypeString, value)
 		_node.Description = value
 	}
-	if value, ok := _c.mutation.Image(); ok {
-		_spec.SetField(event.FieldImage, field.TypeString, value)
-		_node.Image = value
+	if value, ok := _c.mutation.Thumbnail(); ok {
+		_spec.SetField(event.FieldThumbnail, field.TypeString, value)
+		_node.Thumbnail = value
+	}
+	if value, ok := _c.mutation.EventType(); ok {
+		_spec.SetField(event.FieldEventType, field.TypeUint8, value)
+		_node.EventType = value
+	}
+	if value, ok := _c.mutation.Location(); ok {
+		_spec.SetField(event.FieldLocation, field.TypeString, value)
+		_node.Location = value
 	}
 	if value, ok := _c.mutation.Lat(); ok {
 		_spec.SetField(event.FieldLat, field.TypeFloat64, value)
@@ -275,68 +258,60 @@ func (_c *EventCreate) createSpec() (*Event, *sqlgraph.CreateSpec) {
 		_spec.SetField(event.FieldLong, field.TypeFloat64, value)
 		_node.Long = value
 	}
-	if value, ok := _c.mutation.Radius(); ok {
-		_spec.SetField(event.FieldRadius, field.TypeFloat64, value)
-		_node.Radius = value
-	}
-	if value, ok := _c.mutation.Status(); ok {
-		_spec.SetField(event.FieldStatus, field.TypeInt, value)
-		_node.Status = value
-	}
 	if value, ok := _c.mutation.StartDate(); ok {
-		_spec.SetField(event.FieldStartDate, field.TypeFloat64, value)
+		_spec.SetField(event.FieldStartDate, field.TypeTime, value)
 		_node.StartDate = value
 	}
 	if value, ok := _c.mutation.EndDate(); ok {
-		_spec.SetField(event.FieldEndDate, field.TypeFloat64, value)
+		_spec.SetField(event.FieldEndDate, field.TypeTime, value)
 		_node.EndDate = value
 	}
-	if value, ok := _c.mutation.TotalRareNFT(); ok {
-		_spec.SetField(event.FieldTotalRareNFT, field.TypeInt, value)
-		_node.TotalRareNFT = value
+	if value, ok := _c.mutation.Quota(); ok {
+		_spec.SetField(event.FieldQuota, field.TypeUint64, value)
+		_node.Quota = value
 	}
-	if nodes := _c.mutation.ParticipantsIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   event.ParticipantsTable,
-			Columns: []string{event.ParticipantsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(eventparticipant.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges = append(_spec.Edges, edge)
-	}
-	if nodes := _c.mutation.PartnerIDs(); len(nodes) > 0 {
+	if nodes := _c.mutation.HostIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
-			Table:   event.PartnerTable,
-			Columns: []string{event.PartnerColumn},
+			Table:   event.HostTable,
+			Columns: []string{event.HostColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(partner.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
-		_node.partner_partner_address = &nodes[0]
+		_node.user_hosted_events = &nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
-	if nodes := _c.mutation.NftsIDs(); len(nodes) > 0 {
+	if nodes := _c.mutation.PassesIssuedIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   event.NftsTable,
-			Columns: []string{event.NftsColumn},
+			Table:   event.PassesIssuedTable,
+			Columns: []string{event.PassesIssuedColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(nft.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(eventpass.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.AttendancesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   event.AttendancesTable,
+			Columns: []string{event.AttendancesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(attendance.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

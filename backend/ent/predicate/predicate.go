@@ -6,14 +6,23 @@ import (
 	"entgo.io/ent/dialect/sql"
 )
 
+// Attendance is the predicate function for attendance builders.
+type Attendance func(*sql.Selector)
+
 // Event is the predicate function for event builders.
 type Event func(*sql.Selector)
 
-// EventParticipant is the predicate function for eventparticipant builders.
-type EventParticipant func(*sql.Selector)
+// EventPass is the predicate function for eventpass builders.
+type EventPass func(*sql.Selector)
 
-// Nft is the predicate function for nft builders.
-type Nft func(*sql.Selector)
+// Listing is the predicate function for listing builders.
+type Listing func(*sql.Selector)
 
-// Partner is the predicate function for partner builders.
-type Partner func(*sql.Selector)
+// NFTAccessory is the predicate function for nftaccessory builders.
+type NFTAccessory func(*sql.Selector)
+
+// NFTMoment is the predicate function for nftmoment builders.
+type NFTMoment func(*sql.Selector)
+
+// User is the predicate function for user builders.
+type User func(*sql.Selector)

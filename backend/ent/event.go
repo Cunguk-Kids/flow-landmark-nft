@@ -4,9 +4,10 @@ package ent
 
 import (
 	"backend/ent/event"
-	"backend/ent/partner"
+	"backend/ent/user"
 	"fmt"
 	"strings"
+	"time"
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
@@ -17,79 +18,75 @@ type Event struct {
 	config `json:"-"`
 	// ID of the ent.
 	ID int `json:"id,omitempty"`
-	// EventId holds the value of the "eventId" field.
-	EventId int `json:"eventId,omitempty"`
-	// EventName holds the value of the "eventName" field.
-	EventName string `json:"eventName,omitempty"`
-	// Quota holds the value of the "quota" field.
-	Quota int `json:"quota,omitempty"`
-	// Counter holds the value of the "counter" field.
-	Counter int `json:"counter,omitempty"`
+	// EventID holds the value of the "event_id" field.
+	EventID uint64 `json:"event_id,omitempty"`
+	// Name holds the value of the "name" field.
+	Name string `json:"name,omitempty"`
 	// Description holds the value of the "description" field.
 	Description string `json:"description,omitempty"`
-	// Image holds the value of the "image" field.
-	Image string `json:"image,omitempty"`
+	// Thumbnail holds the value of the "thumbnail" field.
+	Thumbnail string `json:"thumbnail,omitempty"`
+	// EventType holds the value of the "event_type" field.
+	EventType uint8 `json:"event_type,omitempty"`
+	// Location holds the value of the "location" field.
+	Location string `json:"location,omitempty"`
 	// Lat holds the value of the "lat" field.
 	Lat float64 `json:"lat,omitempty"`
 	// Long holds the value of the "long" field.
 	Long float64 `json:"long,omitempty"`
-	// Radius holds the value of the "radius" field.
-	Radius float64 `json:"radius,omitempty"`
-	// Status holds the value of the "status" field.
-	Status int `json:"status,omitempty"`
-	// StartDate holds the value of the "startDate" field.
-	StartDate float64 `json:"startDate,omitempty"`
-	// EndDate holds the value of the "endDate" field.
-	EndDate float64 `json:"endDate,omitempty"`
-	// TotalRareNFT holds the value of the "totalRareNFT" field.
-	TotalRareNFT int `json:"totalRareNFT,omitempty"`
+	// StartDate holds the value of the "start_date" field.
+	StartDate time.Time `json:"start_date,omitempty"`
+	// EndDate holds the value of the "end_date" field.
+	EndDate time.Time `json:"end_date,omitempty"`
+	// Quota holds the value of the "quota" field.
+	Quota uint64 `json:"quota,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the EventQuery when eager-loading is set.
-	Edges                   EventEdges `json:"edges"`
-	partner_partner_address *int
-	selectValues            sql.SelectValues
+	Edges              EventEdges `json:"edges"`
+	user_hosted_events *int
+	selectValues       sql.SelectValues
 }
 
 // EventEdges holds the relations/edges for other nodes in the graph.
 type EventEdges struct {
-	// Participants holds the value of the participants edge.
-	Participants []*EventParticipant `json:"participants,omitempty"`
-	// Partner holds the value of the partner edge.
-	Partner *Partner `json:"partner,omitempty"`
-	// Nfts holds the value of the nfts edge.
-	Nfts []*Nft `json:"nfts,omitempty"`
+	// Host holds the value of the host edge.
+	Host *User `json:"host,omitempty"`
+	// PassesIssued holds the value of the passes_issued edge.
+	PassesIssued []*EventPass `json:"passes_issued,omitempty"`
+	// Attendances holds the value of the attendances edge.
+	Attendances []*Attendance `json:"attendances,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
 	loadedTypes [3]bool
 }
 
-// ParticipantsOrErr returns the Participants value or an error if the edge
-// was not loaded in eager-loading.
-func (e EventEdges) ParticipantsOrErr() ([]*EventParticipant, error) {
-	if e.loadedTypes[0] {
-		return e.Participants, nil
-	}
-	return nil, &NotLoadedError{edge: "participants"}
-}
-
-// PartnerOrErr returns the Partner value or an error if the edge
+// HostOrErr returns the Host value or an error if the edge
 // was not loaded in eager-loading, or loaded but was not found.
-func (e EventEdges) PartnerOrErr() (*Partner, error) {
-	if e.Partner != nil {
-		return e.Partner, nil
-	} else if e.loadedTypes[1] {
-		return nil, &NotFoundError{label: partner.Label}
+func (e EventEdges) HostOrErr() (*User, error) {
+	if e.Host != nil {
+		return e.Host, nil
+	} else if e.loadedTypes[0] {
+		return nil, &NotFoundError{label: user.Label}
 	}
-	return nil, &NotLoadedError{edge: "partner"}
+	return nil, &NotLoadedError{edge: "host"}
 }
 
-// NftsOrErr returns the Nfts value or an error if the edge
+// PassesIssuedOrErr returns the PassesIssued value or an error if the edge
 // was not loaded in eager-loading.
-func (e EventEdges) NftsOrErr() ([]*Nft, error) {
-	if e.loadedTypes[2] {
-		return e.Nfts, nil
+func (e EventEdges) PassesIssuedOrErr() ([]*EventPass, error) {
+	if e.loadedTypes[1] {
+		return e.PassesIssued, nil
 	}
-	return nil, &NotLoadedError{edge: "nfts"}
+	return nil, &NotLoadedError{edge: "passes_issued"}
+}
+
+// AttendancesOrErr returns the Attendances value or an error if the edge
+// was not loaded in eager-loading.
+func (e EventEdges) AttendancesOrErr() ([]*Attendance, error) {
+	if e.loadedTypes[2] {
+		return e.Attendances, nil
+	}
+	return nil, &NotLoadedError{edge: "attendances"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -97,13 +94,15 @@ func (*Event) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case event.FieldLat, event.FieldLong, event.FieldRadius, event.FieldStartDate, event.FieldEndDate:
+		case event.FieldLat, event.FieldLong:
 			values[i] = new(sql.NullFloat64)
-		case event.FieldID, event.FieldEventId, event.FieldQuota, event.FieldCounter, event.FieldStatus, event.FieldTotalRareNFT:
+		case event.FieldID, event.FieldEventID, event.FieldEventType, event.FieldQuota:
 			values[i] = new(sql.NullInt64)
-		case event.FieldEventName, event.FieldDescription, event.FieldImage:
+		case event.FieldName, event.FieldDescription, event.FieldThumbnail, event.FieldLocation:
 			values[i] = new(sql.NullString)
-		case event.ForeignKeys[0]: // partner_partner_address
+		case event.FieldStartDate, event.FieldEndDate:
+			values[i] = new(sql.NullTime)
+		case event.ForeignKeys[0]: // user_hosted_events
 			values[i] = new(sql.NullInt64)
 		default:
 			values[i] = new(sql.UnknownType)
@@ -126,29 +125,17 @@ func (_m *Event) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field id", value)
 			}
 			_m.ID = int(value.Int64)
-		case event.FieldEventId:
+		case event.FieldEventID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
-				return fmt.Errorf("unexpected type %T for field eventId", values[i])
+				return fmt.Errorf("unexpected type %T for field event_id", values[i])
 			} else if value.Valid {
-				_m.EventId = int(value.Int64)
+				_m.EventID = uint64(value.Int64)
 			}
-		case event.FieldEventName:
+		case event.FieldName:
 			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field eventName", values[i])
+				return fmt.Errorf("unexpected type %T for field name", values[i])
 			} else if value.Valid {
-				_m.EventName = value.String
-			}
-		case event.FieldQuota:
-			if value, ok := values[i].(*sql.NullInt64); !ok {
-				return fmt.Errorf("unexpected type %T for field quota", values[i])
-			} else if value.Valid {
-				_m.Quota = int(value.Int64)
-			}
-		case event.FieldCounter:
-			if value, ok := values[i].(*sql.NullInt64); !ok {
-				return fmt.Errorf("unexpected type %T for field counter", values[i])
-			} else if value.Valid {
-				_m.Counter = int(value.Int64)
+				_m.Name = value.String
 			}
 		case event.FieldDescription:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -156,11 +143,23 @@ func (_m *Event) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				_m.Description = value.String
 			}
-		case event.FieldImage:
+		case event.FieldThumbnail:
 			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field image", values[i])
+				return fmt.Errorf("unexpected type %T for field thumbnail", values[i])
 			} else if value.Valid {
-				_m.Image = value.String
+				_m.Thumbnail = value.String
+			}
+		case event.FieldEventType:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field event_type", values[i])
+			} else if value.Valid {
+				_m.EventType = uint8(value.Int64)
+			}
+		case event.FieldLocation:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field location", values[i])
+			} else if value.Valid {
+				_m.Location = value.String
 			}
 		case event.FieldLat:
 			if value, ok := values[i].(*sql.NullFloat64); !ok {
@@ -174,42 +173,30 @@ func (_m *Event) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				_m.Long = value.Float64
 			}
-		case event.FieldRadius:
-			if value, ok := values[i].(*sql.NullFloat64); !ok {
-				return fmt.Errorf("unexpected type %T for field radius", values[i])
-			} else if value.Valid {
-				_m.Radius = value.Float64
-			}
-		case event.FieldStatus:
-			if value, ok := values[i].(*sql.NullInt64); !ok {
-				return fmt.Errorf("unexpected type %T for field status", values[i])
-			} else if value.Valid {
-				_m.Status = int(value.Int64)
-			}
 		case event.FieldStartDate:
-			if value, ok := values[i].(*sql.NullFloat64); !ok {
-				return fmt.Errorf("unexpected type %T for field startDate", values[i])
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field start_date", values[i])
 			} else if value.Valid {
-				_m.StartDate = value.Float64
+				_m.StartDate = value.Time
 			}
 		case event.FieldEndDate:
-			if value, ok := values[i].(*sql.NullFloat64); !ok {
-				return fmt.Errorf("unexpected type %T for field endDate", values[i])
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field end_date", values[i])
 			} else if value.Valid {
-				_m.EndDate = value.Float64
+				_m.EndDate = value.Time
 			}
-		case event.FieldTotalRareNFT:
+		case event.FieldQuota:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
-				return fmt.Errorf("unexpected type %T for field totalRareNFT", values[i])
+				return fmt.Errorf("unexpected type %T for field quota", values[i])
 			} else if value.Valid {
-				_m.TotalRareNFT = int(value.Int64)
+				_m.Quota = uint64(value.Int64)
 			}
 		case event.ForeignKeys[0]:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
-				return fmt.Errorf("unexpected type %T for edge-field partner_partner_address", value)
+				return fmt.Errorf("unexpected type %T for edge-field user_hosted_events", value)
 			} else if value.Valid {
-				_m.partner_partner_address = new(int)
-				*_m.partner_partner_address = int(value.Int64)
+				_m.user_hosted_events = new(int)
+				*_m.user_hosted_events = int(value.Int64)
 			}
 		default:
 			_m.selectValues.Set(columns[i], values[i])
@@ -224,19 +211,19 @@ func (_m *Event) Value(name string) (ent.Value, error) {
 	return _m.selectValues.Get(name)
 }
 
-// QueryParticipants queries the "participants" edge of the Event entity.
-func (_m *Event) QueryParticipants() *EventParticipantQuery {
-	return NewEventClient(_m.config).QueryParticipants(_m)
+// QueryHost queries the "host" edge of the Event entity.
+func (_m *Event) QueryHost() *UserQuery {
+	return NewEventClient(_m.config).QueryHost(_m)
 }
 
-// QueryPartner queries the "partner" edge of the Event entity.
-func (_m *Event) QueryPartner() *PartnerQuery {
-	return NewEventClient(_m.config).QueryPartner(_m)
+// QueryPassesIssued queries the "passes_issued" edge of the Event entity.
+func (_m *Event) QueryPassesIssued() *EventPassQuery {
+	return NewEventClient(_m.config).QueryPassesIssued(_m)
 }
 
-// QueryNfts queries the "nfts" edge of the Event entity.
-func (_m *Event) QueryNfts() *NftQuery {
-	return NewEventClient(_m.config).QueryNfts(_m)
+// QueryAttendances queries the "attendances" edge of the Event entity.
+func (_m *Event) QueryAttendances() *AttendanceQuery {
+	return NewEventClient(_m.config).QueryAttendances(_m)
 }
 
 // Update returns a builder for updating this Event.
@@ -262,23 +249,23 @@ func (_m *Event) String() string {
 	var builder strings.Builder
 	builder.WriteString("Event(")
 	builder.WriteString(fmt.Sprintf("id=%v, ", _m.ID))
-	builder.WriteString("eventId=")
-	builder.WriteString(fmt.Sprintf("%v", _m.EventId))
+	builder.WriteString("event_id=")
+	builder.WriteString(fmt.Sprintf("%v", _m.EventID))
 	builder.WriteString(", ")
-	builder.WriteString("eventName=")
-	builder.WriteString(_m.EventName)
-	builder.WriteString(", ")
-	builder.WriteString("quota=")
-	builder.WriteString(fmt.Sprintf("%v", _m.Quota))
-	builder.WriteString(", ")
-	builder.WriteString("counter=")
-	builder.WriteString(fmt.Sprintf("%v", _m.Counter))
+	builder.WriteString("name=")
+	builder.WriteString(_m.Name)
 	builder.WriteString(", ")
 	builder.WriteString("description=")
 	builder.WriteString(_m.Description)
 	builder.WriteString(", ")
-	builder.WriteString("image=")
-	builder.WriteString(_m.Image)
+	builder.WriteString("thumbnail=")
+	builder.WriteString(_m.Thumbnail)
+	builder.WriteString(", ")
+	builder.WriteString("event_type=")
+	builder.WriteString(fmt.Sprintf("%v", _m.EventType))
+	builder.WriteString(", ")
+	builder.WriteString("location=")
+	builder.WriteString(_m.Location)
 	builder.WriteString(", ")
 	builder.WriteString("lat=")
 	builder.WriteString(fmt.Sprintf("%v", _m.Lat))
@@ -286,20 +273,14 @@ func (_m *Event) String() string {
 	builder.WriteString("long=")
 	builder.WriteString(fmt.Sprintf("%v", _m.Long))
 	builder.WriteString(", ")
-	builder.WriteString("radius=")
-	builder.WriteString(fmt.Sprintf("%v", _m.Radius))
+	builder.WriteString("start_date=")
+	builder.WriteString(_m.StartDate.Format(time.ANSIC))
 	builder.WriteString(", ")
-	builder.WriteString("status=")
-	builder.WriteString(fmt.Sprintf("%v", _m.Status))
+	builder.WriteString("end_date=")
+	builder.WriteString(_m.EndDate.Format(time.ANSIC))
 	builder.WriteString(", ")
-	builder.WriteString("startDate=")
-	builder.WriteString(fmt.Sprintf("%v", _m.StartDate))
-	builder.WriteString(", ")
-	builder.WriteString("endDate=")
-	builder.WriteString(fmt.Sprintf("%v", _m.EndDate))
-	builder.WriteString(", ")
-	builder.WriteString("totalRareNFT=")
-	builder.WriteString(fmt.Sprintf("%v", _m.TotalRareNFT))
+	builder.WriteString("quota=")
+	builder.WriteString(fmt.Sprintf("%v", _m.Quota))
 	builder.WriteByte(')')
 	return builder.String()
 }

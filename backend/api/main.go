@@ -1,78 +1,57 @@
 package main
 
 import (
-	_ "backend/docs"
-	"backend/route"
+	"backend/utils"
+	"context"
 	"log"
-	"net/http"
+	"os"
+
+	_ "backend/docs"
 
 	"github.com/joho/godotenv"
-
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	echoSwagger "github.com/swaggo/echo-swagger"
 )
 
-// @title Event Platform API
+// @title Capt.today API
 // @version 1.0
-// @host localhost:6666
+// @host localhost:8000
 // @BasePath /
 func main() {
-	// Load .env file if it exists (optional, environment variables can be set by Docker/system)
 	err := godotenv.Load()
 	if err != nil {
-		log.Println("Warning: .env file not found, using environment variables from system: %v", err)
+		log.Println("Warning: .env file not found, using environment variables from system:", err)
 	}
-	// 1. Buat instance Echo
+
+	client := utils.Open(os.Getenv("DATABASE_URL"))
+	defer client.Close()
+
+	ctx := context.Background()
+	if err := client.Schema.Create(ctx); err != nil {
+		log.Fatalf("gagal membuat skema: %v", err)
+	}
+
 	e := echo.New()
 
-	// 2. Tambahkan Middleware (Opsional, tapi bagus)
-	// Ini setara dengan 'logger' & 'recovery' di Gin
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
-	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
-		// Izinkan semua origin. '*' adalah default, tapi ini lebih eksplisit.
-		AllowOrigins: []string{"*"},
 
-		// Izinkan semua metode yang umum digunakan,
-		// middleware akan otomatis menangani preflight 'OPTIONS'.
-		AllowMethods: []string{
-			http.MethodGet,
-			http.MethodHead,
-			http.MethodPut,
-			http.MethodPatch,
-			http.MethodPost,
-			http.MethodDelete,
-		},
+	// Tambahkan CORS (PENTING untuk frontend React Anda)
+	e.Use(middleware.CORS())
 
-		// INI BAGIAN PENTING:
-		// Izinkan header yang umum dikirim oleh frontend.
-		AllowHeaders: []string{
-			echo.HeaderOrigin,
-			echo.HeaderContentType,
-			echo.HeaderAccept,
-			echo.HeaderAuthorization, // Jika Anda berencana menggunakan token (JWT)
-		},
-	}))
-	e.GET("/", route.Welcome)
+	h := &Handler{DB: client}
 	e.GET("/swagger/*", echoSwagger.WrapHandler)
-	// 3. Definisikan Rute (Routes)
-	// Kita gunakan e.POST karena ini adalah aksi "membuat" (create)
-	e.POST("/event/create", route.HandleCreateEvent)
-	e.GET("/event/:id", route.HandleGetEventByID)
-	e.GET("/event", route.HandleGetAllEvents)
-	e.POST("/event/check-in", route.HandleCheckin)
-	e.POST("/event/update-status", route.HandleUpdateEventStatus)
-	e.GET("/event/user", route.HandleGetEventsForUser)
+	e.GET("/listings", h.getListings)
+	e.GET("/events", h.getEvents)
+	e.GET("/profiles/:address", h.getUserProfile)
+	e.GET("/accessories", h.getAccessories)
+	e.GET("/moments", h.getMoments)
 
-	// partner
-	e.GET("/partner", route.HandleGetAllPartner)
-	e.GET("/partner/:address", route.HandleGetPartnerByAddress)
+	e.POST("/moment/free", h.freeMintMoment)
+	e.POST("/moment/with-event-pass", h.mintMomentWithEventPass)
+	e.POST("/event/check-in", h.checkInUser)
 
-	//nfts
-	e.GET("/nft", route.HandleGetNFTs)
-
-	// 4. Jalankan Server
-	log.Println("Server API Echo berjalan di http://localhost:6060")
-	e.Logger.Fatal(e.Start(":6666"))
+	log.Println("Server API dimulai di http://localhost:8000")
+	e.Logger.Fatal(e.Start(":8000"))
 }

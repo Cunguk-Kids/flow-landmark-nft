@@ -1,7 +1,7 @@
 package transactions
 
 import (
-	"backend/utils"
+	"backend/utils" // Asumsi dari file Anda sebelumnya (untuk WaitForSeal)
 	"context"
 	"fmt"
 	"log"
@@ -11,140 +11,160 @@ import (
 	"github.com/onflow/cadence"
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/access"
-	"github.com/onflow/flow-go-sdk/access/http"
+	"github.com/onflow/flow-go-sdk/access/http" // Menggunakan klien HTTP
 	"github.com/onflow/flow-go-sdk/crypto"
-	// "backend/utils" // Asumsi utils Anda
 )
 
-const checkinTransactionScriptTemplate = `
-import EventPlatform from 0x%s // Alamat Kontrak
+// Ini adalah skrip transaksi minting Anda
+// Saya telah menambahkan '0x%s' agar kita bisa menyuntikkan alamat kontrak
+const userCheckinScriptTemplate = `
+import EventPass from 0x%s
+import EventManager from 0x%s
 
-transaction(brandAddress: Address, eventID: UInt64, userAddress: Address) {
 
-    let eventRef: &EventPlatform.Event // Kita butuh akses ke resource Event, bukan hanya interface
+// Transaksi ini dijalankan oleh ADMIN/BACKEND
+// untuk secara manual melakukan check-in atas nama pengguna
 
-    prepare(signer: auth(Storage) &Account) { // Asumsi signer perlu storage untuk sesuatu, atau bisa &Account saja
+transaction(
+    eventID: UInt64,
+    userAddress: Address // Alamat pengguna yang di-scan
+) {
 
-        // Pinjam Event Manager dari Brand
-        let managerCap = getAccount(brandAddress)
-            .capabilities.get<&EventPlatform.EventManager>( // Pinjam EventManager penuh
-                EventPlatform.EventManagerPublicPath // Asumsi kita pinjam dari storage brand
-            )
-            // ATAU jika Anda punya capability IAdmin di AdminReceiver:
-            // let adminReceiver = signer.storage.borrow...
-            // let adminRef = adminReceiver.getAdminCapability...
-            // let managerRef = adminRef as! &EventPlatform.EventManager // Casting
-
-        let manager = managerCap.borrow()
-            ?? panic("EventManager tidak ditemukan")
-
-        // Dapatkan reference ke Event (bukan interface)
-        self.eventRef = manager.getEvent(id: eventID)
-            ?? panic("Event tidak ditemukan")
+    // Referensi ke 'Admin' resource
+    let adminRef: &EventManager.Admin
+    let recipient: &EventPass.Collection
+    let eventRef: &EventManager.Event
+    let eventPassMinterRef: &EventPass.NFTMinter
+    prepare(signer: auth(BorrowValue) &Account) {
+        
+        // Pinjam 'kunci' Admin dari storage 'signer' (backend)
+        self.eventRef = EventManager.events[eventID] as! &EventManager.Event
+        self.recipient = getAccount(userAddress).capabilities.borrow<&EventPass.Collection>(
+          EventPass.CollectionPublicPath
+        ) ?? panic("cant borrow ressource recipient collection EventPass")
+        self.adminRef = signer.storage.borrow<&EventManager.Admin>(
+            from: EventManager.eventManagerStoragePath
+        ) ?? panic("cant borrow resource Admin EventManager")
+        self.eventPassMinterRef = signer.storage.borrow<&EventPass.NFTMinter>(
+          from: EventPass.MinterStoragePath
+        ) ?? panic("cant borrow ressource minter EventPass")
     }
 
     execute {
-        // Panggil fungsi checkIn di resource Event
-        self.eventRef.checkIn(user: userAddress)
-        log("Check-in on-chain berhasil untuk user ".concat(userAddress.toString()))
+        let thumbnail = self.eventRef.eventPassImg != nil ?
+          self.eventRef.eventPassImg?.uri() :
+          "https://white-lazy-marten-351.mypinata.cloud/ipfs/bafybeibv7mz4yvpuw5ejbovka3h2zhrzyf7jptikz7fzsuprlgw3h6qtnq"
+
+        self.adminRef.checkInUserToEvent(eventID: eventID, userAddress: userAddress)
+        self.eventPassMinterRef.mintNFT(
+          recipient: self.recipient,
+          name: self.eventRef.eventName,
+          description: self.eventRef.description,
+          thumbnail: thumbnail!,
+          eventType: self.eventRef.eventType.rawValue,
+          eventID: self.eventRef.eventID
+        )
+        
+        log("checkIn success and event pass minted to ".concat(userAddress.toString()))
     }
 }
 `
 
-// sendCheckinTransactionAsync mengirim transaksi check-in di background
-// Anda perlu alamat Brand untuk menemukan EventManager-nya
-func SendCheckinTransactionAsync(brandAddressString string, eventID int, userAddress string) {
-	log.Println("[Async Checkin] Memulai proses on-chain untuk Event: %d, User: %s", eventID, userAddress)
+func UserCheckin(
+	eventID uint64,
+	userAddress string,
+) error {
 
-	// Muat .env (diperlukan lagi di goroutine terpisah)
+	// Muat .env
 	err := godotenv.Load()
 	if err != nil {
-		log.Println("[Async Checkin] Peringatan: Gagal load .env:", err)
-		// Lanjutkan saja jika env var diset di sistem
+		log.Println("Peringatan: Error loading .env file:", err)
 	}
 
-	ctx := context.Background() // Gunakan background context untuk goroutine
+	ctx := context.Background()
 	var flowClient access.Client
 
-	flowClient, err = http.NewClient(http.TestnetHost) // Pola koneksi Anda
+	// Koneksi Flow ke Emulator HTTP port
+	flowClient, err = http.NewClient(http.TestnetHost)
 	if err != nil {
-		log.Println("[Async Checkin] Connection Error: %v", err)
-		return // Keluar dari goroutine jika koneksi gagal
+		return fmt.Errorf("gagal membuat flow client: %w", err)
 	}
 
-	// Siapkan Signer (Admin Platform)
-	privateKey := os.Getenv("PRIVATE_KEY")
-	if privateKey == "" {
-		log.Println("[Async Checkin] Error: PRIVATE_KEY tidak ditemukan")
-		return
+	// 1. SIAPKAN SIGNER (ADMIN/MINTER)
+	privateKeyHex := os.Getenv("PRIVATE_KEY") // Ambil dari .env
+	if privateKeyHex == "" {
+		return fmt.Errorf("PRIVATE_KEY tidak ditemukan di environment variables")
 	}
-	platformAddress := flow.HexToAddress(deployerAddress) // Gunakan konstanta deployerAddress Anda
-	platformKey, err := crypto.DecodePrivateKeyHex(crypto.ECDSA_P256, privateKey)
+
+	// Gunakan alamat minter dari konstanta
+	minterFlowAddress := flow.HexToAddress(deployerAddress)
+	platformKey, err := crypto.DecodePrivateKeyHex(crypto.ECDSA_P256, privateKeyHex)
 	if err != nil {
-		log.Println("[Async Checkin] Gagal decode key: %v", err)
-		return
+		return fmt.Errorf("gagal decode private key: %w", err)
 	}
-	platformAccount, err := flowClient.GetAccount(ctx, platformAddress)
+
+	platformAccount, err := flowClient.GetAccount(ctx, minterFlowAddress)
 	if err != nil {
-		log.Println("[Async Checkin] Gagal get account: %v", err)
-		return
+		return fmt.Errorf("gagal mendapatkan akun minter %s: %w", minterFlowAddress.String(), err)
 	}
+
+	// Asumsi kita menggunakan key pertama (index 0)
 	key := platformAccount.Keys[0]
 	signer, err := crypto.NewInMemorySigner(platformKey, key.HashAlgo)
 	if err != nil {
-		log.Println("[Async Checkin] Gagal load signer: %v", err)
-		return
+		return fmt.Errorf("gagal memuat signer: %w", err)
 	}
 
-	// Buat Skrip Transaksi
-	script := []byte(fmt.Sprintf(checkinTransactionScriptTemplate, deployerAddress)) // Ganti deployerAddress jika kontrak di tempat lain
+	// 2. BUAT SKRIP TRANSAKSI
+	// Kita suntikkan alamat minter (yang juga alamat deployer) 2x
+	// 1x untuk 'NFTMoment' dan 1x untuk 'MetadataViews'
+	script := []byte(fmt.Sprintf(userCheckinScriptTemplate, deployerAddress, deployerAddress))
 
-	// Siapkan Argumen
-	brandAddrArg := cadence.NewAddress(flow.HexToAddress(brandAddressString))
-	eventIDArg := cadence.NewUInt64(uint64(eventID)) // Konversi int64 ke uint64
-	userAddrArg := cadence.NewAddress(flow.HexToAddress(userAddress))
+	// 3. SIAPKAN ARGUMEN (4 Argumen)
 
-	// Buat Transaksi
+	// Helper function untuk argumen String (sama seperti template Anda)
+
+	// --- Buat Argumen ---
+	userAddressArg := cadence.NewAddress(flow.HexToAddress(userAddress))
+
+	// 4. BUAT TRANSAKSI
 	latestBlock, err := flowClient.GetLatestBlock(ctx, true)
 	if err != nil {
-		log.Println("[Async Checkin] Gagal get block: %v", err)
-		return
+		return fmt.Errorf("gagal mendapatkan block terbaru: %w", err)
 	}
+
 	tx := flow.NewTransaction().
 		SetScript(script).
-		SetComputeLimit(100). // Check-in harusnya murah
 		SetReferenceBlockID(latestBlock.ID).
-		SetPayer(platformAddress).
-		SetProposalKey(platformAddress, key.Index, key.SequenceNumber).
-		AddAuthorizer(platformAddress)
+		SetPayer(minterFlowAddress). // Admin adalah 'Payer'
+		SetProposalKey(minterFlowAddress, key.Index, key.SequenceNumber).
+		AddAuthorizer(minterFlowAddress) // Admin adalah 'Authorizer'
 
-	_ = tx.AddArgument(brandAddrArg)
-	_ = tx.AddArgument(eventIDArg)
-	_ = tx.AddArgument(userAddrArg)
+	// 5. TAMBAHKAN ARGUMEN
+	_ = tx.AddArgument(cadence.NewUInt64(eventID))
+	_ = tx.AddArgument(userAddressArg)
 
-	// Tanda Tangani
-	err = tx.SignEnvelope(platformAddress, key.Index, signer)
+	// 6. TANDA TANGANI TRANSAKSI
+	err = tx.SignEnvelope(minterFlowAddress, key.Index, signer)
 	if err != nil {
-		log.Println("[Async Checkin] Gagal sign tx: %v", err)
-		return
+		return fmt.Errorf("gagal menandatangani transaksi: %w", err)
 	}
 
-	// Kirim Transaksi
+	// 7. KIRIM TRANSAKSI
+	log.Println("Mengirim transaksi 'mint_nft_moment'...")
 	err = flowClient.SendTransaction(ctx, *tx)
 	if err != nil {
-		log.Println("[Async Checkin] Gagal kirim tx: %v", err)
-		return
+		return fmt.Errorf("gagal mengirim transaksi: %w", err)
 	}
 
-	// Tunggu Seal (Gunakan WaitForSeal yang MENGEMBALIKAN error)
+	// 8. TUNGGU HASILNYA (SEAL)
+	// (Menggunakan 'utils.WaitForSeal' dari template Anda)
 	result, err := utils.WaitForSeal(ctx, flowClient, tx.ID())
 	if err != nil {
-		// Termasuk error Cadence panic
-		log.Println("[Async Checkin] Transaksi %s GAGAL: %v", tx.ID(), err)
-		// TODO: Implementasikan mekanisme retry atau logging error persisten
-		return
+		log.Printf("Transaksi %s gagal: %v\n", tx.ID(), err)
+		return fmt.Errorf("transaksi %s gagal: %w", tx.ID(), err)
 	}
 
-	// Sukses
-	log.Println("[Async Checkin] Transaksi %s Berhasil di-seal! Status: %s", tx.ID(), result.Status)
+	log.Printf("Transaksi Mint NFTMoment Berhasil! 🔥 Status: %s. TX ID: %s", result.Status, tx.ID())
+	return nil // Sukses
 }

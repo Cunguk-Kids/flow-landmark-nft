@@ -8,6 +8,18 @@ import (
 	"fmt"
 )
 
+// The AttendanceFunc type is an adapter to allow the use of ordinary
+// function as Attendance mutator.
+type AttendanceFunc func(context.Context, *ent.AttendanceMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f AttendanceFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.AttendanceMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.AttendanceMutation", m)
+}
+
 // The EventFunc type is an adapter to allow the use of ordinary
 // function as Event mutator.
 type EventFunc func(context.Context, *ent.EventMutation) (ent.Value, error)
@@ -20,40 +32,64 @@ func (f EventFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.EventMutation", m)
 }
 
-// The EventParticipantFunc type is an adapter to allow the use of ordinary
-// function as EventParticipant mutator.
-type EventParticipantFunc func(context.Context, *ent.EventParticipantMutation) (ent.Value, error)
+// The EventPassFunc type is an adapter to allow the use of ordinary
+// function as EventPass mutator.
+type EventPassFunc func(context.Context, *ent.EventPassMutation) (ent.Value, error)
 
 // Mutate calls f(ctx, m).
-func (f EventParticipantFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
-	if mv, ok := m.(*ent.EventParticipantMutation); ok {
+func (f EventPassFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.EventPassMutation); ok {
 		return f(ctx, mv)
 	}
-	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.EventParticipantMutation", m)
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.EventPassMutation", m)
 }
 
-// The NftFunc type is an adapter to allow the use of ordinary
-// function as Nft mutator.
-type NftFunc func(context.Context, *ent.NftMutation) (ent.Value, error)
+// The ListingFunc type is an adapter to allow the use of ordinary
+// function as Listing mutator.
+type ListingFunc func(context.Context, *ent.ListingMutation) (ent.Value, error)
 
 // Mutate calls f(ctx, m).
-func (f NftFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
-	if mv, ok := m.(*ent.NftMutation); ok {
+func (f ListingFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.ListingMutation); ok {
 		return f(ctx, mv)
 	}
-	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.NftMutation", m)
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ListingMutation", m)
 }
 
-// The PartnerFunc type is an adapter to allow the use of ordinary
-// function as Partner mutator.
-type PartnerFunc func(context.Context, *ent.PartnerMutation) (ent.Value, error)
+// The NFTAccessoryFunc type is an adapter to allow the use of ordinary
+// function as NFTAccessory mutator.
+type NFTAccessoryFunc func(context.Context, *ent.NFTAccessoryMutation) (ent.Value, error)
 
 // Mutate calls f(ctx, m).
-func (f PartnerFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
-	if mv, ok := m.(*ent.PartnerMutation); ok {
+func (f NFTAccessoryFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.NFTAccessoryMutation); ok {
 		return f(ctx, mv)
 	}
-	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.PartnerMutation", m)
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.NFTAccessoryMutation", m)
+}
+
+// The NFTMomentFunc type is an adapter to allow the use of ordinary
+// function as NFTMoment mutator.
+type NFTMomentFunc func(context.Context, *ent.NFTMomentMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f NFTMomentFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.NFTMomentMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.NFTMomentMutation", m)
+}
+
+// The UserFunc type is an adapter to allow the use of ordinary
+// function as User mutator.
+type UserFunc func(context.Context, *ent.UserMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f UserFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.UserMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.UserMutation", m)
 }
 
 // Condition is a hook condition function.

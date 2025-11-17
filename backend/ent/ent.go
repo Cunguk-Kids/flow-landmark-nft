@@ -3,10 +3,13 @@
 package ent
 
 import (
+	"backend/ent/attendance"
 	"backend/ent/event"
-	"backend/ent/eventparticipant"
-	"backend/ent/nft"
-	"backend/ent/partner"
+	"backend/ent/eventpass"
+	"backend/ent/listing"
+	"backend/ent/nftaccessory"
+	"backend/ent/nftmoment"
+	"backend/ent/user"
 	"context"
 	"errors"
 	"fmt"
@@ -76,10 +79,13 @@ var (
 func checkColumn(t, c string) error {
 	initCheck.Do(func() {
 		columnCheck = sql.NewColumnCheck(map[string]func(string) bool{
-			event.Table:            event.ValidColumn,
-			eventparticipant.Table: eventparticipant.ValidColumn,
-			nft.Table:              nft.ValidColumn,
-			partner.Table:          partner.ValidColumn,
+			attendance.Table:   attendance.ValidColumn,
+			event.Table:        event.ValidColumn,
+			eventpass.Table:    eventpass.ValidColumn,
+			listing.Table:      listing.ValidColumn,
+			nftaccessory.Table: nftaccessory.ValidColumn,
+			nftmoment.Table:    nftmoment.ValidColumn,
+			user.Table:         user.ValidColumn,
 		})
 	})
 	return columnCheck(t, c)

@@ -1,452 +1,454 @@
-// NFTMoment.cdc
-access(all) contract NFTMoment {
+import "NonFungibleToken"
+import "NFTAccessory"
+import "ViewResolver"
+import "MetadataViews"
+import "EventPass"
 
-    // ========================================
-    // Events
-    // ========================================
-    access(all) event ContractInitialized()
-    access(all) event Withdraw(id: UInt64, from: Address?)
-    access(all) event Deposit(id: UInt64, to: Address?)
-    access(all) event MomentMinted(id: UInt64, owner: Address, category: String, rarity: String, eventId: UInt64)
-    access(all) event MomentUpgraded(id: UInt64, newRarity: String)
-    access(all) event MomentsMerged(id1: UInt64, id2: UInt64, newId: UInt64)
-    access(all) event PartnerAdded(address: Address, name: String, description: String, email: String, image: String)
-    access(all) event AchievementUnlocked(address: Address, achievement: String)
-
-    // ========================================
-    // Paths
-    // ========================================
+access(all) contract NFTMoment: NonFungibleToken {
+    // Path standar untuk menyimpan data
     access(all) let CollectionStoragePath: StoragePath
     access(all) let CollectionPublicPath: PublicPath
-    access(all) let AdminStoragePath: StoragePath
-    access(all) let PartnerStoragePath: StoragePath
+    access(all) let MinterStoragePath: StoragePath
 
-    // ========================================
-    // Contract State
-    // ========================================
-    access(all) var totalSupply: UInt64
-    access(contract) var partners: {Address: PartnerInfo}
-
-    // ========================================
-    // Enums
-    // ========================================
-    access(all) enum Rarity: UInt8 {
-        access(all) case Common
-        access(all) case Rare
-        access(all) case Epic
-        access(all) case Legendary
+    // Event standar
+    access(all) event Withdraw(id: UInt64, from: Address?)
+    access(all) event Deposit(id: UInt64, to: Address?)
+    // Event kustom
+    access(all) event Minted(recipient: Address, id: UInt64, name: String, description: String, thumbnail: String)
+    access(all) event AccessoryEquipped(NftMomentId: UInt64, NftAccessoryId: UInt64?, prevNFTAccessoryId: UInt64?)
+    access(all) event AccessoryUnequipped(NftMomentId: UInt64, NftAccessoryId: UInt64?)
+    
+    access(all) entitlement Equip
+    //custom metadataview
+    access(all) struct NFTMomentEquipmentMetadataView {
+      access(all) let id: UInt64
+      access(all) let equippedFrame: &NFTAccessory.NFT?
+      init(
+        equippedFrame: &NFTAccessory.NFT?,
+        id: UInt64,
+      ) {
+        self.id = id
+        self.equippedFrame = equippedFrame
+      }
     }
 
-    access(all) enum Category: UInt8 {
-        access(all) case Landscape
-        access(all) case Cultural
-        access(all) case Event
-        access(all) case Historical
-        access(all) case Nature
-        access(all) case Urban
-        access(all) case Food
-        access(all) case Art
+    access(all) enum Tier: UInt8 {
+        access(all) case community
+        access(all)case pro
     }
-
-    access(all) enum BorderStyle: UInt8 {
-        access(all) case None
-        access(all) case Batik
-        access(all) case Wayang
-        access(all) case Songket
-        access(all) case Tenun
-    }
-
-    access(all) enum StickerStyle: UInt8 {
-        access(all) case None
-        access(all) case JavaneseScript
-        access(all) case TraditionalPattern
-        access(all) case CulturalIcon
-    }
-
-    access(all) enum FilterStyle: UInt8 {
-        access(all) case None
-        access(all) case Vintage
-        access(all) case Cultural
-        access(all) case Vibrant
-    }
-
-    access(all) enum AudioStyle: UInt8 {
-        access(all) case None
-        access(all) case Gamelan
-        access(all) case Angklung
-        access(all) case Kendang
-    }
-
-    // ========================================
-    // Utility functions: enum -> String
-    // ========================================
-    access(all) fun rarityToString(r: Rarity): String {
-        switch r {
-            case Rarity.Common: return "Common"
-            case Rarity.Rare: return "Rare"
-            case Rarity.Epic: return "Epic"
-            case Rarity.Legendary: return "Legendary"
-            default: return "Unknown"
-        }
-    }
-
-    access(all) fun categoryToString(c: Category): String {
-        switch c {
-            case Category.Landscape: return "Landscape"
-            case Category.Cultural: return "Cultural"
-            case Category.Event: return "Event"
-            case Category.Historical: return "Historical"
-            case Category.Nature: return "Nature"
-            case Category.Urban: return "Urban"
-            case Category.Food: return "Food"
-            case Category.Art: return "Art"
-            default: return "Unknown"
-        }
-    }
-
-    access(all) fun borderToString(b: BorderStyle): String {
-        switch b {
-            case BorderStyle.None: return "None"
-            case BorderStyle.Batik: return "Batik"
-            case BorderStyle.Wayang: return "Wayang"
-            case BorderStyle.Songket: return "Songket"
-            case BorderStyle.Tenun: return "Tenun"
-            default: return "Unknown"
-        }
-    }
-
-    access(all) fun stickerToString(s: StickerStyle): String {
-        switch s {
-            case StickerStyle.None: return "None"
-            case StickerStyle.JavaneseScript: return "JavaneseScript"
-            case StickerStyle.TraditionalPattern: return "TraditionalPattern"
-            case StickerStyle.CulturalIcon: return "CulturalIcon"
-            default: return "Unknown"
-        }
-    }
-
-    access(all) fun filterToString(f: FilterStyle): String {
-        switch f {
-            case FilterStyle.None: return "None"
-            case FilterStyle.Vintage: return "Vintage"
-            case FilterStyle.Cultural: return "Cultural"
-            case FilterStyle.Vibrant: return "Vibrant"
-            default: return "Unknown"
-        }
-    }
-
-    access(all) fun audioToString(a: AudioStyle): String {
-        switch a {
-            case AudioStyle.None: return "None"
-            case AudioStyle.Gamelan: return "Gamelan"
-            case AudioStyle.Angklung: return "Angklung"
-            case AudioStyle.Kendang: return "Kendang"
-            default: return "Unknown"
-        }
-    }
-
-    // ========================================
-    // Structs
-    // ========================================
-    access(all) struct Location {
-        access(all) let placeName: String?
-        access(all) let city: String?
-        access(all) let country: String?
-        access(all) let latitude: Fix64
-        access(all) let longitude: Fix64
-
-        init(latitude: Fix64, longitude: Fix64, placeName: String?, city: String?, country: String?) {
-            self.latitude = latitude
-            self.longitude = longitude
-            self.placeName = placeName
-            self.city = city
-            self.country = country
-        }
-    }
-
-    access(all) struct MomentMetadata {
-        access(all) let title: String
-        access(all) let description: String
-        access(all) let category: Category
-        access(all) let imageURL: String
-        access(all) let thumbnailURL: String?
-        access(all) let timestamp: UFix64
-        access(all) let weather: String?
-        access(all) let temperature: String?
-        access(all) let location: Location?
-        access(all) let altitude: String?
-        access(all) let windSpeed: String?
-        access(all) let border: BorderStyle?
-        access(all) let sticker: StickerStyle?
-        access(all) let filter: FilterStyle?
-        access(all) let audio: AudioStyle?
-        access(all) let javaneseText: String?
-        access(all) let tags: [String]?
-        access(all) let attributes: {String: String}?
-
-        init(
-            title: String,
-            description: String,
-            category: Category,
-            imageURL: String,
-            thumbnailURL: String?,
-            timestamp: UFix64,
-            weather: String?,
-            temperature: String?,
-            location: Location?,
-            altitude: String?,
-            windSpeed: String?,
-            border: BorderStyle,
-            sticker: StickerStyle?,
-            filter: FilterStyle?,
-            audio: AudioStyle?,
-            javaneseText: String?,
-            tags: [String]?,
-            attributes: {String: String}?
-        ) {
-            self.title = title
-            self.description = description
-            self.category = category
-            self.imageURL = imageURL
-            self.thumbnailURL = thumbnailURL
-            self.timestamp = timestamp
-            self.weather = weather
-            self.temperature = temperature
-            self.location = location
-            self.altitude = altitude
-            self.windSpeed = windSpeed
-            self.border = border
-            self.sticker = sticker
-            self.filter = filter
-            self.audio = audio
-            self.javaneseText = javaneseText
-            self.tags = tags
-            self.attributes = attributes
-        }
-    }
-
-    access(all) struct PartnerInfo {
+    // 4. RESOURCE NFT
+    // Ini adalah "benda" NFT Anda
+    access(all) resource NFT: NonFungibleToken.NFT {
+        access(all) let id: UInt64
+        
+        // --- Metadata Anda ---
+        // Ini adalah data yang Anda simpan ON-CHAIN
         access(all) let name: String
         access(all) let description: String
-        access(all) let address: Address
-        access(all) let email: String
-        access(all) let image: String
+        access(all) let thumbnail: String
+        access(self) let metadata: {String: AnyStruct}
+        access(all) var equippedFrame: @NFTAccessory.NFT?
+        access(all) var tier: String
 
         init(
             name: String,
             description: String,
-            address: Address,
-            email: String,
-            image: String,
+            thumbnail: String,
+            metadata: {String: AnyStruct},
+            tier: String
         ) {
+            self.id = self.uuid // ID unik dibuat otomatis
             self.name = name
             self.description = description
-            self.address = address
-            self.email = email
-            self.image = image
-        }
-    }
-
-    // ========================================
-    // Interfaces
-    // ========================================
-    access(all) resource interface NFTPublic {
-        access(all) let id: UInt64
-        access(all) let metadata: MomentMetadata
-        access(all) var rarity: Rarity
-        access(all) let createdBy: Address
-        access(all) let partnerAddress: Address?
-        access(all) var upgradeCount: UInt64
-        access(all) var mergedFrom: [UInt64]
-        access(all) var eventId: UInt64
-    }
-
-    access(all) resource interface CollectionPublic {
-        access(all) fun getIDs(): [UInt64]
-        access(all) fun borrowNFT(id: UInt64): &NFT?
-        access(all) fun deposit(token: @NFT)
-    }
-
-    // ========================================
-    // NFT Resource
-    // ========================================
-    access(all) resource NFT: NFTPublic {
-        access(all) let id: UInt64
-        access(all) let metadata: MomentMetadata
-        access(all) var rarity: Rarity
-        access(all) let createdBy: Address
-        access(all) let partnerAddress: Address?
-        access(all) var upgradeCount: UInt64
-        access(all) var mergedFrom: [UInt64]
-        access(all) var eventId: UInt64
-
-        init(
-            id: UInt64,
-            metadata: MomentMetadata,
-            rarity: Rarity,
-            createdBy: Address,
-            partnerAddress: Address?,
-            eventId: UInt64
-        ) {
-            self.id = id
+            self.thumbnail = thumbnail
             self.metadata = metadata
-            self.rarity = rarity
-            self.createdBy = createdBy
-            self.partnerAddress = partnerAddress
-            self.upgradeCount = 0
-            self.mergedFrom = []
-            self.eventId = eventId
+            self.equippedFrame<-nil
+            self.tier = tier
         }
 
-        access(contract) fun upgrade(newRarity: Rarity) {
-            pre { newRarity.rawValue > self.rarity.rawValue: "New rarity must be higher than current" }
-            self.rarity = newRarity
-            self.upgradeCount = self.upgradeCount + 1
+        access(all) fun createEmptyCollection(): @{NonFungibleToken.Collection} {
+            return <-NFTMoment.createEmptyCollection(nftType: Type<@NFTMoment.NFT>())
         }
 
-        access(contract) fun addMergedNFT(id: UInt64) {
-            self.mergedFrom.append(id)
+        access(contract) fun equipFrame(frameNFT: @NFTAccessory.NFT): @NFTAccessory.NFT? {
+          let accessoryNFT <- frameNFT
+          if self.equippedFrame != nil {
+            
+            let prevEquippedAccessory <- self.equippedFrame <- accessoryNFT
+            emit NFTMoment.AccessoryEquipped(NftMomentId: self.id, NftAccessoryId: self.equippedFrame?.id, prevNFTAccessoryId: prevEquippedAccessory?.id)
+            return <-prevEquippedAccessory
+          } else {
+
+            let oldEqippedAccessories <- self.equippedFrame <-accessoryNFT
+            destroy oldEqippedAccessories
+            emit NFTMoment.AccessoryEquipped(NftMomentId: self.id, NftAccessoryId: self.equippedFrame?.id, prevNFTAccessoryId: nil)
+            
+            return nil
+          }
         }
-    }
 
-    // ========================================
-    // Collection Resource
-    // ========================================
-    access(all) resource Collection: CollectionPublic {
-        access(all) var ownedNFTs: @{UInt64: NFT}
-        access(all) let ownerAddress: Address
-
-        init(ownerAddress: Address) {
-            self.ownedNFTs <- {}
-            self.ownerAddress = ownerAddress
+        access(contract) fun unequipFrame(): @NFTAccessory.NFT {
+          pre {
+            self.equippedFrame != nil: "no accessory equipped"
+          }
+          let unequippedAccessory <- self.equippedFrame <- nil
+          emit NFTMoment.AccessoryUnequipped(NftMomentId: self.id, NftAccessoryId: unequippedAccessory?.id)
+          return <- unequippedAccessory as! @NFTAccessory.NFT
         }
 
-        access(all) fun getIDs(): [UInt64] { return self.ownedNFTs.keys }
+        access(all) view fun getViews(): [Type] {
+            return [
+                Type<MetadataViews.Display>(),
+                Type<NFTMomentEquipmentMetadataView>(),
+                Type<MetadataViews.ExternalURL>(),
+                Type<MetadataViews.NFTCollectionData>(),
+                Type<MetadataViews.NFTCollectionDisplay>(),
+                Type<MetadataViews.Traits>()
+            ]
+        }
 
-        access(all) fun borrowNFT(id: UInt64): &NFT? {
-            if self.ownedNFTs[id] != nil { return &self.ownedNFTs[id] }
+        // resolveView() adalah tempat Anda "menata" data Anda
+        // agar sesuai dengan standar
+        access(all) fun resolveView(_ view: Type): AnyStruct? {
+            switch view {
+                case Type<MetadataViews.Display>():
+                    return MetadataViews.Display(
+                        name: self.name,
+                        description: self.description,
+                        thumbnail: MetadataViews.HTTPFile(
+                            url: self.thumbnail
+                        ),
+                    )
+                case Type<NFTMomentEquipmentMetadataView>():
+                    // Pinjam referensi ke 'equippedFrame' yang 
+                    // tersimpan di resource NFTMoment ini.
+                    // (Asumsi Anda punya: var equippedFrame: @NFTAccessories.NFT?)
+                    let frameRef = &self.equippedFrame as &NFTAccessory.NFT?
+                    
+                    // Buat dan kembalikan struct kustom Anda
+                    return NFTMomentEquipmentMetadataView(
+                        equippedFrame: frameRef,
+                        id: self.id,
+                    )
+                case Type<MetadataViews.Editions>():
+                    // There is no max number of NFTs that can be minted from this contract
+                    // so the max edition field value is set to nil
+                    let editionInfo = MetadataViews.Edition(name: "Example NFT Edition", number: self.id, max: nil)
+                    let editionList: [MetadataViews.Edition] = [editionInfo]
+                    return MetadataViews.Editions(
+                        editionList
+                    )
+                case Type<MetadataViews.Serial>():
+                    return MetadataViews.Serial(
+                        self.id
+                    )
+                case Type<MetadataViews.ExternalURL>():
+                    return MetadataViews.ExternalURL("https://example-nft.onflow.org/".concat(self.id.toString()))
+                case Type<MetadataViews.NFTCollectionData>():
+                    return NFTMoment.resolveContractView(resourceType: Type<@NFTMoment.NFT>(), viewType: Type<MetadataViews.NFTCollectionData>())
+                case Type<MetadataViews.NFTCollectionDisplay>():
+                    return NFTMoment.resolveContractView(resourceType: Type<@NFTMoment.NFT>(), viewType: Type<MetadataViews.NFTCollectionDisplay>())
+                case Type<MetadataViews.Traits>():
+                    // exclude mintedTime and foo to show other uses of Traits
+                    let excludedTraits = ["mintedTime", "frame"]
+                    let traitsView = MetadataViews.dictToTraits(dict: self.metadata, excludedNames: excludedTraits)
+
+                    // mintedTime is a unix timestamp, we should mark it with a displayType so platforms know how to show it.
+                    let mintedTimeTrait = MetadataViews.Trait(name: "mintedTime", value: self.metadata["mintedTime"]!, displayType: "Date", rarity: nil)
+                    traitsView.addTrait(mintedTimeTrait)
+
+                    let frameRef: &NFTAccessory.NFT? = &self.equippedFrame
+                    var frameTraitRarity: MetadataViews.Rarity? = nil
+                    let frameRawRarityValue: AnyStruct?? = frameRef?.getMetaDataByField(field: "rarity")
+                    let frameRarity = NFTMoment.unwrapRarity(rawRarityValue: frameRawRarityValue)
+                    
+                    let frameTrait = MetadataViews.Trait(name: "frame", value: frameRef?.name, displayType: nil, rarity: frameRarity)
+                    traitsView.addTrait(frameTrait)
+                    // if frameRef != nil {
+                    //   let frameTraitRarity = frameRef.
+                    // } 
+                    // foo is a trait with its own rarity
+                    // let fooTraitRarity = MetadataViews.Rarity(score: 10.0, max: 100.0, description: "Common")
+                    // let fooTrait = MetadataViews.Trait(name: "foo", value: self.metadata["foo"], displayType: nil, rarity: fooTraitRarity)
+                    // traitsView.addTrait(fooTrait)
+
+                    return traitsView
+                case Type<MetadataViews.EVMBridgedMetadata>():
+                    // Implementing this view gives the project control over how the bridged NFT is represented as an
+                    // ERC721 when bridged to EVM on Flow via the public infrastructure bridge.
+                    // NOTE: If your NFT is a cross-VM NFT, meaning you control both your Cadence & EVM contracts and
+                    //      registered your custom association with the VM bridge, it's recommended you use the 
+                    //      CrossVMMetadata.EVMBytesMetadata view to define and pass metadata as EVMBytes into your
+                    //      EVM contract at the time of bridging into EVM. For more information about cross-VM NFTs,
+                    //      see FLIP-318: https://github.com/onflow/flips/issues/318
+
+                    // Get the contract-level name and symbol values
+                    let contractLevel = NFTMoment.resolveContractView(
+                            resourceType: nil,
+                            viewType: Type<MetadataViews.EVMBridgedMetadata>()
+                        ) as! MetadataViews.EVMBridgedMetadata?
+
+                    if let contractMetadata = contractLevel {
+                        // Compose the token-level URI based on a base URI and the token ID, pointing to a JSON file. This
+                        // would be a file you've uploaded and are hosting somewhere - in this case HTTP, but this could be
+                        // IPFS, S3, a data URL containing the JSON directly, etc.
+                        let baseURI = "https://example-nft.onflow.org/token-metadata/"
+                        let uriValue = self.id.toString().concat(".json")
+
+                        return MetadataViews.EVMBridgedMetadata(
+                            name: contractMetadata.name,
+                            symbol: contractMetadata.symbol,
+                            uri: MetadataViews.URI(
+                                baseURI: baseURI, // defining baseURI results in a concatenation of baseURI and value
+                                value: self.id.toString().concat(".json")
+                            )
+                        )
+                    } else {
+                        return nil
+                    }
+            }
             return nil
         }
+    }
 
-        access(all) fun withdraw(withdrawID: UInt64): @NFT {
-            let token <- self.ownedNFTs.remove(key: withdrawID) ?? panic("NFT not found")
-            emit Withdraw(id: token.id, from: self.ownerAddress)
-            return <- token
+    access(all) fun resolveContractView(resourceType: Type?, viewType: Type): AnyStruct? {
+        switch viewType {
+            case Type<MetadataViews.NFTCollectionData>():
+                let collectionData = MetadataViews.NFTCollectionData(
+                    storagePath: self.CollectionStoragePath,
+                    publicPath: self.CollectionPublicPath,
+                    publicCollection: Type<&NFTMoment.Collection>(),
+                    publicLinkedType: Type<&NFTMoment.Collection>(),
+                    createEmptyCollectionFunction: (fun(): @{NonFungibleToken.Collection} {
+                        return <-NFTMoment.createEmptyCollection(nftType: Type<@NFTMoment.NFT>())
+                    })
+                )
+                return collectionData
+            case Type<MetadataViews.NFTCollectionDisplay>():
+                let media = MetadataViews.Media(
+                    file: MetadataViews.HTTPFile(
+                        url: "https://assets.website-files.com/5f6294c0c7a8cdd643b1c820/5f6294c0c7a8cda55cb1c936_Flow_Wordmark.svg"
+                    ),
+                    mediaType: "image/svg+xml"
+                )
+                return MetadataViews.NFTCollectionDisplay(
+                    name: "The Example Collection",
+                    description: "This collection is used as an example to help you develop your next Flow NFT.",
+                    externalURL: MetadataViews.ExternalURL("https://example-nft.onflow.org"),
+                    squareImage: media,
+                    bannerImage: media,
+                    socials: {
+                        "twitter": MetadataViews.ExternalURL("https://twitter.com/flow_blockchain")
+                    }
+                )
+            case Type<MetadataViews.EVMBridgedMetadata>():
+                // Implementing this view gives the project control over how the bridged NFT is represented as an ERC721
+                // when bridged to EVM on Flow via the public infrastructure bridge.
+
+                // Compose the contract-level URI. In this case, the contract metadata is located on some HTTP host,
+                // but it could be IPFS, S3, a data URL containing the JSON directly, etc.
+                return MetadataViews.EVMBridgedMetadata(
+                    name: "NFTMoment",
+                    symbol: "XMPL",
+                    uri: MetadataViews.URI(
+                        baseURI: nil, // setting baseURI as nil sets the given value as the uri field value
+                        value: "https://example-nft.onflow.org/contract-metadata.json"
+                    )
+                )
+        }
+        return nil
+    }
+
+    access(all) resource Collection: NonFungibleToken.Collection {
+        
+        access(all) var ownedNFTs: @{UInt64: {NonFungibleToken.NFT}}
+        access(all) var isUsedFreeMint: Bool 
+        init() {
+            self.ownedNFTs <- {}
+            self.isUsedFreeMint = false
         }
 
-        access(all) fun deposit(token: @NFT) {
+        access(all) view fun getSupportedNFTTypes(): {Type: Bool} {
+            let supportedTypes: {Type: Bool} = {}
+            supportedTypes[Type<@NFTMoment.NFT>()] = true
+            return supportedTypes
+        }
+
+        access(all) view fun isSupportedNFTType(type: Type): Bool {
+            return type == Type<@NFTMoment.NFT>()
+        }
+
+
+        //in this function only can withdraw if there is no equipped accessories
+        access(NonFungibleToken.Withdraw) fun withdraw(withdrawID: UInt64): @{NonFungibleToken.NFT} {
+            let nft = self.borrowNFT(withdrawID) as! &NFTMoment.NFT
+            assert(nft.equippedFrame == nil, message: "Please unequip your accessory")
+            let token <- self.ownedNFTs.remove(key: withdrawID)
+                ?? panic("NFTMoment.Collection.withdraw: Could not withdraw an NFT with ID "
+                        .concat(withdrawID.toString())
+                        .concat(". Check the submitted ID to make sure it is one that this collection owns."))
+            return <-token
+        }
+
+        access(all) fun deposit(token: @{NonFungibleToken.NFT}) {
+            let token <- token as! @NFTMoment.NFT
             let id = token.id
-            var oldTokenOpt <- self.ownedNFTs.remove(key: id)
-            self.ownedNFTs[id] <-! token
-            if let old <- oldTokenOpt { destroy old }
-            emit Deposit(id: id, to: self.ownerAddress)
+
+            // add the new token to the dictionary which removes the old one
+            let oldToken <- self.ownedNFTs[token.id] <- token
+
+            destroy oldToken
+        }
+
+        access(contract) fun useFreeMint() {
+          pre {
+            self.isUsedFreeMint == false: "Free Mint already used"
+          }
+          self.isUsedFreeMint = true
+        }
+
+        access(Equip) fun equipFrame(momentNFTID: UInt64, frameNFT: @NFTAccessory.NFT): @NFTAccessory.NFT? {
+          pre {
+            frameNFT.listingResouceId == nil: "frameNFT is listed for sale, please unlist frameNFT"
+          }
+          let nft: &NFTMoment.NFT = self.borrowNFT(momentNFTID) as! &NFTMoment.NFT
+          return <-nft.equipFrame(frameNFT: <-frameNFT)
+        }
+
+        access(Equip) fun unequipFrame(momentNFTID: UInt64): @NFTAccessory.NFT {
+          let nft: &NFTMoment.NFT = self.borrowNFT(momentNFTID) as! &NFTMoment.NFT
+          return <- nft.unequipFrame()
+        }
+
+        access(all) view fun getIDs(): [UInt64] {
+          return self.ownedNFTs.keys
+        }
+
+        access(all) view fun getLength(): Int {
+          return self.ownedNFTs.length
+        }
+
+        access(all) view fun borrowNFT(_ id: UInt64): &{NonFungibleToken.NFT}? {
+            return &self.ownedNFTs[id]
+        }
+
+        access(all) view fun borrowViewResolver(id: UInt64): &{ViewResolver.Resolver}? {
+          if let nft = &self.ownedNFTs[id] as &{NonFungibleToken.NFT}? {
+            return nft as &{ViewResolver.Resolver}
+          }
+          return nil
+        }
+
+        access(all) fun createEmptyCollection(): @{NonFungibleToken.Collection} {
+            return <-NFTMoment.createEmptyCollection(nftType: Type<@NFTMoment.NFT>())
         }
     }
 
-    // ========================================
-    // Admin Resource
-    // ========================================
-    access(all) resource Admin {
+    access(all) fun unwrapRarity(rawRarityValue: AnyStruct??): MetadataViews.Rarity? {
+      if let unwrappedOnce: AnyStruct? = rawRarityValue {
 
-        access(all) fun addPartner(
-            address: Address,
+          if let rarity = unwrappedOnce as? MetadataViews.Rarity {
+              
+              return rarity
+          }
+      }
+      return nil
+    }
+
+    access(all) fun createEmptyCollection(nftType: Type): @{NonFungibleToken.Collection} {
+        return <- create Collection()
+    }
+
+    access(all) view fun getContractViews(resourceType: Type?): [Type] {
+        return [
+            Type<MetadataViews.NFTCollectionData>(),
+            Type<MetadataViews.NFTCollectionDisplay>(),
+            Type<MetadataViews.EVMBridgedMetadata>()
+        ]
+    }
+
+    access(all) fun applyTier(_ tier: Tier): String {
+      switch tier {
+        case Tier.community:
+          return "community"
+        case Tier.pro:
+          return "pro"
+        default:
+          return "not a tier"
+      }
+    }
+
+    access(all) resource NFTMinter {
+
+        access(all) fun freeMint(
+            recipient: &NFTMoment.Collection,
             name: String,
             description: String,
-            email: String,
-            image: String,
+            thumbnail: String,
         ) {
-            let partnerInfo = PartnerInfo(
+            let metadata: {String: AnyStruct} = {}
+            let currentBlock = getCurrentBlock()
+            let appliedTier = NFTMoment.applyTier(Tier(rawValue: 0)!)
+            metadata["tier"] = appliedTier
+            metadata["mintedBlock"] = currentBlock.height
+            metadata["mintedTime"] = currentBlock.timestamp
+
+            let newNFT <- create NFT(
                 name: name,
                 description: description,
-                address: address,
-                email: email,
-                image: image
-            )
-            NFTMoment.partners[address] = partnerInfo
-            emit PartnerAdded(address: address, name: name, description: description, email: email, image: image)
-        }
-
-        access(all) fun removePartner(address: Address) {
-            NFTMoment.partners.remove(key: address)
-        }
-
-        access(all) fun createPartner(): @Partner { return <- create Partner() }
-    }
-
-    // ========================================
-    // Partner Resource
-    // ========================================
-    access(all) resource Partner {
-
-        access(all) fun mintPartnerNFT(
-            recipient: &Collection,
-            metadata: MomentMetadata,
-            rarity: Rarity,
-            partnerAddress: Address,
-            eventId: UInt64
-        ): UInt64 {
-            pre { NFTMoment.partners[partnerAddress] != nil: "Partner not registered" }
-
-            let partnerInfo = NFTMoment.partners[partnerAddress]!
-
-            let id = NFTMoment.totalSupply
-            NFTMoment.totalSupply = NFTMoment.totalSupply + 1
-
-            let nft <- create NFT(
-                id: id,
+                thumbnail: thumbnail,
                 metadata: metadata,
-                rarity: rarity,
-                createdBy: recipient.ownerAddress,
-                partnerAddress: partnerAddress,
-                eventId: eventId
+                tier: appliedTier
             )
 
-            emit MomentMinted(
-                id: id,
-                owner: recipient.ownerAddress,
-                category: NFTMoment.categoryToString(c: metadata.category),
-                rarity: NFTMoment.rarityToString(r: rarity),
-                eventId: eventId
+            let id = newNFT.id
+            emit Minted(recipient: recipient.owner!.address, id: id, name: name, description: description, thumbnail: thumbnail)
+
+            recipient.deposit(token: <-newNFT)
+        }
+
+        access(all) fun mintNFTWithEventPass(
+            recipient: &NFTMoment.Collection,
+            recipientPass: &EventPass.NFT,
+            name: String,
+            description: String,
+            thumbnail: String,
+            tier: UInt8
+        ) {
+            pre {
+              recipient.isUsedFreeMint == false: "Free Mint already used"
+            }
+            recipientPass.useEventPass()
+
+            let metadata: {String: AnyStruct} = {}
+            let currentBlock = getCurrentBlock()
+            let appliedTier = NFTMoment.applyTier(Tier(rawValue: tier)!)
+            metadata["tier"] = appliedTier
+            metadata["mintedBlock"] = currentBlock.height
+            metadata["mintedTime"] = currentBlock.timestamp
+
+            let newNFT <- create NFT(
+                name: name,
+                description: description,
+                thumbnail: thumbnail,
+                metadata: metadata,
+                tier: appliedTier
             )
 
-            recipient.deposit(token: <- nft)
-            return id
+            let id = newNFT.id
+
+            emit Minted(recipient: recipient.owner!.address, id: id, name: name, description: description, thumbnail: thumbnail)
+
+            recipient.deposit(token: <-newNFT)
         }
     }
 
-    // ========================================
-    // Public Functions
-    // ========================================
-    access(all) fun createEmptyCollection(ownerAddress: Address): @Collection {
-        return <- create Collection(ownerAddress: ownerAddress)
-    }
-
-    access(all) fun getPartnerInfo(address: Address): PartnerInfo? { return self.partners[address] }
-    access(all) fun getAllPartners(): {Address: PartnerInfo} { return self.partners }
-    access(all) fun getTotalSupply(): UInt64 { return self.totalSupply }
-
-    // ========================================
-    // Contract Init
-    // ========================================
-    init() {
-        self.totalSupply = 0
-        self.partners = {}
-
-        // Definisikan Path DULU
+    init() {        
         self.CollectionStoragePath = /storage/NFTMomentCollection
-        self.CollectionPublicPath = /public/NFTMomentCollection
-        self.AdminStoragePath = /storage/NFTMomentAdmin
-        self.PartnerStoragePath = /storage/NFTMomentPartner
+        self.CollectionPublicPath = /public/NFTMomentReceiver
+        self.MinterStoragePath = /storage/NFTMomentMinter
 
-        // --- PERBAIKAN: Buat dan LANGSUNG simpan Admin Resource ---
-        // 1. Buat resource Admin
-        let admin <- create Admin()
-
-        // 2. Simpan resource ke storage path yang sudah didefinisikan
-        self.account.storage.save(<-admin, to: self.AdminStoragePath)
-        // --------------------------------------------------------
-
-        log("Admin resource berhasil dibuat dan disimpan ke ".concat(self.AdminStoragePath.toString()))
-        emit ContractInitialized()
+        let minter <- create NFTMinter()
+        self.account.storage.save(<-minter, to: self.MinterStoragePath)
     }
 }

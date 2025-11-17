@@ -6,38 +6,43 @@ import (
 	"entgo.io/ent/schema/field"
 )
 
-// User holds the schema definition for the User entity.
+// Event memegang skema untuk tipe Event.
 type Event struct {
 	ent.Schema
 }
 
-// Fields of the User.
+// Fields dari Event.
 func (Event) Fields() []ent.Field {
 	return []ent.Field{
-		field.Int("eventId").Unique(),
-		field.String("eventName"),
-		field.Int("quota"),
-		field.Int("counter"),
+		// Ini adalah ID dari kontrak EventManager (nextEventID)
+		field.Uint64("event_id").
+			Unique(),
+		field.String("name"),
 		field.String("description"),
-		field.String("image"),
+		field.String("thumbnail"),
+		field.Uint8("event_type"),
+		field.String("location"),
 		field.Float("lat"),
 		field.Float("long"),
-		field.Float("radius"),
-		field.Int("status"),
-		field.Float("startDate"),
-		field.Float("endDate"),
-		field.Int("totalRareNFT"),
+		field.Time("start_date"),
+		field.Time("end_date"),
+		field.Uint64("quota"),
 	}
 }
 
-// Edges of the User.
+// Edges (relasi) dari Event.
 func (Event) Edges() []ent.Edge {
 	return []ent.Edge{
-		edge.To("participants", EventParticipant.Type),
-		edge.From("partner", Partner.Type).
-			Ref("partner_address").
+		// Relasi Many-to-One (Banyak-ke-Satu)
+		// Banyak Event dimiliki oleh satu Host (User)
+		edge.From("host", User.Type).
+			Ref("hosted_events"). // Merujuk ke edge di skema User
 			Unique().
-			Required(),
-		edge.To("nfts", Nft.Type),
+			Required(), // Setiap event harus punya host
+
+		// Relasi One-to-Many (Satu-ke-Banyak)
+		// Satu Event akan menghasilkan banyak EventPass
+		edge.To("passes_issued", EventPass.Type),
+		edge.To("attendances", Attendance.Type),
 	}
 }
