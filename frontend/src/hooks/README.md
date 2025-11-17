@@ -262,18 +262,16 @@ interface Event {
 ### Event Status
 
 Event status is represented as a number:
-- `0` - Upcoming
-- `1` - Active (displayed as "Open")
+- `0` - Pending
+- `1` - Active
 - `2` - Ended
-- `3` - Cancelled
 
 ```typescript
-// Event status labels mapping
+// Event status labels mapping (from backend)
 const EventStatusLabels = {
-  0: "Upcoming",
-  1: "Open",
+  0: "Pending",
+  1: "Active",
   2: "Ended",
-  3: "Cancelled",
 } as const;
 ```
 

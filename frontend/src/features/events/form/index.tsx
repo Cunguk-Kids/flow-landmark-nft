@@ -1,33 +1,16 @@
-import { useState, type FC, type FormEvent, useEffect } from "react";
+import { useState, type FC, useEffect, useCallback } from "react";
 import { useNavigate, useRouter } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Typhography } from "@/components/ui/typhography";
-import { ArrowLeft, Phone, X } from "lucide-react";
-import {
-  Field,
-  FieldGroup,
-  FieldLabel,
-  FieldLegend,
-  FieldSet,
-} from "@/components/ui/field";
+import { CheckCircle2, ExternalLink } from "lucide-react";
 import { Spinner } from "@/components/ui/spinner";
 import { toast } from "sonner";
-import {
-  InputGroup,
-  InputGroupAddon,
-  InputGroupInput,
-} from "@/components/ui/input-group";
-import { Label } from "@/components/ui/label";
-import {
-  ItemContent,
-  ItemDescription,
-  ItemFooter,
-  ItemGroup,
-  ItemHeader,
-} from "@/components/ui/item";
-import { useRegisterEvent, useEventDetail } from "@/hooks";
+import { useRegisterEvent, useEventDetail, formatEvent } from "@/hooks";
 import { useFlowCurrentUser, useFlowTransactionStatus } from "@onflow/react-sdk";
+import { motion } from "motion/react";
+import Galaxy from "@/components/Galaxy";
+import { PageHeader } from "@/components/PageHeader";
+import RegistrationForm from "./RegistrationForm";
 
 const EventsFormPage: FC<{ id: string }> = ({ id }) => {
   const router = useRouter();
@@ -50,13 +33,6 @@ const EventsFormPage: FC<{ id: string }> = ({ id }) => {
     }
   }, [event]);
 
-  const [formData, setFormData] = useState({
-    id: id,
-    name: "",
-    email: "",
-    phoneNo: "",
-  });
-
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [loadingToastId, setLoadingToastId] = useState<string | number | null>(null);
@@ -64,54 +40,85 @@ const EventsFormPage: FC<{ id: string }> = ({ id }) => {
   // Watch transaction status and show success when sealed
   useEffect(() => {
     if (txId && transactionStatus?.status === 4) {
-      // Status 4 = sealed (completed)
+      // Status 4 = sealed (included in a block)
       setIsSubmitting(false);
-      setIsSuccess(true);
-      setFormData({
-        id: id,
-        name: "",
-        email: "",
-        phoneNo: "",
-      });
 
-      // Dismiss loading toast and show success
-      if (loadingToastId) {
-        toast.success("Event registered successfully!", { id: loadingToastId });
-        setLoadingToastId(null);
+      // Debug: Log the full transaction status
+      console.log("Transaction sealed - Full status:", transactionStatus);
+
+      // Check if transaction actually succeeded
+      // Check for errorMessage first, then statusCode
+      const hasError =
+        transactionStatus.errorMessage ||
+        (transactionStatus.statusCode !== undefined && transactionStatus.statusCode > 1);
+
+      if (hasError) {
+        // Transaction was sealed but failed - parse the error message
+        const rawError = transactionStatus.errorMessage || "Transaction failed";
+
+        // Try to extract the actual Cadence error message
+        // Look for patterns like "error: pre-condition failed: [message]"
+        let userFriendlyError = rawError;
+
+        // Pattern 1: "error: pre-condition failed: [message]"
+        const preConditionMatch = rawError.match(/error: pre-condition failed: (.+?)(?:\n|$)/);
+        if (preConditionMatch) {
+          userFriendlyError = preConditionMatch[1].trim();
+        } else {
+          // Pattern 2: "error: [message]" (general Cadence errors)
+          const errorMatch = rawError.match(/error: (.+?)(?:\n|  -->|$)/);
+          if (errorMatch) {
+            userFriendlyError = errorMatch[1].trim();
+          }
+        }
+
+        // Log full error for debugging
+        console.error("Transaction failed:", {
+          statusCode: transactionStatus.statusCode,
+          rawError: rawError,
+          parsedError: userFriendlyError,
+          events: transactionStatus.events,
+        });
+
+        if (loadingToastId) {
+          toast.error(userFriendlyError, { id: loadingToastId, duration: 10000 });
+          setLoadingToastId(null);
+        } else {
+          toast.error(userFriendlyError, { duration: 10000 });
+        }
       } else {
-        toast.success("Event registered successfully!");
+        // Transaction succeeded
+        setIsSuccess(true);
+
+        if (loadingToastId) {
+          toast.success("Event registered successfully!", { id: loadingToastId });
+          setLoadingToastId(null);
+        } else {
+          toast.success("Event registered successfully!");
+        }
       }
     } else if (txId && transactionStatus?.status === 5) {
-      // Status 5 = error
+      // Status 5 = expired/unknown error
       setIsSubmitting(false);
 
-      // Dismiss loading toast and show error
       if (loadingToastId) {
-        toast.error("Registration failed. Please try again.", { id: loadingToastId });
+        toast.error("Transaction expired or failed. Please try again.", { id: loadingToastId });
         setLoadingToastId(null);
       } else {
-        toast.error("Registration failed. Please try again.");
+        toast.error("Transaction expired or failed. Please try again.");
       }
     }
-  }, [transactionStatus, txId, id, loadingToastId]);
+  }, [transactionStatus, txId, loadingToastId]);
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-  ) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleClickBack = () => {
+  const handleClickBack = useCallback(() => {
     router.history.back();
-  };
+  }, [router]);
 
-  const handleClickMyTicket = () => {
+  const handleClickMyTicket = useCallback(() => {
     navigate({ to: `/` });
-  };
+  }, [navigate]);
 
-  const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = useCallback(async (formData: { name: string; email: string; phoneNo: string }) => {
 
     // Check if user is logged in
     if (!user?.loggedIn) {
@@ -179,200 +186,135 @@ const EventsFormPage: FC<{ id: string }> = ({ id }) => {
 
       toast.error(errorMessage);
     }
-  };
+  }, [user, event, registerEvent]);
 
   if (isSuccess) {
     return (
-      <ItemGroup className="p-6 text-center">
-        <ItemContent>
-          <ItemHeader className="font-semibold self-center">
-            <Typhography variant="3xl">Register Success</Typhography>
-          </ItemHeader>
-          <ItemDescription className="text-muted-foreground my-8">
-            <Typhography variant="2xl">
-              Your ticket can be viewed on My Ticket
-            </Typhography>
-          </ItemDescription>
-          <ItemFooter className="flex flex-col md:flex-row justify-between items-center gap-4">
-            <Button onClick={handleClickMyTicket} className="flex-1 w-full">
-              <Typhography variant="lg">My Ticket</Typhography>
-            </Button>
-            <Button
-              variant={"secondary"}
-              onClick={handleClickMyTicket}
-              className="flex-1 w-full"
+      <motion.div
+        animate={{ opacity: 1 }}
+        initial={{ opacity: 0 }}
+        className="min-h-screen bg-background relative isolate flex items-center justify-center p-4"
+      >
+        <div className="fixed inset-0 -z-1">
+          <Galaxy />
+        </div>
+
+        <div className="bg-background/10 backdrop-blur-lg border border-border rounded-2xl p-8 max-w-md w-full text-center space-y-6 flex flex-col">
+          <div className="flex justify-center">
+            <div className="p-4 rounded-full bg-primary/20 backdrop-blur-sm">
+              <CheckCircle2 className="w-16 h-16 text-primary" />
+            </div>
+          </div>
+
+          <Typhography variant="3xl" className="font-bold">
+            Registration Successful!
+          </Typhography>
+
+          <Typhography variant="lg" className="text-muted-foreground">
+            Your ticket has been generated and saved to your wallet.
+          </Typhography>
+
+          {/* Transaction Link */}
+          {txId && (
+            <a
+              href={`https://testnet.flowscan.io/transaction/${txId}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 text-primary hover:text-primary/80 transition-colors"
             >
-              <Typhography variant="lg">Home</Typhography>
+              <Typhography variant="t1" className="font-mono">
+                {txId.slice(0, 8)}...{txId.slice(-6)}
+              </Typhography>
+              <ExternalLink size={14} />
+            </a>
+          )}
+
+          <div className="flex flex-col gap-3 pt-4">
+            <Button onClick={handleClickMyTicket} size="lg" className="w-full">
+              <Typhography variant="lg">View My Tickets</Typhography>
             </Button>
-          </ItemFooter>
-        </ItemContent>
-      </ItemGroup>
+            <Button onClick={handleClickMyTicket} size="lg" variant="outline" className="w-full">
+              <Typhography variant="lg">Back to Home</Typhography>
+            </Button>
+          </div>
+        </div>
+      </motion.div>
     );
   }
 
   // Show loading state while fetching event
   if (isLoadingEvent) {
     return (
-      <div className="flex h-screen items-center justify-center">
+      <motion.div
+        animate={{ opacity: 1 }}
+        initial={{ opacity: 0 }}
+        className="min-h-screen bg-background relative isolate flex items-center justify-center"
+      >
+        <div className="absolute inset-0 -z-1">
+          <Galaxy />
+        </div>
         <div className="text-center">
           <Spinner />
           <Typhography variant="2xl" className="mt-4 text-muted-foreground">
             Loading event details...
           </Typhography>
         </div>
-      </div>
+      </motion.div>
     );
   }
 
   // Show error if event fetch failed
   if (eventError) {
     return (
-      <div className="flex h-screen items-center justify-center">
-        <div className="text-center p-6">
+      <motion.div
+        animate={{ opacity: 1 }}
+        initial={{ opacity: 0 }}
+        className="min-h-screen bg-background relative isolate flex items-center justify-center p-4"
+      >
+        <div className="absolute inset-0 -z-1">
+          <Galaxy />
+        </div>
+        <div className="bg-background/10 backdrop-blur-lg border border-border rounded-2xl p-8 max-w-md w-full text-center space-y-4">
           <Typhography variant="2xl" className="text-destructive">
             Failed to load event details
           </Typhography>
-          <Typhography variant="lg" className="text-muted-foreground mt-2">
+          <Typhography variant="lg" className="text-muted-foreground">
             {eventError instanceof Error ? eventError.message : "Unknown error"}
           </Typhography>
-          <Button onClick={handleClickBack} className="mt-4">
+          <Button onClick={handleClickBack} size="lg" className="w-full mt-4">
             Go Back
           </Button>
         </div>
-      </div>
+      </motion.div>
     );
   }
 
+  const formattedEvent = event ? formatEvent(event) : null;
+
   return (
-    <form className="min-h-screen text-foreground">
-      <FieldSet className="w-full py-2 px-6 flex flex-col justify-center items-center">
-        <div className="w-full flex justify-between items-center gap-2">
-          <Button
-            onClick={handleClickBack}
-            size={"icon-sm"}
-            variant={"outline"}
-            className="rounded-full"
-          >
-            <ArrowLeft />
-          </Button>
-          <Typhography variant="3xl" className="font-bold">
-            Registration Form
-          </Typhography>
-        </div>
+    <motion.div
+      animate={{ opacity: 1 }}
+      initial={{ opacity: 0 }}
+      className="min-h-screen bg-background relative isolate"
+    >
+      <div className="absolute inset-0 -z-1">
+        <Galaxy />
+      </div>
 
-        {/* Debug Info - Remove in production */}
-        {event && (
-          <div className="w-full my-2 p-2 bg-muted/50 rounded text-xs">
-            <Typhography variant="t3" className="text-muted-foreground">
-              Event: {event.eventName} (ID: {event.eventId})
-              <br />
-              Partner: {event.edges?.partner?.name || "Unknown"}
-              <br />
-              Brand Address: {event.edges?.partner?.address || "⚠️ MISSING"}
-            </Typhography>
-          </div>
-        )}
+      {/* Header with back button */}
+      <PageHeader showLogo />
 
-        {!user?.loggedIn && (
-          <div className="w-full my-4 p-4 bg-muted rounded-lg border border-border">
-            <Typhography variant="lg" className="text-muted-foreground text-center">
-              Please connect your wallet to register for this event
-            </Typhography>
-          </div>
-        )}
-        <FieldGroup>
-          <Field>
-            <FieldLabel htmlFor="name">
-              <Typhography variant="lg">
-                Name<span className="text-destructive">*</span>
-              </Typhography>
-            </FieldLabel>
-            <Input
-              id="name"
-              name="name"
-              autoComplete="off"
-              required
-              value={formData.name}
-              onChange={handleChange}
-              placeholder="Your Name"
-              max={50}
-            />
-          </Field>
-          <Field>
-            <FieldLabel htmlFor="email">
-              <Typhography variant="lg">
-                Email<span className="text-destructive">*</span>
-              </Typhography>
-            </FieldLabel>
-            <InputGroup>
-              <InputGroupInput
-                id="email"
-                type="email"
-                name="email"
-                autoComplete="off"
-                required
-                value={formData.email}
-                onChange={handleChange}
-                placeholder="Your Active Email"
-                max={50}
-              />
-              <InputGroupAddon>
-                <Label htmlFor="email">@</Label>
-              </InputGroupAddon>
-            </InputGroup>
-          </Field>
-          <Field>
-            <FieldLabel htmlFor="phoneNo">
-              <Typhography variant="lg">
-                Phone Number<span className="text-destructive">*</span>
-              </Typhography>
-            </FieldLabel>
-            <InputGroup>
-              <InputGroupInput
-                id="phoneNo"
-                type="number"
-                name="phoneNo"
-                autoComplete="off"
-                required
-                value={formData.phoneNo}
-                onChange={handleChange}
-                placeholder="Your Phone Number"
-                max={20}
-                min={5}
-              />
-              <InputGroupAddon>
-                <Label htmlFor="phoneNo">
-                  <Phone size={16} />
-                </Label>
-              </InputGroupAddon>
-            </InputGroup>
-          </Field>
-
-          <Field orientation="responsive">
-            <Button onClick={handleClickBack} type="button" variant="outline">
-              <Typhography variant="lg">Cancel</Typhography>
-            </Button>
-            <Button
-              type="submit"
-              className={`${isSubmitting || !user?.loggedIn ? "cursor-not-allowed" : ""}`}
-              disabled={isSubmitting || !user?.loggedIn}
-              onClick={handleSubmit}
-            >
-              {isSubmitting ? (
-                <>
-                  <Spinner />
-                  <Typhography variant="lg">Processing...</Typhography>
-                </>
-              ) : !user?.loggedIn ? (
-                <Typhography variant="lg">Connect Wallet First</Typhography>
-              ) : (
-                <Typhography variant="lg">Register</Typhography>
-              )}
-            </Button>
-          </Field>
-        </FieldGroup>
-      </FieldSet>
-    </form>
+      {/* Main content */}
+      <div className="container mx-auto px-4 py-8 max-w-2xl">
+        <RegistrationForm
+          eventName={formattedEvent?.eventName}
+          isSubmitting={isSubmitting}
+          isLoggedIn={!!user?.loggedIn}
+          onSubmit={handleSubmit}
+          onCancel={handleClickBack}
+        />
+      </div>
+    </motion.div>
   );
 };
 

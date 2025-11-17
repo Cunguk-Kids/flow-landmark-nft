@@ -1,20 +1,27 @@
-import { useEventList, formatEvent } from "@/hooks";
-import { useMediaQuery } from "@/hooks/useMediaQuery";
-import { Link } from "@tanstack/react-router";
-import { Typhography } from "./ui/typhography";
-import { Button } from "./ui/button";
-import { Badge } from "./ui/badge";
-import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
-import { Drawer, DrawerContent, DrawerTrigger, DrawerHeader, DrawerTitle, DrawerDescription } from "./ui/drawer";
-import { Calendar, MapPin, Users, LucidePartyPopper } from "lucide-react";
-import { formatDateTime, cn } from "@/lib/utils";
+import { useState } from 'react';
+import { useEventList, formatEvent } from '@/hooks';
+import { useMediaQuery } from '@/hooks/useMediaQuery';
+import { Link } from '@tanstack/react-router';
+import { Typhography } from './ui/typhography';
+import { Button } from './ui/button';
+import { Badge } from './ui/badge';
+import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
+import {
+  Drawer,
+  DrawerContent,
+  DrawerTrigger,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerDescription,
+} from './ui/drawer';
+import { Calendar, MapPin, Users, LucidePartyPopper } from 'lucide-react';
+import { formatDateTime, cn } from '@/lib/utils';
+import { store } from '@/stores';
 
-const EventListPopup = () => {
+// Shared content component
+const EventListContent = ({ onClose }: { onClose: () => void }) => {
   const { data, isLoading, error } = useEventList({ page: 1, limit: 10 });
-  const isDesktop = useMediaQuery("(min-width: 768px)");
-
-  // Shared content component
-  const EventListContent = () => (
+  return (
     <>
       {isLoading && (
         <div className="flex items-center justify-center h-32">
@@ -38,9 +45,8 @@ const EventListPopup = () => {
           <Link
             key={event.id}
             to="/events/details/$eventId"
-            params={{ eventId: event.id.toString() }}
-            className="block"
-          >
+            params={{ eventId: event.eventId.toString() }}
+            className="block dark">
             <div className="bg-card hover:bg-accent transition-colors rounded-lg border border-border overflow-hidden cursor-pointer">
               {/* Event Image */}
               <div className="relative h-32 overflow-hidden">
@@ -50,11 +56,7 @@ const EventListPopup = () => {
                   className="w-full h-full object-cover"
                 />
                 <div className="absolute top-2 right-2">
-                  <Badge
-                    variant={
-                      event.statusLabel === "Open" ? "default" : "secondary"
-                    }
-                  >
+                  <Badge variant={event.statusLabel === 'Active' ? 'default' : 'secondary'}>
                     <Typhography variant="t3">{event.statusLabel}</Typhography>
                   </Badge>
                 </div>
@@ -70,44 +72,58 @@ const EventListPopup = () => {
                   <div className="flex items-center gap-2 text-muted-foreground">
                     <Calendar size={14} />
                     <Typhography variant="t2">
-                      {formatDateTime(event.startDateTime.toISOString(), "date")}
+                      {formatDateTime(event.startDateTime.toISOString(), 'date')}
                     </Typhography>
                   </div>
 
                   <div className="flex items-center gap-2 text-muted-foreground">
                     <MapPin size={14} />
                     <Typhography variant="t2" className="line-clamp-1">
-                      {event.partner?.name || "Unknown Location"}
+                      {event.partner?.name || 'Unknown Location'}
                     </Typhography>
                   </div>
 
                   <div className="flex items-center gap-2 text-muted-foreground">
                     <Users size={14} />
                     <Typhography variant="t2">
-                      {event.participantCount}/{event.quota}{" "}
-                      {event.isFull ? "(Full)" : "spots"}
+                      {event?.participantCount || 0}/{event.quota}{' '}
+                      {event.isFull ? '(Full)' : 'spots'}
                     </Typhography>
                   </div>
                 </div>
 
-                <Button
-                  size="sm"
-                  variant={
-                    event.statusLabel === "Open" && !event.isFull
-                      ? "default"
-                      : "secondary"
-                  }
-                  disabled={event.statusLabel !== "Open" || event.isFull}
-                  className="w-full mt-2"
-                >
-                  <Typhography variant="t2">
-                    {event.isFull
-                      ? "Full"
-                      : event.statusLabel === "Open"
-                      ? "Register"
-                      : event.statusLabel}
-                  </Typhography>
-                </Button>
+                <div className="flex gap-2 w-full mt-2">
+                  <Button
+                    size="sm"
+                    variant={
+                      event.statusLabel === 'Active' && !event.isFull ? 'default' : 'secondary'
+                    }
+                    disabled={event.statusLabel !== 'Active' || event.isFull}
+                    className="flex-1">
+                    <Typhography variant="t2">
+                      {event.isFull
+                        ? 'Full'
+                        : event.statusLabel === 'Active'
+                          ? 'Register'
+                          : event.statusLabel}
+                    </Typhography>
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="aspect-square p-0"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      store.state.ref?.getMap().flyTo({
+                        center: [event.long, event.lat],
+                        zoom: 15,
+                        essential: true,
+                      });
+                      onClose();
+                    }}>
+                    <MapPin size={16} />
+                  </Button>
+                </div>
               </div>
             </div>
           </Link>
@@ -126,28 +142,31 @@ const EventListPopup = () => {
       )}
     </>
   );
+};
+
+const EventListPopup = () => {
+  const isDesktop = useMediaQuery('(min-width: 768px)');
+  const [open, setOpen] = useState(false);
+
+  const handleClose = () => setOpen(false);
 
   // Desktop: Use Popover
   if (isDesktop) {
     return (
-      <Popover>
+      <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
-          <Button
-            variant="outline"
-            size="icon"
-            className="absolute left-4 bottom-4 z-10 shadow-lg bg-background/95 backdrop-blur-lg"
-          >
+          <Button variant="link">
             <LucidePartyPopper />
+            Explore Events
           </Button>
         </PopoverTrigger>
         <PopoverContent
-          side="right"
-          align="start"
+          side="bottom"
+          align="end"
           sideOffset={12}
-          className={cn("w-80 md:w-96 h-[calc(100vh-8rem)] p-0 overflow-hidden dark")}
-        >
+          className={cn('w-80 md:w-96 h-[calc(100vh-8rem)] p-0 overflow-hidden dark')}>
           <div className="h-full flex flex-col">
-            {/* Header */}
+            {/* Header */}{' '}
             <div className="p-4 border-b border-border flex flex-col">
               <Typhography variant="2xl" className="font-bold">
                 Events Near You
@@ -156,10 +175,9 @@ const EventListPopup = () => {
                 Discover cultural moments
               </Typhography>
             </div>
-
             {/* Event List */}
             <div className="flex-1 overflow-y-auto p-4 space-y-3">
-              <EventListContent />
+              <EventListContent onClose={handleClose} />
             </div>
           </div>
         </PopoverContent>
@@ -169,14 +187,11 @@ const EventListPopup = () => {
 
   // Mobile: Use Drawer
   return (
-    <Drawer>
+    <Drawer open={open} onOpenChange={setOpen}>
       <DrawerTrigger asChild>
-        <Button
-          variant="outline"
-          size="icon"
-          className="absolute left-4 bottom-4 z-10 shadow-lg bg-background/95 backdrop-blur-lg"
-        >
+        <Button variant="link">
           <LucidePartyPopper />
+          Explore Events
         </Button>
       </DrawerTrigger>
       <DrawerContent className="max-h-[80vh] dark">
@@ -194,8 +209,8 @@ const EventListPopup = () => {
         </DrawerHeader>
 
         {/* Event List */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-3">
-          <EventListContent />
+        <div className="flex-1 overflow-y-auto p-4 space-y-3 dark">
+          <EventListContent onClose={handleClose} />
         </div>
       </DrawerContent>
     </Drawer>

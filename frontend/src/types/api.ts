@@ -9,8 +9,8 @@
 export interface EventParticipant {
   id: number;
   userAddress: string;
-  isCheckedIn: boolean;
-  edges: Record<string, unknown>;
+  isCheckedIn?: boolean; // Optional - may not be present in all responses
+  edges?: Record<string, unknown>;
 }
 
 /**
@@ -27,7 +27,7 @@ export interface Event {
   lat: number;
   long: number;
   radius: number;
-  status: number; // 0 = Upcoming, 1 = Active, 2 = Ended, 3 = Cancelled
+  status: number; // 0 = Pending, 1 = Active, 2 = Ended
   startDate: number; // Unix timestamp
   endDate: number; // Unix timestamp
   totalRareNFT: number;
@@ -116,12 +116,12 @@ export interface CheckInResponse {
 
 /**
  * Event status labels mapping
+ * Based on backend: 0=Pending, 1=Active, 2=Ended
  */
 export const EventStatusLabels = {
-  0: "Upcoming",
-  1: "Open",
+  0: "Pending",
+  1: "Active",
   2: "Ended",
-  3: "Cancelled",
 } as const;
 
 /**
@@ -131,7 +131,7 @@ export interface EventsQueryParams {
   page?: number;
   limit?: number;
   brandAddress?: string;
-  status?: number; // 0 = Upcoming, 1 = Active, 2 = Ended, 3 = Cancelled
+  status?: number; // 0 = Pending, 1 = Active, 2 = Ended
 }
 
 /**
@@ -148,7 +148,7 @@ export const formatEvent = (event: Event) => {
     startDateTime: new Date(event.startDate * 1000),
     endDateTime: new Date(event.endDate * 1000),
     // Get status label
-    statusLabel: EventStatusLabels[event.status as keyof typeof EventStatusLabels] || "Unknown",
+    statusLabel: EventStatusLabels[event.status as keyof typeof EventStatusLabels] || EventStatusLabels[0],
     // Get participants list
     participants: event.edges?.participants || [],
     // Get participant count
@@ -189,7 +189,7 @@ export interface PartnersListResponse {
   pagination: PaginationMeta;
 }
 
-export interface PartnerDetailResponse extends Partner {}
+export interface PartnerDetailResponse extends Partner { }
 
 /**
  * NFT types
@@ -199,6 +199,7 @@ export interface NFTMetadata {
   description: string;
   category: number;
   imageUrl: string;
+  imageURL: string;
   thumbnailUrl: string;
   weather: string;
   temperature: string;
@@ -217,12 +218,22 @@ export interface NFTMetadata {
   tags: string[];
 }
 
+export interface Edges {
+  event?: {
+    eventName?: string;
+    partner?: {
+      name?: string;
+    };
+  };
+};
+
 export interface NFT {
   nft_id: number;
   owner_address: string;
   rarity: number;
   metadata: NFTMetadata;
   mint_time: string;
+  edges: Edges;
 }
 
 export interface NFTsListResponse {

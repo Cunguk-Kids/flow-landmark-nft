@@ -1,19 +1,21 @@
-import * as React from "react";
-import Map, { Marker } from "react-map-gl/maplibre";
-import maplibregl from "maplibre-gl";
-import "maplibre-gl/dist/maplibre-gl.css";
-import { useQuery } from "@tanstack/react-query";
-import { useStore } from "@tanstack/react-store";
-import { store } from "@/stores";
-import { LocateFixed } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { useEventList } from "@/hooks/useEventList";
-import { EventCategoryIcon, EventMarkerContent } from "./EventMarkerContent";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+import * as React from 'react';
+import Map, { Marker } from 'react-map-gl/maplibre';
+import maplibregl from 'maplibre-gl';
+import 'maplibre-gl/dist/maplibre-gl.css';
+import { useQuery } from '@tanstack/react-query';
+import { useStore } from '@tanstack/react-store';
+import { store } from '@/stores';
+import { LocateFixed, Radius } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { useEventList } from '@/hooks/useEventList';
+// import { LocateFixed, LucideMapPin } from 'lucide-react';
+// import { EventMarkerContent } from './EventMarkerContent';
+// import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { DynamicRadiusMarkers } from './components/DynamicRadiusMarkers';
+import { twMerge } from 'tailwind-merge';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import MapZoomInfo from './components/MapZoomInfo';
+import MyListNft from './components/MyListNft';
 
 async function getCurrentLocation() {
   return new Promise<GeolocationPosition>((resolve, reject) => {
@@ -27,17 +29,19 @@ async function getCurrentLocation() {
 
 const SandboxMap: React.FC = () => {
   const viewport = useStore(store, (x) => x.mapViewState);
+  const [showRadius, setShowRadius] = React.useState(true);
+
   const setViewport = React.useCallback(
     (viewp: typeof viewport) =>
       store.setState((prev) => ({
         ...prev,
         mapViewState: viewp,
       })),
-    []
+    [],
   );
 
   const { data: position } = useQuery({
-    queryKey: ["geolocation"],
+    queryKey: ['geolocation'],
     queryFn: getCurrentLocation,
     retry: false,
   });
@@ -63,24 +67,23 @@ const SandboxMap: React.FC = () => {
         initialViewState={viewport}
         onMove={(evt) => setViewport(evt.viewState)}
         mapStyle="https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json"
-        style={{ width: "100%", height: "100%" }}
-      >
+        style={{ width: '100%', height: '100%' }}>
         {position && (
           <Marker
             latitude={position?.coords.latitude}
             longitude={position?.coords.longitude}
-            anchor="bottom"
-          >
-            <div className="bg-blue-500 w-4 h-4 rounded-full border-2 border-white shadow-lg" />
+            anchor="bottom">
+            <div className="bg-primary w-4 h-4 rounded-full border-2 border-white shadow-lg" />
           </Marker>
         )}
-        {eventList?.data.map((event) => (
-          <Marker
-            key={event.id}
-            latitude={event.lat}
-            longitude={event.long}
-            anchor="bottom"
-          >
+        <DynamicRadiusMarkers
+          showRadius={showRadius}
+          mapRef={store.state.ref}
+          eventList={eventList?.data || []}
+        />
+
+        {/* {eventList?.data.map((event) => (
+          <Marker key={event.id} latitude={event.lat} longitude={event.long} anchor="bottom">
             <Popover>
               <PopoverContent>
                 <EventMarkerContent event={event} />
@@ -88,27 +91,51 @@ const SandboxMap: React.FC = () => {
               <PopoverTrigger asChild>
                 <Button
                   className="cursor-pointer rounded-full"
-                  title={event.eventName.replace(/^"|"$/g, "")}
-                  variant="outline"
-                  size="icon"
-                >
-                  <EventCategoryIcon category={''} />
+                  title={event.eventName.replace(/^"|"$/g, '')}
+                  variant="ghost"
+                  size="icon">
+                  <LucideMapPin className="text-primary fill-primary/10 size-5" />
                 </Button>
               </PopoverTrigger>
             </Popover>
           </Marker>
-        ))}
+        ))} */}
       </Map>
+      <div className="absolute bottom-0 left-2 z-30">
+        <MapZoomInfo mapRef={store.state.ref} />
+      </div>
       {position?.coords && (
         <Button
           onClick={handleCenterToUser}
           variant="secondary"
           size="icon"
-          className="rounded-full shadow-lg bg-white hover:bg-gray-100 absolute bottom-12 right-2"
-        >
-          <LocateFixed className="w-8 h-8 text-blue-600" />
+          className="rounded-full shadow-lg bg-white hover:bg-gray-100 absolute bottom-12 right-2">
+          <LocateFixed className="w-8 h-8 text-primary" />
         </Button>
       )}
+
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            onClick={() => setShowRadius((old) => !old)}
+            variant="secondary"
+            size="icon"
+            className={twMerge(
+              'rounded-full shadow-lg bg-white hover:bg-gray-100 absolute bottom-24 right-2 cursor-pointer transition-colors',
+              showRadius && 'bg-primary hover:bg-primary/90',
+            )}>
+            <Radius className={twMerge('w-8 h-8 text-primary', showRadius && 'text-white')} />
+          </Button>
+        </TooltipTrigger>
+
+        <TooltipContent side="left" className="text-xs font-medium">
+          Show all radius <br /> (available at zoom level 10)
+        </TooltipContent>
+
+        <div className="absolute top-24 left-2 z-40">
+          <MyListNft />
+        </div>
+      </Tooltip>
     </div>
   );
 };
