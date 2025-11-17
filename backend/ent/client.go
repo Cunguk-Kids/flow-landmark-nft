@@ -11,10 +11,13 @@ import (
 
 	"backend/ent/migrate"
 
+	"backend/ent/attendance"
 	"backend/ent/event"
-	"backend/ent/eventparticipant"
-	"backend/ent/nft"
-	"backend/ent/partner"
+	"backend/ent/eventpass"
+	"backend/ent/listing"
+	"backend/ent/nftaccessory"
+	"backend/ent/nftmoment"
+	"backend/ent/user"
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect"
@@ -27,14 +30,20 @@ type Client struct {
 	config
 	// Schema is the client for creating, migrating and dropping schema.
 	Schema *migrate.Schema
+	// Attendance is the client for interacting with the Attendance builders.
+	Attendance *AttendanceClient
 	// Event is the client for interacting with the Event builders.
 	Event *EventClient
-	// EventParticipant is the client for interacting with the EventParticipant builders.
-	EventParticipant *EventParticipantClient
-	// Nft is the client for interacting with the Nft builders.
-	Nft *NftClient
-	// Partner is the client for interacting with the Partner builders.
-	Partner *PartnerClient
+	// EventPass is the client for interacting with the EventPass builders.
+	EventPass *EventPassClient
+	// Listing is the client for interacting with the Listing builders.
+	Listing *ListingClient
+	// NFTAccessory is the client for interacting with the NFTAccessory builders.
+	NFTAccessory *NFTAccessoryClient
+	// NFTMoment is the client for interacting with the NFTMoment builders.
+	NFTMoment *NFTMomentClient
+	// User is the client for interacting with the User builders.
+	User *UserClient
 }
 
 // NewClient creates a new client configured with the given options.
@@ -46,10 +55,13 @@ func NewClient(opts ...Option) *Client {
 
 func (c *Client) init() {
 	c.Schema = migrate.NewSchema(c.driver)
+	c.Attendance = NewAttendanceClient(c.config)
 	c.Event = NewEventClient(c.config)
-	c.EventParticipant = NewEventParticipantClient(c.config)
-	c.Nft = NewNftClient(c.config)
-	c.Partner = NewPartnerClient(c.config)
+	c.EventPass = NewEventPassClient(c.config)
+	c.Listing = NewListingClient(c.config)
+	c.NFTAccessory = NewNFTAccessoryClient(c.config)
+	c.NFTMoment = NewNFTMomentClient(c.config)
+	c.User = NewUserClient(c.config)
 }
 
 type (
@@ -140,12 +152,15 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 	cfg := c.config
 	cfg.driver = tx
 	return &Tx{
-		ctx:              ctx,
-		config:           cfg,
-		Event:            NewEventClient(cfg),
-		EventParticipant: NewEventParticipantClient(cfg),
-		Nft:              NewNftClient(cfg),
-		Partner:          NewPartnerClient(cfg),
+		ctx:          ctx,
+		config:       cfg,
+		Attendance:   NewAttendanceClient(cfg),
+		Event:        NewEventClient(cfg),
+		EventPass:    NewEventPassClient(cfg),
+		Listing:      NewListingClient(cfg),
+		NFTAccessory: NewNFTAccessoryClient(cfg),
+		NFTMoment:    NewNFTMomentClient(cfg),
+		User:         NewUserClient(cfg),
 	}, nil
 }
 
@@ -163,19 +178,22 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 	cfg := c.config
 	cfg.driver = &txDriver{tx: tx, drv: c.driver}
 	return &Tx{
-		ctx:              ctx,
-		config:           cfg,
-		Event:            NewEventClient(cfg),
-		EventParticipant: NewEventParticipantClient(cfg),
-		Nft:              NewNftClient(cfg),
-		Partner:          NewPartnerClient(cfg),
+		ctx:          ctx,
+		config:       cfg,
+		Attendance:   NewAttendanceClient(cfg),
+		Event:        NewEventClient(cfg),
+		EventPass:    NewEventPassClient(cfg),
+		Listing:      NewListingClient(cfg),
+		NFTAccessory: NewNFTAccessoryClient(cfg),
+		NFTMoment:    NewNFTMomentClient(cfg),
+		User:         NewUserClient(cfg),
 	}, nil
 }
 
 // Debug returns a new debug-client. It's used to get verbose logging on specific operations.
 //
 //	client.Debug().
-//		Event.
+//		Attendance.
 //		Query().
 //		Count(ctx)
 func (c *Client) Debug() *Client {
@@ -197,34 +215,209 @@ func (c *Client) Close() error {
 // Use adds the mutation hooks to all the entity clients.
 // In order to add hooks to a specific client, call: `client.Node.Use(...)`.
 func (c *Client) Use(hooks ...Hook) {
-	c.Event.Use(hooks...)
-	c.EventParticipant.Use(hooks...)
-	c.Nft.Use(hooks...)
-	c.Partner.Use(hooks...)
+	for _, n := range []interface{ Use(...Hook) }{
+		c.Attendance, c.Event, c.EventPass, c.Listing, c.NFTAccessory, c.NFTMoment,
+		c.User,
+	} {
+		n.Use(hooks...)
+	}
 }
 
 // Intercept adds the query interceptors to all the entity clients.
 // In order to add interceptors to a specific client, call: `client.Node.Intercept(...)`.
 func (c *Client) Intercept(interceptors ...Interceptor) {
-	c.Event.Intercept(interceptors...)
-	c.EventParticipant.Intercept(interceptors...)
-	c.Nft.Intercept(interceptors...)
-	c.Partner.Intercept(interceptors...)
+	for _, n := range []interface{ Intercept(...Interceptor) }{
+		c.Attendance, c.Event, c.EventPass, c.Listing, c.NFTAccessory, c.NFTMoment,
+		c.User,
+	} {
+		n.Intercept(interceptors...)
+	}
 }
 
 // Mutate implements the ent.Mutator interface.
 func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 	switch m := m.(type) {
+	case *AttendanceMutation:
+		return c.Attendance.mutate(ctx, m)
 	case *EventMutation:
 		return c.Event.mutate(ctx, m)
-	case *EventParticipantMutation:
-		return c.EventParticipant.mutate(ctx, m)
-	case *NftMutation:
-		return c.Nft.mutate(ctx, m)
-	case *PartnerMutation:
-		return c.Partner.mutate(ctx, m)
+	case *EventPassMutation:
+		return c.EventPass.mutate(ctx, m)
+	case *ListingMutation:
+		return c.Listing.mutate(ctx, m)
+	case *NFTAccessoryMutation:
+		return c.NFTAccessory.mutate(ctx, m)
+	case *NFTMomentMutation:
+		return c.NFTMoment.mutate(ctx, m)
+	case *UserMutation:
+		return c.User.mutate(ctx, m)
 	default:
 		return nil, fmt.Errorf("ent: unknown mutation type %T", m)
+	}
+}
+
+// AttendanceClient is a client for the Attendance schema.
+type AttendanceClient struct {
+	config
+}
+
+// NewAttendanceClient returns a client for the Attendance from the given config.
+func NewAttendanceClient(c config) *AttendanceClient {
+	return &AttendanceClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `attendance.Hooks(f(g(h())))`.
+func (c *AttendanceClient) Use(hooks ...Hook) {
+	c.hooks.Attendance = append(c.hooks.Attendance, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `attendance.Intercept(f(g(h())))`.
+func (c *AttendanceClient) Intercept(interceptors ...Interceptor) {
+	c.inters.Attendance = append(c.inters.Attendance, interceptors...)
+}
+
+// Create returns a builder for creating a Attendance entity.
+func (c *AttendanceClient) Create() *AttendanceCreate {
+	mutation := newAttendanceMutation(c.config, OpCreate)
+	return &AttendanceCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of Attendance entities.
+func (c *AttendanceClient) CreateBulk(builders ...*AttendanceCreate) *AttendanceCreateBulk {
+	return &AttendanceCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *AttendanceClient) MapCreateBulk(slice any, setFunc func(*AttendanceCreate, int)) *AttendanceCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &AttendanceCreateBulk{err: fmt.Errorf("calling to AttendanceClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*AttendanceCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &AttendanceCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for Attendance.
+func (c *AttendanceClient) Update() *AttendanceUpdate {
+	mutation := newAttendanceMutation(c.config, OpUpdate)
+	return &AttendanceUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *AttendanceClient) UpdateOne(_m *Attendance) *AttendanceUpdateOne {
+	mutation := newAttendanceMutation(c.config, OpUpdateOne, withAttendance(_m))
+	return &AttendanceUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *AttendanceClient) UpdateOneID(id int) *AttendanceUpdateOne {
+	mutation := newAttendanceMutation(c.config, OpUpdateOne, withAttendanceID(id))
+	return &AttendanceUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for Attendance.
+func (c *AttendanceClient) Delete() *AttendanceDelete {
+	mutation := newAttendanceMutation(c.config, OpDelete)
+	return &AttendanceDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *AttendanceClient) DeleteOne(_m *Attendance) *AttendanceDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *AttendanceClient) DeleteOneID(id int) *AttendanceDeleteOne {
+	builder := c.Delete().Where(attendance.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &AttendanceDeleteOne{builder}
+}
+
+// Query returns a query builder for Attendance.
+func (c *AttendanceClient) Query() *AttendanceQuery {
+	return &AttendanceQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeAttendance},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a Attendance entity by its id.
+func (c *AttendanceClient) Get(ctx context.Context, id int) (*Attendance, error) {
+	return c.Query().Where(attendance.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *AttendanceClient) GetX(ctx context.Context, id int) *Attendance {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryUser queries the user edge of a Attendance.
+func (c *AttendanceClient) QueryUser(_m *Attendance) *UserQuery {
+	query := (&UserClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(attendance.Table, attendance.FieldID, id),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, attendance.UserTable, attendance.UserColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryEvent queries the event edge of a Attendance.
+func (c *AttendanceClient) QueryEvent(_m *Attendance) *EventQuery {
+	query := (&EventClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(attendance.Table, attendance.FieldID, id),
+			sqlgraph.To(event.Table, event.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, attendance.EventTable, attendance.EventColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *AttendanceClient) Hooks() []Hook {
+	return c.hooks.Attendance
+}
+
+// Interceptors returns the client interceptors.
+func (c *AttendanceClient) Interceptors() []Interceptor {
+	return c.inters.Attendance
+}
+
+func (c *AttendanceClient) mutate(ctx context.Context, m *AttendanceMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&AttendanceCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&AttendanceUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&AttendanceUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&AttendanceDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown Attendance mutation op: %q", m.Op())
 	}
 }
 
@@ -336,15 +529,15 @@ func (c *EventClient) GetX(ctx context.Context, id int) *Event {
 	return obj
 }
 
-// QueryParticipants queries the participants edge of a Event.
-func (c *EventClient) QueryParticipants(_m *Event) *EventParticipantQuery {
-	query := (&EventParticipantClient{config: c.config}).Query()
+// QueryHost queries the host edge of a Event.
+func (c *EventClient) QueryHost(_m *Event) *UserQuery {
+	query := (&UserClient{config: c.config}).Query()
 	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := _m.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(event.Table, event.FieldID, id),
-			sqlgraph.To(eventparticipant.Table, eventparticipant.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, event.ParticipantsTable, event.ParticipantsColumn),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, event.HostTable, event.HostColumn),
 		)
 		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil
@@ -352,15 +545,15 @@ func (c *EventClient) QueryParticipants(_m *Event) *EventParticipantQuery {
 	return query
 }
 
-// QueryPartner queries the partner edge of a Event.
-func (c *EventClient) QueryPartner(_m *Event) *PartnerQuery {
-	query := (&PartnerClient{config: c.config}).Query()
+// QueryPassesIssued queries the passes_issued edge of a Event.
+func (c *EventClient) QueryPassesIssued(_m *Event) *EventPassQuery {
+	query := (&EventPassClient{config: c.config}).Query()
 	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := _m.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(event.Table, event.FieldID, id),
-			sqlgraph.To(partner.Table, partner.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, event.PartnerTable, event.PartnerColumn),
+			sqlgraph.To(eventpass.Table, eventpass.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, event.PassesIssuedTable, event.PassesIssuedColumn),
 		)
 		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil
@@ -368,15 +561,15 @@ func (c *EventClient) QueryPartner(_m *Event) *PartnerQuery {
 	return query
 }
 
-// QueryNfts queries the nfts edge of a Event.
-func (c *EventClient) QueryNfts(_m *Event) *NftQuery {
-	query := (&NftClient{config: c.config}).Query()
+// QueryAttendances queries the attendances edge of a Event.
+func (c *EventClient) QueryAttendances(_m *Event) *AttendanceQuery {
+	query := (&AttendanceClient{config: c.config}).Query()
 	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := _m.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(event.Table, event.FieldID, id),
-			sqlgraph.To(nft.Table, nft.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, event.NftsTable, event.NftsColumn),
+			sqlgraph.To(attendance.Table, attendance.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, event.AttendancesTable, event.AttendancesColumn),
 		)
 		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil
@@ -409,107 +602,107 @@ func (c *EventClient) mutate(ctx context.Context, m *EventMutation) (Value, erro
 	}
 }
 
-// EventParticipantClient is a client for the EventParticipant schema.
-type EventParticipantClient struct {
+// EventPassClient is a client for the EventPass schema.
+type EventPassClient struct {
 	config
 }
 
-// NewEventParticipantClient returns a client for the EventParticipant from the given config.
-func NewEventParticipantClient(c config) *EventParticipantClient {
-	return &EventParticipantClient{config: c}
+// NewEventPassClient returns a client for the EventPass from the given config.
+func NewEventPassClient(c config) *EventPassClient {
+	return &EventPassClient{config: c}
 }
 
 // Use adds a list of mutation hooks to the hooks stack.
-// A call to `Use(f, g, h)` equals to `eventparticipant.Hooks(f(g(h())))`.
-func (c *EventParticipantClient) Use(hooks ...Hook) {
-	c.hooks.EventParticipant = append(c.hooks.EventParticipant, hooks...)
+// A call to `Use(f, g, h)` equals to `eventpass.Hooks(f(g(h())))`.
+func (c *EventPassClient) Use(hooks ...Hook) {
+	c.hooks.EventPass = append(c.hooks.EventPass, hooks...)
 }
 
 // Intercept adds a list of query interceptors to the interceptors stack.
-// A call to `Intercept(f, g, h)` equals to `eventparticipant.Intercept(f(g(h())))`.
-func (c *EventParticipantClient) Intercept(interceptors ...Interceptor) {
-	c.inters.EventParticipant = append(c.inters.EventParticipant, interceptors...)
+// A call to `Intercept(f, g, h)` equals to `eventpass.Intercept(f(g(h())))`.
+func (c *EventPassClient) Intercept(interceptors ...Interceptor) {
+	c.inters.EventPass = append(c.inters.EventPass, interceptors...)
 }
 
-// Create returns a builder for creating a EventParticipant entity.
-func (c *EventParticipantClient) Create() *EventParticipantCreate {
-	mutation := newEventParticipantMutation(c.config, OpCreate)
-	return &EventParticipantCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+// Create returns a builder for creating a EventPass entity.
+func (c *EventPassClient) Create() *EventPassCreate {
+	mutation := newEventPassMutation(c.config, OpCreate)
+	return &EventPassCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
 
-// CreateBulk returns a builder for creating a bulk of EventParticipant entities.
-func (c *EventParticipantClient) CreateBulk(builders ...*EventParticipantCreate) *EventParticipantCreateBulk {
-	return &EventParticipantCreateBulk{config: c.config, builders: builders}
+// CreateBulk returns a builder for creating a bulk of EventPass entities.
+func (c *EventPassClient) CreateBulk(builders ...*EventPassCreate) *EventPassCreateBulk {
+	return &EventPassCreateBulk{config: c.config, builders: builders}
 }
 
 // MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
 // a builder and applies setFunc on it.
-func (c *EventParticipantClient) MapCreateBulk(slice any, setFunc func(*EventParticipantCreate, int)) *EventParticipantCreateBulk {
+func (c *EventPassClient) MapCreateBulk(slice any, setFunc func(*EventPassCreate, int)) *EventPassCreateBulk {
 	rv := reflect.ValueOf(slice)
 	if rv.Kind() != reflect.Slice {
-		return &EventParticipantCreateBulk{err: fmt.Errorf("calling to EventParticipantClient.MapCreateBulk with wrong type %T, need slice", slice)}
+		return &EventPassCreateBulk{err: fmt.Errorf("calling to EventPassClient.MapCreateBulk with wrong type %T, need slice", slice)}
 	}
-	builders := make([]*EventParticipantCreate, rv.Len())
+	builders := make([]*EventPassCreate, rv.Len())
 	for i := 0; i < rv.Len(); i++ {
 		builders[i] = c.Create()
 		setFunc(builders[i], i)
 	}
-	return &EventParticipantCreateBulk{config: c.config, builders: builders}
+	return &EventPassCreateBulk{config: c.config, builders: builders}
 }
 
-// Update returns an update builder for EventParticipant.
-func (c *EventParticipantClient) Update() *EventParticipantUpdate {
-	mutation := newEventParticipantMutation(c.config, OpUpdate)
-	return &EventParticipantUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+// Update returns an update builder for EventPass.
+func (c *EventPassClient) Update() *EventPassUpdate {
+	mutation := newEventPassMutation(c.config, OpUpdate)
+	return &EventPassUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
 
 // UpdateOne returns an update builder for the given entity.
-func (c *EventParticipantClient) UpdateOne(_m *EventParticipant) *EventParticipantUpdateOne {
-	mutation := newEventParticipantMutation(c.config, OpUpdateOne, withEventParticipant(_m))
-	return &EventParticipantUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+func (c *EventPassClient) UpdateOne(_m *EventPass) *EventPassUpdateOne {
+	mutation := newEventPassMutation(c.config, OpUpdateOne, withEventPass(_m))
+	return &EventPassUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
 
 // UpdateOneID returns an update builder for the given id.
-func (c *EventParticipantClient) UpdateOneID(id int) *EventParticipantUpdateOne {
-	mutation := newEventParticipantMutation(c.config, OpUpdateOne, withEventParticipantID(id))
-	return &EventParticipantUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+func (c *EventPassClient) UpdateOneID(id int) *EventPassUpdateOne {
+	mutation := newEventPassMutation(c.config, OpUpdateOne, withEventPassID(id))
+	return &EventPassUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
 
-// Delete returns a delete builder for EventParticipant.
-func (c *EventParticipantClient) Delete() *EventParticipantDelete {
-	mutation := newEventParticipantMutation(c.config, OpDelete)
-	return &EventParticipantDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+// Delete returns a delete builder for EventPass.
+func (c *EventPassClient) Delete() *EventPassDelete {
+	mutation := newEventPassMutation(c.config, OpDelete)
+	return &EventPassDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
 
 // DeleteOne returns a builder for deleting the given entity.
-func (c *EventParticipantClient) DeleteOne(_m *EventParticipant) *EventParticipantDeleteOne {
+func (c *EventPassClient) DeleteOne(_m *EventPass) *EventPassDeleteOne {
 	return c.DeleteOneID(_m.ID)
 }
 
 // DeleteOneID returns a builder for deleting the given entity by its id.
-func (c *EventParticipantClient) DeleteOneID(id int) *EventParticipantDeleteOne {
-	builder := c.Delete().Where(eventparticipant.ID(id))
+func (c *EventPassClient) DeleteOneID(id int) *EventPassDeleteOne {
+	builder := c.Delete().Where(eventpass.ID(id))
 	builder.mutation.id = &id
 	builder.mutation.op = OpDeleteOne
-	return &EventParticipantDeleteOne{builder}
+	return &EventPassDeleteOne{builder}
 }
 
-// Query returns a query builder for EventParticipant.
-func (c *EventParticipantClient) Query() *EventParticipantQuery {
-	return &EventParticipantQuery{
+// Query returns a query builder for EventPass.
+func (c *EventPassClient) Query() *EventPassQuery {
+	return &EventPassQuery{
 		config: c.config,
-		ctx:    &QueryContext{Type: TypeEventParticipant},
+		ctx:    &QueryContext{Type: TypeEventPass},
 		inters: c.Interceptors(),
 	}
 }
 
-// Get returns a EventParticipant entity by its id.
-func (c *EventParticipantClient) Get(ctx context.Context, id int) (*EventParticipant, error) {
-	return c.Query().Where(eventparticipant.ID(id)).Only(ctx)
+// Get returns a EventPass entity by its id.
+func (c *EventPassClient) Get(ctx context.Context, id int) (*EventPass, error) {
+	return c.Query().Where(eventpass.ID(id)).Only(ctx)
 }
 
 // GetX is like Get, but panics if an error occurs.
-func (c *EventParticipantClient) GetX(ctx context.Context, id int) *EventParticipant {
+func (c *EventPassClient) GetX(ctx context.Context, id int) *EventPass {
 	obj, err := c.Get(ctx, id)
 	if err != nil {
 		panic(err)
@@ -517,15 +710,47 @@ func (c *EventParticipantClient) GetX(ctx context.Context, id int) *EventPartici
 	return obj
 }
 
-// QueryEvent queries the event edge of a EventParticipant.
-func (c *EventParticipantClient) QueryEvent(_m *EventParticipant) *EventQuery {
+// QueryOwner queries the owner edge of a EventPass.
+func (c *EventPassClient) QueryOwner(_m *EventPass) *UserQuery {
+	query := (&UserClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(eventpass.Table, eventpass.FieldID, id),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, eventpass.OwnerTable, eventpass.OwnerColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryEvent queries the event edge of a EventPass.
+func (c *EventPassClient) QueryEvent(_m *EventPass) *EventQuery {
 	query := (&EventClient{config: c.config}).Query()
 	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := _m.ID
 		step := sqlgraph.NewStep(
-			sqlgraph.From(eventparticipant.Table, eventparticipant.FieldID, id),
+			sqlgraph.From(eventpass.Table, eventpass.FieldID, id),
 			sqlgraph.To(event.Table, event.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, eventparticipant.EventTable, eventparticipant.EventColumn),
+			sqlgraph.Edge(sqlgraph.M2O, true, eventpass.EventTable, eventpass.EventColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryMoment queries the moment edge of a EventPass.
+func (c *EventPassClient) QueryMoment(_m *EventPass) *NFTMomentQuery {
+	query := (&NFTMomentClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(eventpass.Table, eventpass.FieldID, id),
+			sqlgraph.To(nftmoment.Table, nftmoment.FieldID),
+			sqlgraph.Edge(sqlgraph.O2O, false, eventpass.MomentTable, eventpass.MomentColumn),
 		)
 		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil
@@ -534,131 +759,131 @@ func (c *EventParticipantClient) QueryEvent(_m *EventParticipant) *EventQuery {
 }
 
 // Hooks returns the client hooks.
-func (c *EventParticipantClient) Hooks() []Hook {
-	return c.hooks.EventParticipant
+func (c *EventPassClient) Hooks() []Hook {
+	return c.hooks.EventPass
 }
 
 // Interceptors returns the client interceptors.
-func (c *EventParticipantClient) Interceptors() []Interceptor {
-	return c.inters.EventParticipant
+func (c *EventPassClient) Interceptors() []Interceptor {
+	return c.inters.EventPass
 }
 
-func (c *EventParticipantClient) mutate(ctx context.Context, m *EventParticipantMutation) (Value, error) {
+func (c *EventPassClient) mutate(ctx context.Context, m *EventPassMutation) (Value, error) {
 	switch m.Op() {
 	case OpCreate:
-		return (&EventParticipantCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+		return (&EventPassCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
 	case OpUpdate:
-		return (&EventParticipantUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+		return (&EventPassUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
 	case OpUpdateOne:
-		return (&EventParticipantUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+		return (&EventPassUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
 	case OpDelete, OpDeleteOne:
-		return (&EventParticipantDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+		return (&EventPassDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
-		return nil, fmt.Errorf("ent: unknown EventParticipant mutation op: %q", m.Op())
+		return nil, fmt.Errorf("ent: unknown EventPass mutation op: %q", m.Op())
 	}
 }
 
-// NftClient is a client for the Nft schema.
-type NftClient struct {
+// ListingClient is a client for the Listing schema.
+type ListingClient struct {
 	config
 }
 
-// NewNftClient returns a client for the Nft from the given config.
-func NewNftClient(c config) *NftClient {
-	return &NftClient{config: c}
+// NewListingClient returns a client for the Listing from the given config.
+func NewListingClient(c config) *ListingClient {
+	return &ListingClient{config: c}
 }
 
 // Use adds a list of mutation hooks to the hooks stack.
-// A call to `Use(f, g, h)` equals to `nft.Hooks(f(g(h())))`.
-func (c *NftClient) Use(hooks ...Hook) {
-	c.hooks.Nft = append(c.hooks.Nft, hooks...)
+// A call to `Use(f, g, h)` equals to `listing.Hooks(f(g(h())))`.
+func (c *ListingClient) Use(hooks ...Hook) {
+	c.hooks.Listing = append(c.hooks.Listing, hooks...)
 }
 
 // Intercept adds a list of query interceptors to the interceptors stack.
-// A call to `Intercept(f, g, h)` equals to `nft.Intercept(f(g(h())))`.
-func (c *NftClient) Intercept(interceptors ...Interceptor) {
-	c.inters.Nft = append(c.inters.Nft, interceptors...)
+// A call to `Intercept(f, g, h)` equals to `listing.Intercept(f(g(h())))`.
+func (c *ListingClient) Intercept(interceptors ...Interceptor) {
+	c.inters.Listing = append(c.inters.Listing, interceptors...)
 }
 
-// Create returns a builder for creating a Nft entity.
-func (c *NftClient) Create() *NftCreate {
-	mutation := newNftMutation(c.config, OpCreate)
-	return &NftCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+// Create returns a builder for creating a Listing entity.
+func (c *ListingClient) Create() *ListingCreate {
+	mutation := newListingMutation(c.config, OpCreate)
+	return &ListingCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
 
-// CreateBulk returns a builder for creating a bulk of Nft entities.
-func (c *NftClient) CreateBulk(builders ...*NftCreate) *NftCreateBulk {
-	return &NftCreateBulk{config: c.config, builders: builders}
+// CreateBulk returns a builder for creating a bulk of Listing entities.
+func (c *ListingClient) CreateBulk(builders ...*ListingCreate) *ListingCreateBulk {
+	return &ListingCreateBulk{config: c.config, builders: builders}
 }
 
 // MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
 // a builder and applies setFunc on it.
-func (c *NftClient) MapCreateBulk(slice any, setFunc func(*NftCreate, int)) *NftCreateBulk {
+func (c *ListingClient) MapCreateBulk(slice any, setFunc func(*ListingCreate, int)) *ListingCreateBulk {
 	rv := reflect.ValueOf(slice)
 	if rv.Kind() != reflect.Slice {
-		return &NftCreateBulk{err: fmt.Errorf("calling to NftClient.MapCreateBulk with wrong type %T, need slice", slice)}
+		return &ListingCreateBulk{err: fmt.Errorf("calling to ListingClient.MapCreateBulk with wrong type %T, need slice", slice)}
 	}
-	builders := make([]*NftCreate, rv.Len())
+	builders := make([]*ListingCreate, rv.Len())
 	for i := 0; i < rv.Len(); i++ {
 		builders[i] = c.Create()
 		setFunc(builders[i], i)
 	}
-	return &NftCreateBulk{config: c.config, builders: builders}
+	return &ListingCreateBulk{config: c.config, builders: builders}
 }
 
-// Update returns an update builder for Nft.
-func (c *NftClient) Update() *NftUpdate {
-	mutation := newNftMutation(c.config, OpUpdate)
-	return &NftUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+// Update returns an update builder for Listing.
+func (c *ListingClient) Update() *ListingUpdate {
+	mutation := newListingMutation(c.config, OpUpdate)
+	return &ListingUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
 
 // UpdateOne returns an update builder for the given entity.
-func (c *NftClient) UpdateOne(_m *Nft) *NftUpdateOne {
-	mutation := newNftMutation(c.config, OpUpdateOne, withNft(_m))
-	return &NftUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+func (c *ListingClient) UpdateOne(_m *Listing) *ListingUpdateOne {
+	mutation := newListingMutation(c.config, OpUpdateOne, withListing(_m))
+	return &ListingUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
 
 // UpdateOneID returns an update builder for the given id.
-func (c *NftClient) UpdateOneID(id int) *NftUpdateOne {
-	mutation := newNftMutation(c.config, OpUpdateOne, withNftID(id))
-	return &NftUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+func (c *ListingClient) UpdateOneID(id int) *ListingUpdateOne {
+	mutation := newListingMutation(c.config, OpUpdateOne, withListingID(id))
+	return &ListingUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
 
-// Delete returns a delete builder for Nft.
-func (c *NftClient) Delete() *NftDelete {
-	mutation := newNftMutation(c.config, OpDelete)
-	return &NftDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+// Delete returns a delete builder for Listing.
+func (c *ListingClient) Delete() *ListingDelete {
+	mutation := newListingMutation(c.config, OpDelete)
+	return &ListingDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
 
 // DeleteOne returns a builder for deleting the given entity.
-func (c *NftClient) DeleteOne(_m *Nft) *NftDeleteOne {
+func (c *ListingClient) DeleteOne(_m *Listing) *ListingDeleteOne {
 	return c.DeleteOneID(_m.ID)
 }
 
 // DeleteOneID returns a builder for deleting the given entity by its id.
-func (c *NftClient) DeleteOneID(id int) *NftDeleteOne {
-	builder := c.Delete().Where(nft.ID(id))
+func (c *ListingClient) DeleteOneID(id int) *ListingDeleteOne {
+	builder := c.Delete().Where(listing.ID(id))
 	builder.mutation.id = &id
 	builder.mutation.op = OpDeleteOne
-	return &NftDeleteOne{builder}
+	return &ListingDeleteOne{builder}
 }
 
-// Query returns a query builder for Nft.
-func (c *NftClient) Query() *NftQuery {
-	return &NftQuery{
+// Query returns a query builder for Listing.
+func (c *ListingClient) Query() *ListingQuery {
+	return &ListingQuery{
 		config: c.config,
-		ctx:    &QueryContext{Type: TypeNft},
+		ctx:    &QueryContext{Type: TypeListing},
 		inters: c.Interceptors(),
 	}
 }
 
-// Get returns a Nft entity by its id.
-func (c *NftClient) Get(ctx context.Context, id int) (*Nft, error) {
-	return c.Query().Where(nft.ID(id)).Only(ctx)
+// Get returns a Listing entity by its id.
+func (c *ListingClient) Get(ctx context.Context, id int) (*Listing, error) {
+	return c.Query().Where(listing.ID(id)).Only(ctx)
 }
 
 // GetX is like Get, but panics if an error occurs.
-func (c *NftClient) GetX(ctx context.Context, id int) *Nft {
+func (c *ListingClient) GetX(ctx context.Context, id int) *Listing {
 	obj, err := c.Get(ctx, id)
 	if err != nil {
 		panic(err)
@@ -666,15 +891,31 @@ func (c *NftClient) GetX(ctx context.Context, id int) *Nft {
 	return obj
 }
 
-// QueryEvent queries the event edge of a Nft.
-func (c *NftClient) QueryEvent(_m *Nft) *EventQuery {
-	query := (&EventClient{config: c.config}).Query()
+// QuerySeller queries the seller edge of a Listing.
+func (c *ListingClient) QuerySeller(_m *Listing) *UserQuery {
+	query := (&UserClient{config: c.config}).Query()
 	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := _m.ID
 		step := sqlgraph.NewStep(
-			sqlgraph.From(nft.Table, nft.FieldID, id),
-			sqlgraph.To(event.Table, event.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, nft.EventTable, nft.EventColumn),
+			sqlgraph.From(listing.Table, listing.FieldID, id),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, listing.SellerTable, listing.SellerColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryNftAccessory queries the nft_accessory edge of a Listing.
+func (c *ListingClient) QueryNftAccessory(_m *Listing) *NFTAccessoryQuery {
+	query := (&NFTAccessoryClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(listing.Table, listing.FieldID, id),
+			sqlgraph.To(nftaccessory.Table, nftaccessory.FieldID),
+			sqlgraph.Edge(sqlgraph.O2O, false, listing.NftAccessoryTable, listing.NftAccessoryColumn),
 		)
 		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil
@@ -683,131 +924,131 @@ func (c *NftClient) QueryEvent(_m *Nft) *EventQuery {
 }
 
 // Hooks returns the client hooks.
-func (c *NftClient) Hooks() []Hook {
-	return c.hooks.Nft
+func (c *ListingClient) Hooks() []Hook {
+	return c.hooks.Listing
 }
 
 // Interceptors returns the client interceptors.
-func (c *NftClient) Interceptors() []Interceptor {
-	return c.inters.Nft
+func (c *ListingClient) Interceptors() []Interceptor {
+	return c.inters.Listing
 }
 
-func (c *NftClient) mutate(ctx context.Context, m *NftMutation) (Value, error) {
+func (c *ListingClient) mutate(ctx context.Context, m *ListingMutation) (Value, error) {
 	switch m.Op() {
 	case OpCreate:
-		return (&NftCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+		return (&ListingCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
 	case OpUpdate:
-		return (&NftUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+		return (&ListingUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
 	case OpUpdateOne:
-		return (&NftUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+		return (&ListingUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
 	case OpDelete, OpDeleteOne:
-		return (&NftDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+		return (&ListingDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
-		return nil, fmt.Errorf("ent: unknown Nft mutation op: %q", m.Op())
+		return nil, fmt.Errorf("ent: unknown Listing mutation op: %q", m.Op())
 	}
 }
 
-// PartnerClient is a client for the Partner schema.
-type PartnerClient struct {
+// NFTAccessoryClient is a client for the NFTAccessory schema.
+type NFTAccessoryClient struct {
 	config
 }
 
-// NewPartnerClient returns a client for the Partner from the given config.
-func NewPartnerClient(c config) *PartnerClient {
-	return &PartnerClient{config: c}
+// NewNFTAccessoryClient returns a client for the NFTAccessory from the given config.
+func NewNFTAccessoryClient(c config) *NFTAccessoryClient {
+	return &NFTAccessoryClient{config: c}
 }
 
 // Use adds a list of mutation hooks to the hooks stack.
-// A call to `Use(f, g, h)` equals to `partner.Hooks(f(g(h())))`.
-func (c *PartnerClient) Use(hooks ...Hook) {
-	c.hooks.Partner = append(c.hooks.Partner, hooks...)
+// A call to `Use(f, g, h)` equals to `nftaccessory.Hooks(f(g(h())))`.
+func (c *NFTAccessoryClient) Use(hooks ...Hook) {
+	c.hooks.NFTAccessory = append(c.hooks.NFTAccessory, hooks...)
 }
 
 // Intercept adds a list of query interceptors to the interceptors stack.
-// A call to `Intercept(f, g, h)` equals to `partner.Intercept(f(g(h())))`.
-func (c *PartnerClient) Intercept(interceptors ...Interceptor) {
-	c.inters.Partner = append(c.inters.Partner, interceptors...)
+// A call to `Intercept(f, g, h)` equals to `nftaccessory.Intercept(f(g(h())))`.
+func (c *NFTAccessoryClient) Intercept(interceptors ...Interceptor) {
+	c.inters.NFTAccessory = append(c.inters.NFTAccessory, interceptors...)
 }
 
-// Create returns a builder for creating a Partner entity.
-func (c *PartnerClient) Create() *PartnerCreate {
-	mutation := newPartnerMutation(c.config, OpCreate)
-	return &PartnerCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+// Create returns a builder for creating a NFTAccessory entity.
+func (c *NFTAccessoryClient) Create() *NFTAccessoryCreate {
+	mutation := newNFTAccessoryMutation(c.config, OpCreate)
+	return &NFTAccessoryCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
 
-// CreateBulk returns a builder for creating a bulk of Partner entities.
-func (c *PartnerClient) CreateBulk(builders ...*PartnerCreate) *PartnerCreateBulk {
-	return &PartnerCreateBulk{config: c.config, builders: builders}
+// CreateBulk returns a builder for creating a bulk of NFTAccessory entities.
+func (c *NFTAccessoryClient) CreateBulk(builders ...*NFTAccessoryCreate) *NFTAccessoryCreateBulk {
+	return &NFTAccessoryCreateBulk{config: c.config, builders: builders}
 }
 
 // MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
 // a builder and applies setFunc on it.
-func (c *PartnerClient) MapCreateBulk(slice any, setFunc func(*PartnerCreate, int)) *PartnerCreateBulk {
+func (c *NFTAccessoryClient) MapCreateBulk(slice any, setFunc func(*NFTAccessoryCreate, int)) *NFTAccessoryCreateBulk {
 	rv := reflect.ValueOf(slice)
 	if rv.Kind() != reflect.Slice {
-		return &PartnerCreateBulk{err: fmt.Errorf("calling to PartnerClient.MapCreateBulk with wrong type %T, need slice", slice)}
+		return &NFTAccessoryCreateBulk{err: fmt.Errorf("calling to NFTAccessoryClient.MapCreateBulk with wrong type %T, need slice", slice)}
 	}
-	builders := make([]*PartnerCreate, rv.Len())
+	builders := make([]*NFTAccessoryCreate, rv.Len())
 	for i := 0; i < rv.Len(); i++ {
 		builders[i] = c.Create()
 		setFunc(builders[i], i)
 	}
-	return &PartnerCreateBulk{config: c.config, builders: builders}
+	return &NFTAccessoryCreateBulk{config: c.config, builders: builders}
 }
 
-// Update returns an update builder for Partner.
-func (c *PartnerClient) Update() *PartnerUpdate {
-	mutation := newPartnerMutation(c.config, OpUpdate)
-	return &PartnerUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+// Update returns an update builder for NFTAccessory.
+func (c *NFTAccessoryClient) Update() *NFTAccessoryUpdate {
+	mutation := newNFTAccessoryMutation(c.config, OpUpdate)
+	return &NFTAccessoryUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
 
 // UpdateOne returns an update builder for the given entity.
-func (c *PartnerClient) UpdateOne(_m *Partner) *PartnerUpdateOne {
-	mutation := newPartnerMutation(c.config, OpUpdateOne, withPartner(_m))
-	return &PartnerUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+func (c *NFTAccessoryClient) UpdateOne(_m *NFTAccessory) *NFTAccessoryUpdateOne {
+	mutation := newNFTAccessoryMutation(c.config, OpUpdateOne, withNFTAccessory(_m))
+	return &NFTAccessoryUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
 
 // UpdateOneID returns an update builder for the given id.
-func (c *PartnerClient) UpdateOneID(id int) *PartnerUpdateOne {
-	mutation := newPartnerMutation(c.config, OpUpdateOne, withPartnerID(id))
-	return &PartnerUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+func (c *NFTAccessoryClient) UpdateOneID(id int) *NFTAccessoryUpdateOne {
+	mutation := newNFTAccessoryMutation(c.config, OpUpdateOne, withNFTAccessoryID(id))
+	return &NFTAccessoryUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
 
-// Delete returns a delete builder for Partner.
-func (c *PartnerClient) Delete() *PartnerDelete {
-	mutation := newPartnerMutation(c.config, OpDelete)
-	return &PartnerDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+// Delete returns a delete builder for NFTAccessory.
+func (c *NFTAccessoryClient) Delete() *NFTAccessoryDelete {
+	mutation := newNFTAccessoryMutation(c.config, OpDelete)
+	return &NFTAccessoryDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
 
 // DeleteOne returns a builder for deleting the given entity.
-func (c *PartnerClient) DeleteOne(_m *Partner) *PartnerDeleteOne {
+func (c *NFTAccessoryClient) DeleteOne(_m *NFTAccessory) *NFTAccessoryDeleteOne {
 	return c.DeleteOneID(_m.ID)
 }
 
 // DeleteOneID returns a builder for deleting the given entity by its id.
-func (c *PartnerClient) DeleteOneID(id int) *PartnerDeleteOne {
-	builder := c.Delete().Where(partner.ID(id))
+func (c *NFTAccessoryClient) DeleteOneID(id int) *NFTAccessoryDeleteOne {
+	builder := c.Delete().Where(nftaccessory.ID(id))
 	builder.mutation.id = &id
 	builder.mutation.op = OpDeleteOne
-	return &PartnerDeleteOne{builder}
+	return &NFTAccessoryDeleteOne{builder}
 }
 
-// Query returns a query builder for Partner.
-func (c *PartnerClient) Query() *PartnerQuery {
-	return &PartnerQuery{
+// Query returns a query builder for NFTAccessory.
+func (c *NFTAccessoryClient) Query() *NFTAccessoryQuery {
+	return &NFTAccessoryQuery{
 		config: c.config,
-		ctx:    &QueryContext{Type: TypePartner},
+		ctx:    &QueryContext{Type: TypeNFTAccessory},
 		inters: c.Interceptors(),
 	}
 }
 
-// Get returns a Partner entity by its id.
-func (c *PartnerClient) Get(ctx context.Context, id int) (*Partner, error) {
-	return c.Query().Where(partner.ID(id)).Only(ctx)
+// Get returns a NFTAccessory entity by its id.
+func (c *NFTAccessoryClient) Get(ctx context.Context, id int) (*NFTAccessory, error) {
+	return c.Query().Where(nftaccessory.ID(id)).Only(ctx)
 }
 
 // GetX is like Get, but panics if an error occurs.
-func (c *PartnerClient) GetX(ctx context.Context, id int) *Partner {
+func (c *NFTAccessoryClient) GetX(ctx context.Context, id int) *NFTAccessory {
 	obj, err := c.Get(ctx, id)
 	if err != nil {
 		panic(err)
@@ -815,15 +1056,47 @@ func (c *PartnerClient) GetX(ctx context.Context, id int) *Partner {
 	return obj
 }
 
-// QueryPartnerAddress queries the partner_address edge of a Partner.
-func (c *PartnerClient) QueryPartnerAddress(_m *Partner) *EventQuery {
-	query := (&EventClient{config: c.config}).Query()
+// QueryOwner queries the owner edge of a NFTAccessory.
+func (c *NFTAccessoryClient) QueryOwner(_m *NFTAccessory) *UserQuery {
+	query := (&UserClient{config: c.config}).Query()
 	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := _m.ID
 		step := sqlgraph.NewStep(
-			sqlgraph.From(partner.Table, partner.FieldID, id),
-			sqlgraph.To(event.Table, event.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, partner.PartnerAddressTable, partner.PartnerAddressColumn),
+			sqlgraph.From(nftaccessory.Table, nftaccessory.FieldID, id),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, nftaccessory.OwnerTable, nftaccessory.OwnerColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryEquippedOnMoment queries the equipped_on_moment edge of a NFTAccessory.
+func (c *NFTAccessoryClient) QueryEquippedOnMoment(_m *NFTAccessory) *NFTMomentQuery {
+	query := (&NFTMomentClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(nftaccessory.Table, nftaccessory.FieldID, id),
+			sqlgraph.To(nftmoment.Table, nftmoment.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, nftaccessory.EquippedOnMomentTable, nftaccessory.EquippedOnMomentColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryListing queries the listing edge of a NFTAccessory.
+func (c *NFTAccessoryClient) QueryListing(_m *NFTAccessory) *ListingQuery {
+	query := (&ListingClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(nftaccessory.Table, nftaccessory.FieldID, id),
+			sqlgraph.To(listing.Table, listing.FieldID),
+			sqlgraph.Edge(sqlgraph.O2O, true, nftaccessory.ListingTable, nftaccessory.ListingColumn),
 		)
 		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil
@@ -832,36 +1105,447 @@ func (c *PartnerClient) QueryPartnerAddress(_m *Partner) *EventQuery {
 }
 
 // Hooks returns the client hooks.
-func (c *PartnerClient) Hooks() []Hook {
-	return c.hooks.Partner
+func (c *NFTAccessoryClient) Hooks() []Hook {
+	return c.hooks.NFTAccessory
 }
 
 // Interceptors returns the client interceptors.
-func (c *PartnerClient) Interceptors() []Interceptor {
-	return c.inters.Partner
+func (c *NFTAccessoryClient) Interceptors() []Interceptor {
+	return c.inters.NFTAccessory
 }
 
-func (c *PartnerClient) mutate(ctx context.Context, m *PartnerMutation) (Value, error) {
+func (c *NFTAccessoryClient) mutate(ctx context.Context, m *NFTAccessoryMutation) (Value, error) {
 	switch m.Op() {
 	case OpCreate:
-		return (&PartnerCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+		return (&NFTAccessoryCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
 	case OpUpdate:
-		return (&PartnerUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+		return (&NFTAccessoryUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
 	case OpUpdateOne:
-		return (&PartnerUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+		return (&NFTAccessoryUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
 	case OpDelete, OpDeleteOne:
-		return (&PartnerDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+		return (&NFTAccessoryDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
-		return nil, fmt.Errorf("ent: unknown Partner mutation op: %q", m.Op())
+		return nil, fmt.Errorf("ent: unknown NFTAccessory mutation op: %q", m.Op())
+	}
+}
+
+// NFTMomentClient is a client for the NFTMoment schema.
+type NFTMomentClient struct {
+	config
+}
+
+// NewNFTMomentClient returns a client for the NFTMoment from the given config.
+func NewNFTMomentClient(c config) *NFTMomentClient {
+	return &NFTMomentClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `nftmoment.Hooks(f(g(h())))`.
+func (c *NFTMomentClient) Use(hooks ...Hook) {
+	c.hooks.NFTMoment = append(c.hooks.NFTMoment, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `nftmoment.Intercept(f(g(h())))`.
+func (c *NFTMomentClient) Intercept(interceptors ...Interceptor) {
+	c.inters.NFTMoment = append(c.inters.NFTMoment, interceptors...)
+}
+
+// Create returns a builder for creating a NFTMoment entity.
+func (c *NFTMomentClient) Create() *NFTMomentCreate {
+	mutation := newNFTMomentMutation(c.config, OpCreate)
+	return &NFTMomentCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of NFTMoment entities.
+func (c *NFTMomentClient) CreateBulk(builders ...*NFTMomentCreate) *NFTMomentCreateBulk {
+	return &NFTMomentCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *NFTMomentClient) MapCreateBulk(slice any, setFunc func(*NFTMomentCreate, int)) *NFTMomentCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &NFTMomentCreateBulk{err: fmt.Errorf("calling to NFTMomentClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*NFTMomentCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &NFTMomentCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for NFTMoment.
+func (c *NFTMomentClient) Update() *NFTMomentUpdate {
+	mutation := newNFTMomentMutation(c.config, OpUpdate)
+	return &NFTMomentUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *NFTMomentClient) UpdateOne(_m *NFTMoment) *NFTMomentUpdateOne {
+	mutation := newNFTMomentMutation(c.config, OpUpdateOne, withNFTMoment(_m))
+	return &NFTMomentUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *NFTMomentClient) UpdateOneID(id int) *NFTMomentUpdateOne {
+	mutation := newNFTMomentMutation(c.config, OpUpdateOne, withNFTMomentID(id))
+	return &NFTMomentUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for NFTMoment.
+func (c *NFTMomentClient) Delete() *NFTMomentDelete {
+	mutation := newNFTMomentMutation(c.config, OpDelete)
+	return &NFTMomentDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *NFTMomentClient) DeleteOne(_m *NFTMoment) *NFTMomentDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *NFTMomentClient) DeleteOneID(id int) *NFTMomentDeleteOne {
+	builder := c.Delete().Where(nftmoment.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &NFTMomentDeleteOne{builder}
+}
+
+// Query returns a query builder for NFTMoment.
+func (c *NFTMomentClient) Query() *NFTMomentQuery {
+	return &NFTMomentQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeNFTMoment},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a NFTMoment entity by its id.
+func (c *NFTMomentClient) Get(ctx context.Context, id int) (*NFTMoment, error) {
+	return c.Query().Where(nftmoment.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *NFTMomentClient) GetX(ctx context.Context, id int) *NFTMoment {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryOwner queries the owner edge of a NFTMoment.
+func (c *NFTMomentClient) QueryOwner(_m *NFTMoment) *UserQuery {
+	query := (&UserClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(nftmoment.Table, nftmoment.FieldID, id),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, nftmoment.OwnerTable, nftmoment.OwnerColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryEquippedAccessories queries the equipped_accessories edge of a NFTMoment.
+func (c *NFTMomentClient) QueryEquippedAccessories(_m *NFTMoment) *NFTAccessoryQuery {
+	query := (&NFTAccessoryClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(nftmoment.Table, nftmoment.FieldID, id),
+			sqlgraph.To(nftaccessory.Table, nftaccessory.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, nftmoment.EquippedAccessoriesTable, nftmoment.EquippedAccessoriesColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryMintedWithPass queries the minted_with_pass edge of a NFTMoment.
+func (c *NFTMomentClient) QueryMintedWithPass(_m *NFTMoment) *EventPassQuery {
+	query := (&EventPassClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(nftmoment.Table, nftmoment.FieldID, id),
+			sqlgraph.To(eventpass.Table, eventpass.FieldID),
+			sqlgraph.Edge(sqlgraph.O2O, true, nftmoment.MintedWithPassTable, nftmoment.MintedWithPassColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *NFTMomentClient) Hooks() []Hook {
+	return c.hooks.NFTMoment
+}
+
+// Interceptors returns the client interceptors.
+func (c *NFTMomentClient) Interceptors() []Interceptor {
+	return c.inters.NFTMoment
+}
+
+func (c *NFTMomentClient) mutate(ctx context.Context, m *NFTMomentMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&NFTMomentCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&NFTMomentUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&NFTMomentUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&NFTMomentDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown NFTMoment mutation op: %q", m.Op())
+	}
+}
+
+// UserClient is a client for the User schema.
+type UserClient struct {
+	config
+}
+
+// NewUserClient returns a client for the User from the given config.
+func NewUserClient(c config) *UserClient {
+	return &UserClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `user.Hooks(f(g(h())))`.
+func (c *UserClient) Use(hooks ...Hook) {
+	c.hooks.User = append(c.hooks.User, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `user.Intercept(f(g(h())))`.
+func (c *UserClient) Intercept(interceptors ...Interceptor) {
+	c.inters.User = append(c.inters.User, interceptors...)
+}
+
+// Create returns a builder for creating a User entity.
+func (c *UserClient) Create() *UserCreate {
+	mutation := newUserMutation(c.config, OpCreate)
+	return &UserCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of User entities.
+func (c *UserClient) CreateBulk(builders ...*UserCreate) *UserCreateBulk {
+	return &UserCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *UserClient) MapCreateBulk(slice any, setFunc func(*UserCreate, int)) *UserCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &UserCreateBulk{err: fmt.Errorf("calling to UserClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*UserCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &UserCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for User.
+func (c *UserClient) Update() *UserUpdate {
+	mutation := newUserMutation(c.config, OpUpdate)
+	return &UserUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *UserClient) UpdateOne(_m *User) *UserUpdateOne {
+	mutation := newUserMutation(c.config, OpUpdateOne, withUser(_m))
+	return &UserUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *UserClient) UpdateOneID(id int) *UserUpdateOne {
+	mutation := newUserMutation(c.config, OpUpdateOne, withUserID(id))
+	return &UserUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for User.
+func (c *UserClient) Delete() *UserDelete {
+	mutation := newUserMutation(c.config, OpDelete)
+	return &UserDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *UserClient) DeleteOne(_m *User) *UserDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *UserClient) DeleteOneID(id int) *UserDeleteOne {
+	builder := c.Delete().Where(user.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &UserDeleteOne{builder}
+}
+
+// Query returns a query builder for User.
+func (c *UserClient) Query() *UserQuery {
+	return &UserQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeUser},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a User entity by its id.
+func (c *UserClient) Get(ctx context.Context, id int) (*User, error) {
+	return c.Query().Where(user.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *UserClient) GetX(ctx context.Context, id int) *User {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryEventPasses queries the event_passes edge of a User.
+func (c *UserClient) QueryEventPasses(_m *User) *EventPassQuery {
+	query := (&EventPassClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, id),
+			sqlgraph.To(eventpass.Table, eventpass.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.EventPassesTable, user.EventPassesColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryHostedEvents queries the hosted_events edge of a User.
+func (c *UserClient) QueryHostedEvents(_m *User) *EventQuery {
+	query := (&EventClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, id),
+			sqlgraph.To(event.Table, event.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.HostedEventsTable, user.HostedEventsColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryMoments queries the moments edge of a User.
+func (c *UserClient) QueryMoments(_m *User) *NFTMomentQuery {
+	query := (&NFTMomentClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, id),
+			sqlgraph.To(nftmoment.Table, nftmoment.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.MomentsTable, user.MomentsColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryAccessories queries the accessories edge of a User.
+func (c *UserClient) QueryAccessories(_m *User) *NFTAccessoryQuery {
+	query := (&NFTAccessoryClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, id),
+			sqlgraph.To(nftaccessory.Table, nftaccessory.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.AccessoriesTable, user.AccessoriesColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryAttendances queries the attendances edge of a User.
+func (c *UserClient) QueryAttendances(_m *User) *AttendanceQuery {
+	query := (&AttendanceClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, id),
+			sqlgraph.To(attendance.Table, attendance.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.AttendancesTable, user.AttendancesColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryListings queries the listings edge of a User.
+func (c *UserClient) QueryListings(_m *User) *ListingQuery {
+	query := (&ListingClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, id),
+			sqlgraph.To(listing.Table, listing.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.ListingsTable, user.ListingsColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *UserClient) Hooks() []Hook {
+	return c.hooks.User
+}
+
+// Interceptors returns the client interceptors.
+func (c *UserClient) Interceptors() []Interceptor {
+	return c.inters.User
+}
+
+func (c *UserClient) mutate(ctx context.Context, m *UserMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&UserCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&UserUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&UserUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&UserDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown User mutation op: %q", m.Op())
 	}
 }
 
 // hooks and interceptors per client, for fast access.
 type (
 	hooks struct {
-		Event, EventParticipant, Nft, Partner []ent.Hook
+		Attendance, Event, EventPass, Listing, NFTAccessory, NFTMoment, User []ent.Hook
 	}
 	inters struct {
-		Event, EventParticipant, Nft, Partner []ent.Interceptor
+		Attendance, Event, EventPass, Listing, NFTAccessory, NFTMoment,
+		User []ent.Interceptor
 	}
 )

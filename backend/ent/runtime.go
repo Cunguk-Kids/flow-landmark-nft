@@ -3,9 +3,8 @@
 package ent
 
 import (
-	"backend/ent/eventparticipant"
-	"backend/ent/nft"
-	"backend/ent/partner"
+	"backend/ent/attendance"
+	"backend/ent/eventpass"
 	"backend/ent/schema"
 	"time"
 )
@@ -14,38 +13,20 @@ import (
 // (default values, validators, hooks and policies) and stitches it
 // to their package variables.
 func init() {
-	eventparticipantFields := schema.EventParticipant{}.Fields()
-	_ = eventparticipantFields
-	// eventparticipantDescUserAddress is the schema descriptor for userAddress field.
-	eventparticipantDescUserAddress := eventparticipantFields[0].Descriptor()
-	// eventparticipant.DefaultUserAddress holds the default value on creation for the userAddress field.
-	eventparticipant.DefaultUserAddress = eventparticipantDescUserAddress.Default.(string)
-	// eventparticipantDescIsCheckedIn is the schema descriptor for isCheckedIn field.
-	eventparticipantDescIsCheckedIn := eventparticipantFields[1].Descriptor()
-	// eventparticipant.DefaultIsCheckedIn holds the default value on creation for the isCheckedIn field.
-	eventparticipant.DefaultIsCheckedIn = eventparticipantDescIsCheckedIn.Default.(bool)
-	nftFields := schema.Nft{}.Fields()
-	_ = nftFields
-	// nftDescMintTime is the schema descriptor for mint_time field.
-	nftDescMintTime := nftFields[3].Descriptor()
-	// nft.DefaultMintTime holds the default value on creation for the mint_time field.
-	nft.DefaultMintTime = nftDescMintTime.Default.(func() time.Time)
-	partnerFields := schema.Partner{}.Fields()
-	_ = partnerFields
-	// partnerDescName is the schema descriptor for name field.
-	partnerDescName := partnerFields[1].Descriptor()
-	// partner.DefaultName holds the default value on creation for the name field.
-	partner.DefaultName = partnerDescName.Default.(string)
-	// partnerDescDescription is the schema descriptor for description field.
-	partnerDescDescription := partnerFields[2].Descriptor()
-	// partner.DefaultDescription holds the default value on creation for the description field.
-	partner.DefaultDescription = partnerDescDescription.Default.(string)
-	// partnerDescEmail is the schema descriptor for email field.
-	partnerDescEmail := partnerFields[3].Descriptor()
-	// partner.DefaultEmail holds the default value on creation for the email field.
-	partner.DefaultEmail = partnerDescEmail.Default.(string)
-	// partnerDescImage is the schema descriptor for image field.
-	partnerDescImage := partnerFields[4].Descriptor()
-	// partner.DefaultImage holds the default value on creation for the image field.
-	partner.DefaultImage = partnerDescImage.Default.(string)
+	attendanceFields := schema.Attendance{}.Fields()
+	_ = attendanceFields
+	// attendanceDescCheckedIn is the schema descriptor for checked_in field.
+	attendanceDescCheckedIn := attendanceFields[0].Descriptor()
+	// attendance.DefaultCheckedIn holds the default value on creation for the checked_in field.
+	attendance.DefaultCheckedIn = attendanceDescCheckedIn.Default.(bool)
+	// attendanceDescRegistrationTime is the schema descriptor for registration_time field.
+	attendanceDescRegistrationTime := attendanceFields[1].Descriptor()
+	// attendance.DefaultRegistrationTime holds the default value on creation for the registration_time field.
+	attendance.DefaultRegistrationTime = attendanceDescRegistrationTime.Default.(func() time.Time)
+	eventpassFields := schema.EventPass{}.Fields()
+	_ = eventpassFields
+	// eventpassDescIsUsed is the schema descriptor for is_used field.
+	eventpassDescIsUsed := eventpassFields[5].Descriptor()
+	// eventpass.DefaultIsUsed holds the default value on creation for the is_used field.
+	eventpass.DefaultIsUsed = eventpassDescIsUsed.Default.(bool)
 }

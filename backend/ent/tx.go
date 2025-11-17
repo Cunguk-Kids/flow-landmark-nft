@@ -12,14 +12,20 @@ import (
 // Tx is a transactional client that is created by calling Client.Tx().
 type Tx struct {
 	config
+	// Attendance is the client for interacting with the Attendance builders.
+	Attendance *AttendanceClient
 	// Event is the client for interacting with the Event builders.
 	Event *EventClient
-	// EventParticipant is the client for interacting with the EventParticipant builders.
-	EventParticipant *EventParticipantClient
-	// Nft is the client for interacting with the Nft builders.
-	Nft *NftClient
-	// Partner is the client for interacting with the Partner builders.
-	Partner *PartnerClient
+	// EventPass is the client for interacting with the EventPass builders.
+	EventPass *EventPassClient
+	// Listing is the client for interacting with the Listing builders.
+	Listing *ListingClient
+	// NFTAccessory is the client for interacting with the NFTAccessory builders.
+	NFTAccessory *NFTAccessoryClient
+	// NFTMoment is the client for interacting with the NFTMoment builders.
+	NFTMoment *NFTMomentClient
+	// User is the client for interacting with the User builders.
+	User *UserClient
 
 	// lazily loaded.
 	client     *Client
@@ -151,10 +157,13 @@ func (tx *Tx) Client() *Client {
 }
 
 func (tx *Tx) init() {
+	tx.Attendance = NewAttendanceClient(tx.config)
 	tx.Event = NewEventClient(tx.config)
-	tx.EventParticipant = NewEventParticipantClient(tx.config)
-	tx.Nft = NewNftClient(tx.config)
-	tx.Partner = NewPartnerClient(tx.config)
+	tx.EventPass = NewEventPassClient(tx.config)
+	tx.Listing = NewListingClient(tx.config)
+	tx.NFTAccessory = NewNFTAccessoryClient(tx.config)
+	tx.NFTMoment = NewNFTMomentClient(tx.config)
+	tx.User = NewUserClient(tx.config)
 }
 
 // txDriver wraps the given dialect.Tx with a nop dialect.Driver implementation.
@@ -164,7 +173,7 @@ func (tx *Tx) init() {
 // of them in order to commit or rollback the transaction.
 //
 // If a closed transaction is embedded in one of the generated entities, and the entity
-// applies a query, for example: Event.QueryXXX(), the query will be executed
+// applies a query, for example: Attendance.QueryXXX(), the query will be executed
 // through the driver which created this transaction.
 //
 // Note that txDriver is not goroutine safe.
