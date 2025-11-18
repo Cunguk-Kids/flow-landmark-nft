@@ -1,18 +1,52 @@
-import { Toaster } from "@/components/ui/sonner";
-import { Outlet, createRootRoute } from "@tanstack/react-router";
-// import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
+import { createRootRoute, Link, Outlet } from "@tanstack/react-router";
+import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
+import {
+  TransitionProvider,
+  useTransition,
+} from "@/contexts/TransitionContext";
+import { motion, AnimatePresence } from "motion/react";
 
-export const Route = createRootRoute({
-  component: RootComponent,
-});
+function TransitionOverlay() {
+  const { isTransitioning, cardBounds } = useTransition();
 
-function RootComponent() {
+  if (!cardBounds) return null;
+
   return (
-    <>
-      <div className="isolate relative mx-auto bg-background dark">
-        <Outlet />
-      </div>
-      <Toaster position="top-center" expand richColors />
-    </>
+    <AnimatePresence>
+      {isTransitioning && (
+        <motion.div
+          className="fixed bg-red-400 z-[9999] pointer-events-none origin-top-left"
+          initial={{
+            left: cardBounds.x,
+            top: cardBounds.y,
+            width: 0,
+            height: 0,
+            borderRadius: cardBounds.borderRadius,
+          }}
+          animate={{
+            left: 0,
+            top: 0,
+            width: "100vw",
+            height: "100vh",
+            borderRadius: 0,
+          }}
+          exit={{ opacity: 0 }}
+          transition={{
+            duration: 0.8,
+            ease: [0.43, 0.13, 0.23, 0.96],
+          }}
+        />
+      )}
+    </AnimatePresence>
   );
 }
+
+const RootLayout = () => (
+  <TransitionProvider>
+    <Outlet />
+    <TransitionOverlay />
+    <TanStackRouterDevtools />
+  </TransitionProvider>
+);
+
+export const Route = createRootRoute({ component: RootLayout });
