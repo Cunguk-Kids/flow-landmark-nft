@@ -14,9 +14,9 @@ export function EventCard({ event }: EventCardProps) {
   return (
     <div className="group relative">
       {/* Card Container */}
-      <div className="bg-card rounded-[2rem] overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+      <div className="bg-card rounded-4xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
         {/* Image Container */}
-        <div className="relative h-48 overflow-hidden bg-gradient-to-br from-primary/20 to-accent/20">
+        <div className="relative h-48 overflow-hidden bg-linear-to-br from-primary/20 to-accent/20">
           {event.image ? (
             <img
               src={event.image}

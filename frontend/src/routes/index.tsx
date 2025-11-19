@@ -4,6 +4,14 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { LucideExternalLink } from "lucide-react";
 import { useTransition } from "@/contexts/TransitionContext";
 import { useRef } from "react";
+import { Button } from "@/components/ui/button";
+import {
+  useFlowQuery,
+  useFlowMutate,
+  useFlowTransactionStatus,
+  useFlowCurrentUser,
+} from '@onflow/react-sdk';
+import { useSetupAccount } from "@/hooks/transactions/useSetupAccount";
 
 export const Route = createFileRoute("/")({
   component: Index,
@@ -77,6 +85,8 @@ function EventsHeroCard() {
 }
 
 function Index() {
+  const { user, authenticate, unauthenticate } = useFlowCurrentUser();
+  
   return (
     <div className="min-h-screen bg-background p-4 md:p-6">
       {/* Bento Grid Layout */}
@@ -88,10 +98,20 @@ function Index() {
             <div className="absolute top-6 right-6 w-20 h-20 pixel-pattern text-black opacity-20" />
             <div className="text-center p-6">
               <div className="w-40 h-40 mx-auto mb-2 rounded-full overflow-hidden relative">
-                <div className="absolute inset-0 bg-gradient-to-br from-accent to-accent/80 flex items-center justify-center">
+                <div className="absolute inset-0 bg-linear-to-br from-accent to-accent/80 flex items-center justify-center">
                   <div className="text-7xl">🌟</div>
                 </div>
               </div>
+                {user?.loggedIn ? 
+                  (
+                    <div>
+                      <p className="text-black">Connected: {user.addr}</p>
+                      <Button onClick={unauthenticate}>Disconnect</Button>
+                    </div>
+                  )
+                : (
+                  <Button onClick={authenticate} className="btn-brutalist">Connect Wallet</Button>
+                )}
             </div>
           </div>
 
