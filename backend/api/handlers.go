@@ -2,11 +2,13 @@ package main
 
 import (
 	"backend/ent"
+	"backend/ent/attendance"
 	"backend/ent/event"
 	"backend/ent/listing"
 	"backend/ent/nftaccessory"
 	"backend/ent/nftmoment"
 	"backend/ent/user"
+	"backend/swagdto"
 	"backend/transactions"
 	"backend/utils"
 	"fmt"
@@ -496,7 +498,7 @@ func (h *Handler) getEvents(c echo.Context) error {
 	// 6. Jalankan Query UTAMA dengan Limit/Offset
 	events, err := query.
 		WithHost(). // Ambil data 'User' (host)
-		// WithAttendances(). // Hati-hati: 'Eager loading' ini bisa sangat berat jika ada 1000 peserta
+		WithAttendances().
 		Limit(limit).
 		Offset(offset).
 		Order(ent.Desc("start_date")). // Urutkan dari yang paling baru
@@ -512,6 +514,114 @@ func (h *Handler) getEvents(c echo.Context) error {
 		Pagination: pagination,
 	}
 	return c.JSON(http.StatusOK, response)
+}
+
+// @Summary     Ambil Detail Event
+// @Description Mengambil satu event berdasarkan 'event_id' (ID on-chain).
+// @Tags        Events
+// @Accept      json
+// @Produce     json
+// @Param       id   path      int  true  "Event ID (On-Chain ID)"
+// @Param       viewer   query      string  false  "userAddress"
+// @Success     200 {object} APIResponse{data=swagdto.EventResponse} "Detail event"
+// @Failure     404 {object} APIResponse "Event tidak ditemukan"
+// @Failure     500 {object} APIResponse "Internal Server Error"
+// @Router      /events/{id} [get]
+func (h *Handler) getEventByID(c echo.Context) error {
+	ctx := c.Request().Context()
+	idStr := c.Param("id")
+	viewerAddress := c.QueryParam("viewer")
+
+	// 1. Parse ID
+	eventID, err := strconv.ParseUint(idStr, 10, 64)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, APIResponse{Error: "Invalid Event ID format"})
+	}
+
+	// 2. Query Database
+	ev, err := h.DB.Event.Query().
+		Where(event.EventIDEQ(eventID)). // Cari berdasarkan event_id (bukan ID internal)
+		WithHost().
+		WithAttendances(func(q *ent.AttendanceQuery) {
+			q.WithUser() // Agar kita tahu siapa yang hadir (Address)
+		}). // Preload Host
+		Only(ctx)
+
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return c.JSON(http.StatusNotFound, APIResponse{Error: "Event not found"})
+		}
+		return c.JSON(http.StatusInternalServerError, APIResponse{Error: err.Error()})
+	}
+
+	isRegistered := false
+
+	// Hanya cek jika viewerAddress dikirim
+	if viewerAddress != "" {
+		// Cek apakah ada 'Attendance' yang menghubungkan Event ini dengan User ini
+		count, _ := h.DB.Attendance.Query().
+			Where(
+				attendance.HasEventWith(event.EventIDEQ(ev.EventID)),
+				attendance.HasUserWith(user.AddressEQ(viewerAddress)),
+			).
+			Count(ctx)
+
+		if count > 0 {
+			isRegistered = true
+		}
+	}
+
+	// 3. Mapping ke DTO Bersih (Sama seperti getEvents)
+	// Kita pakai struct dari 'swagdto' atau struct lokal 'EventResponse' di handlers.go
+	// (Asumsi Anda menaruh struct EventResponse di handlers.go atau import dari swagdto)
+
+	// Konversi Host
+	var hostResponse *swagdto.HostResponse
+	if ev.Edges.Host != nil {
+		hostResponse = &swagdto.HostResponse{
+			ID:      ev.Edges.Host.ID,
+			Address: ev.Edges.Host.Address,
+		}
+	}
+
+	var attendanceResponses []*swagdto.AttendanceResponse
+	for _, att := range ev.Edges.Attendances {
+
+		// Ambil address user jika ada
+		userAddr := ""
+		if att.Edges.User != nil {
+			userAddr = att.Edges.User.Address
+		}
+
+		attendanceResponses = append(attendanceResponses, &swagdto.AttendanceResponse{
+			ID:               att.ID,
+			CheckedIn:        att.CheckedIn,
+			RegistrationTime: att.RegistrationTime.String(),
+			UserAddress:      userAddr,
+		})
+	}
+
+	response := &swagdto.EventResponse{
+		ID:           ev.ID,
+		EventID:      ev.EventID,
+		Name:         ev.Name,
+		Description:  ev.Description,
+		Thumbnail:    ev.Thumbnail,
+		Location:     ev.Location,
+		StartDate:    ev.StartDate,
+		EndDate:      ev.EndDate,
+		Quota:        ev.Quota,
+		IsRegistered: isRegistered,
+		Edges: swagdto.EventEdges{
+			Host:        hostResponse,
+			Attendances: attendanceResponses,
+		},
+	}
+
+	// 4. Return Single Object
+	return c.JSON(http.StatusOK, APIResponse{
+		Data: response,
+	})
 }
 
 // @Summary     Ambil Profil User (Lengkap)

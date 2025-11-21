@@ -44,6 +44,7 @@ func main() {
 	e.GET("/swagger/*", echoSwagger.WrapHandler)
 	e.GET("/listings", h.getListings)
 	e.GET("/events", h.getEvents)
+	e.GET("/events/:id", h.getEventByID)
 	e.GET("/profiles/:address", h.getUserProfile)
 	e.GET("/accessories", h.getAccessories)
 	e.GET("/moments", h.getMoments)

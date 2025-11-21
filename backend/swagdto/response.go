@@ -26,21 +26,23 @@ type HostResponse struct {
 
 // EventEdges bersih (HANYA 'host')
 type EventEdges struct {
-	Host *HostResponse `json:"host,omitempty"`
+	Attendances []*AttendanceResponse `json:"attendances,omitempty"`
+	Host        *HostResponse         `json:"host,omitempty"`
 }
 
 // EventResponse bersih (sesuai JSON Anda)
 type EventResponse struct {
-	ID          int        `json:"id"`
-	EventID     uint64     `json:"event_id"`
-	Name        string     `json:"name"`
-	Description string     `json:"description"`
-	Thumbnail   string     `json:"thumbnail"`
-	Location    string     `json:"location"`
-	StartDate   time.Time  `json:"start_date"`
-	EndDate     time.Time  `json:"end_date"`
-	Quota       uint64     `json:"quota"`
-	Edges       EventEdges `json:"edges"` // <-- Menggunakan struct 'edges' bersih
+	ID           int        `json:"id"`
+	EventID      uint64     `json:"event_id"`
+	Name         string     `json:"name"`
+	Description  string     `json:"description"`
+	Thumbnail    string     `json:"thumbnail"`
+	Location     string     `json:"location"`
+	StartDate    time.Time  `json:"start_date"`
+	EndDate      time.Time  `json:"end_date"`
+	Quota        uint64     `json:"quota"`
+	IsRegistered bool       `json:"is_registered"`
+	Edges        EventEdges `json:"edges"` // <-- Menggunakan struct 'edges' bersih
 }
 
 // GetEventsResponse bersih (pembungkus utama)
@@ -205,4 +207,11 @@ type MintResponse struct {
 	Recipient string `json:"recipient" example:"0x1bb6b1e0a5170088"`
 	Name      string `json:"name"      example:"Momen Keren"`
 	Thumbnail string `json:"thumbnail" example:"ipfs://bafy..."`
+}
+
+type AttendanceResponse struct {
+	ID               int    `json:"id"`
+	CheckedIn        bool   `json:"checked_in"`
+	RegistrationTime string `json:"registration_time"`
+	UserAddress      string `json:"user_address,omitempty"`
 }
