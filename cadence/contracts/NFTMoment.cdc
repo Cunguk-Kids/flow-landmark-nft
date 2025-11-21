@@ -386,6 +386,9 @@ access(all) contract NFTMoment: NonFungibleToken {
             description: String,
             thumbnail: String,
         ) {
+            pre {
+              recipient.isUsedFreeMint == false: "Free Mint already used"
+            }
             let metadata: {String: AnyStruct} = {}
             let currentBlock = getCurrentBlock()
             let appliedTier = NFTMoment.applyTier(Tier(rawValue: 0)!)
@@ -416,7 +419,7 @@ access(all) contract NFTMoment: NonFungibleToken {
             tier: UInt8
         ) {
             pre {
-              recipient.isUsedFreeMint == false: "Free Mint already used"
+              recipientPass.isUsed == false: "Event Pass already used"
             }
             recipientPass.useEventPass()
 
