@@ -95,7 +95,7 @@ export function useSetupAccount() {
   }, [mutate]);
 
   // 4. Hitung status gabungan
-  const isPending = isMutating || (txId && transactionStatus?.status !== 4);
+  const isPending = isMutating;
   const isSealed = transactionStatus?.status === 4; // Status 4 = SEALED (Selesai)
   const isSuccess = isSealed && !txStatusError;
   const error = txError || txStatusError;

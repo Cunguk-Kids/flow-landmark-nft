@@ -1,161 +1,186 @@
 'use client';
 
-import { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useFlowCurrentUser } from '@onflow/react-sdk';
 import { useSetupAccount } from '@/hooks/transactions/useSetupAccount';
-// import { useUserProfile } from '@/hooks/api/useUserProfile';
-import { Loader2, Wallet, LogOut, User as UserIcon, Settings } from 'lucide-react';
+import { useUserProfile } from '@/hooks/api/useUserProfile';
 import { Button } from './ui/button';
+import { LogOut, User as UserIcon, Shield, LogIn, Settings } from 'lucide-react'; 
+import { useTransition } from "@/contexts/TransitionContext";
+import { useNavigate } from '@tanstack/react-router';
 
-// Definisikan props agar parent bisa mengatur ukuran grid
 interface ProfileCardProps {
   className?: string;
 }
 
 export default function ProfileCard({ className = "" }: ProfileCardProps) {
-  // 1. Hook Auth
+  // ... (Semua hooks dan logic tetap sama) ...
   const { user, authenticate, unauthenticate } = useFlowCurrentUser();
+  const { data: profile, refetch: refetchProfile } = useUserProfile(user?.addr);
+  const { isSealed, setup, isPending: isSetupPending } = useSetupAccount();
+  const { triggerTransition } = useTransition();
+  const navigate = useNavigate();
+  const cardRef = useRef<HTMLDivElement>(null);
 
-  // 2. Hook Cek Profil
-  // const { 
-  //   data: profile, 
-  //   isLoading: isCheckingProfile, 
-  //   refetch: refetchProfile 
-  // } = useUserProfile(user?.addr);
+  useEffect(() => {
+    if (isSealed) refetchProfile();
+  }, [isSealed, refetchProfile]);
 
-  // 3. Hook Setup Account
-  const { 
-    setup, 
-    isPending: isSetupPending, 
-    isSealed, 
-  } = useSetupAccount();
-
-  // Efek: Refresh profil jika setup berhasil
-  // useEffect(() => {
-  //   if (isSealed) {
-  //     refetchProfile();
-  //   }
-  // }, [isSealed, refetchProfile]);
-
-  // --- LOGIKA TAMPILAN (RENDER) ---
-
-  const renderContent = () => {
-    // KONDISI 1: Loading Awal (Cek user/profil)
-    // if (user?.loggedIn && isCheckingProfile) {
-    //   return (
-    //     <div className="flex flex-col items-center animate-pulse">
-    //       <div className="w-40 h-40 rounded-full bg-black/20 mb-4" />
-    //       <p className="font-bold text-black">Checking Profile...</p>
-    //     </div>
-    //   );
-    // }
-
-    // KONDISI 2: Belum Login
-    if (!user?.loggedIn) {
-      return (
-        <div className="text-center">
-          <div className="w-40 h-40 mx-auto mb-6 rounded-full border-4 border-black bg-yellow-300 flex items-center justify-center relative overflow-hidden group">
-             <div className="absolute inset-0 bg-linear-to-br from-yellow-300 to-yellow-500 flex items-center justify-center transition-transform group-hover:scale-110">
-                <Wallet size={64} className="text-black" />
-             </div>
-          </div>
-          <h3 className="text-2xl font-black text-black mb-2 uppercase">Welcome!</h3>
-          <p className="text-sm text-black/70 mb-6 font-mono">Connect wallet to start.</p>
-          
-          <Button onClick={authenticate} className="btn-brutalist">Connect Wallet</Button>
-        </div>
-      );
+  const handleSettingsClick = () => {
+    // ... (Logic transisi tetap sama) ...
+    if (cardRef.current) {
+      const rect = cardRef.current.getBoundingClientRect();
+      const computedStyle = window.getComputedStyle(cardRef.current);
+      const borderRadius = parseFloat(computedStyle.borderRadius);
+      triggerTransition({
+        x: rect.left,
+        y: rect.top,
+        width: rect.width,
+        height: rect.height,
+        borderRadius: borderRadius,
+      });
     }
-
-    // KONDISI 3: Sudah Login TAPI Belum Setup (Profile == null)
-    if (!profile) {
-      return (
-        <div className="text-center w-full max-w-xs">
-           <div className="w-32 h-32 mx-auto mb-4 rounded-full border-4 border-red-500 bg-red-100 flex items-center justify-center animate-bounce">
-              <span className="text-5xl">⚠️</span>
-           </div>
-           <h3 className="text-xl font-black text-black mb-1">Account Not Ready</h3>
-           <p className="text-xs text-black/70 mb-6 font-mono">You need to initialize your storage.</p>
-
-           <button 
-            onClick={setup}
-            disabled={isSetupPending}
-            className="w-full bg-red-500 text-white border-2 border-black px-6 py-3 font-bold shadow-[4px_4px_0px_0px_black] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_black] disabled:opacity-50 disabled:shadow-none transition-all flex items-center justify-center gap-2"
-           >
-             {isSetupPending ? <Loader2 className="animate-spin" /> : <Settings size={18} />}
-             {isSetupPending ? "Setting up..." : "Setup Account"}
-           </button>
-           
-           <button onClick={unauthenticate} className="mt-4 text-xs text-black underline font-mono hover:text-red-600">
-             Disconnect
-           </button>
-        </div>
-      );
-    }
-
-    // KONDISI 4: Sudah Login DAN Sudah Setup (Profile Ada)
-    return (
-      <div className="text-center w-full">
-        {/* Avatar Container */}
-        <div className="w-40 h-40 mx-auto mb-4 rounded-full border-4 border-black overflow-hidden relative bg-white">
-          {profile.pfp ? (
-            <img 
-              src={profile.pfp} // Pastikan URL ini sudah di-resolve (https)
-              alt="Profile" 
-              className="w-full h-full object-cover"
-              style={{ imageRendering: 'pixelated' }}
-            />
-          ) : (
-            <div className="w-full h-full bg-green-400 flex items-center justify-center">
-               <UserIcon size={64} className="text-black opacity-50" />
-            </div>
-          )}
-        </div>
-
-        {/* User Info */}
-        <h3 className="text-2xl font-black text-black mb-0 uppercase tracking-tighter">
-          {profile.nickname || "Anon"}
-        </h3>
-        <p className="text-xs font-mono bg-black text-white px-2 py-1 rounded inline-block mb-6">
-          {user.addr}
-        </p>
-
-        {/* Stats Row (Contoh) */}
-        <div className="flex justify-center gap-4 mb-6 border-t-2 border-b-2 border-black py-2 bg-white/50">
-            <div className="text-center">
-                <p className="text-xs font-bold text-gray-500">MOMENTS</p>
-                <p className="text-xl font-black">{profile.edges?.moments?.length || 0}</p>
-            </div>
-            <div className="w-[2px] bg-black"></div>
-            <div className="text-center">
-                <p className="text-xs font-bold text-gray-500">ITEMS</p>
-                <p className="text-xl font-black">{profile.edges?.accessories?.length || 0}</p>
-            </div>
-        </div>
-
-        {/* Action */}
-        <button 
-          onClick={unauthenticate}
-          className="flex items-center justify-center gap-2 mx-auto text-sm font-bold text-red-600 hover:bg-red-100 px-4 py-2 rounded transition-colors"
-        >
-          <LogOut size={16} />
-          Logout
-        </button>
-      </div>
-    );
+    setTimeout(() => {
+      navigate({ to: "/profile" }); 
+    }, 800);
   };
 
-  // --- RENDER CONTAINER ---
-  // Kita gabungkan className dari props dengan style dasar 'card-brutalist'
+  // --- RENDER UTAMA ---
   return (
-    <div className={`card-brutalist bg-accent relative overflow-hidden flex items-center justify-center p-6 ${className}`}>
+    <div 
+      ref={cardRef}
+      className={`
+        relative w-full h-full min-h-[400px] 
+        bg-rpn-card 
+        border-2 border-rpn-blue 
+        rounded-xl 
+        overflow-hidden 
+        flex flex-col 
+        
+        /* --- PERUBAHAN STYLE DI SINI --- */
+        /* 1. Shadow Hitam Transparan (Lebih Elegan) */
+        shadow-[8px_8px_0px_0px_rgba(0,0,0,0.5)]
+        
+        /* 2. Transisi */
+        transition-all duration-200 ease-in-out
+
+        /* 3. Hover Effect: "Ditekan" (Sama seperti Event Card) */
+        /* Kartu bergeser ke kanan & bawah */
+        hover:translate-x-[2px] 
+        hover:translate-y-[2px]
+        /* Bayangan memendek */
+        hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,0.5)]
+        
+        ${className}
+      `}
+    >
       
-      {/* Dekorasi Pixel di Pojok */}
-      <div className="absolute top-4 right-4 w-16 h-16 pixel-pattern text-black opacity-10 pointer-events-none" />
+      {/* ... (SISA KODE DI DALAMNYA TETAP SAMA PERSIS) ... */}
       
-      {/* Konten Utama */}
-      <div className="relative z-10 w-full flex flex-col items-center justify-center">
-        {renderContent()}
+      {/* BALOK 1: BANNER */}
+      <div className="absolute top-0 left-0 w-full h-[55%] z-0">
+        {/* ... */}
+        {profile?.bg_image ? (
+             <img src={profile.bg_image} alt="Banner" className="w-full h-full object-cover" style={{ imageRendering: 'pixelated' }} />
+        ) : (
+             <div className="w-full h-full bg-gradient-to-br from-rpn-blue via-blue-600 to-rpn-dark">
+                <div className="absolute inset-0 opacity-20" style={{ backgroundImage: 'radial-gradient(circle, #fff 1px, transparent 1px)', backgroundSize: '20px 20px' }}></div>
+             </div>
+        )}
+        <div className="absolute bottom-0 left-0 w-full h-24 bg-gradient-to-t from-rpn-card to-transparent"></div>
+      </div>
+
+      {/* BALOK 2: KONTEN UTAMA */}
+      {(user?.loggedIn && profile) ? (
+        <div className="absolute bottom-0 left-0 w-full h-[50%] z-20">
+            {/* ... Konten Profile ... */}
+            <div className="absolute -top-12 left-0 w-full h-32 bg-gradient-to-b from-transparent to-rpn-card pointer-events-none"></div>
+            <div className="h-full bg-rpn-card pl-6 pr-16 pb-6 relative flex flex-col items-end"> 
+                <div className="relative -mt-16 z-40 shrink-0 mb-2"> 
+                    <div className="w-32 h-32 rounded-2xl shadow-xl transform rotate-3 transition-transform hover:rotate-0 bg-rpn-card p-1">
+                        <div className="w-full h-full bg-rpn-dark rounded-xl overflow-hidden border-2 border-rpn-blue">
+                            {profile?.pfp ? <img src={profile.pfp} className="w-full h-full object-cover" style={{ imageRendering: 'pixelated' }} /> : <div className="w-full h-full flex items-center justify-center bg-rpn-dark text-rpn-blue"><UserIcon size={48}/></div>}
+                        </div>
+                    </div>
+                </div>
+                <div className="text-right flex flex-col items-end z-30 relative w-full">
+                    <h2 className="text-2xl md:text-3xl font-pixel text-white uppercase tracking-tighter leading-none break-all drop-shadow-md">{profile?.nickname || "Anonymous"}</h2>
+                    <div className="flex items-center justify-end gap-2 mt-2 bg-rpn-dark px-2 py-1 rounded border border-rpn-blue/30">
+                        <div className="w-2 h-2 bg-success rounded-full animate-pulse"></div>
+                        <p className="text-[10px] font-mono text-rpn-blue truncate max-w-[150px]">{user?.addr}</p>
+                    </div>
+                    <p className="text-xs text-rpn-muted mt-3 line-clamp-2 italic max-w-[250px] ml-auto font-sans">"{profile?.bio || "No bio - just vibing in the RPN."}"</p>
+                     <div className="mt-4 flex gap-4 justify-end w-full font-pixel text-[10px]">
+                        <div className="text-right">
+                            <p className="text-rpn-muted font-bold uppercase mb-1">Moments</p>
+                            <p className="text-base text-white">{profile?.edges?.moments?.length || 0}</p>
+                        </div>
+                        <div className="w-[1px] bg-rpn-blue/30 h-8"></div>
+                        <div className="text-right">
+                            <p className="text-rpn-muted font-bold uppercase mb-1">Items</p>
+                            <p className="text-base text-white">{profile?.edges?.accessories?.length || 0}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+      ) : (user?.loggedIn && !profile) ? (
+        // ... State Belum Setup ...
+        <div className="absolute bottom-0 left-0 w-full h-[50%] z-20">
+            <div className="absolute -top-12 left-0 w-full h-32 bg-gradient-to-b from-transparent to-rpn-card pointer-events-none"></div>
+            <div className="h-full bg-rpn-card pl-6 pr-16 pb-6 relative flex flex-col items-end justify-center">
+                <h2 className="text-2xl font-pixel text-white uppercase tracking-tighter leading-none break-all mt-4 text-right">Setup Account</h2>
+                <p className="text-xs text-rpn-muted mt-2 line-clamp-2 italic max-w-[250px] ml-auto text-right font-sans">Initialize your storage to start collecting.</p>
+                <Button className="mt-4 bg-rpn-blue text-white hover:bg-white hover:text-rpn-blue font-bold font-pixel text-xs px-4 py-2 rounded-none shadow-[2px_2px_0px_0px_#fff]" onClick={setup} disabled={isSetupPending}>
+                  {isSetupPending ? "Setting up..." : "INITIALIZE"}
+                </Button>
+            </div>
+        </div>
+      ) : (
+        // ... State Belum Login ...
+        <div className="absolute bottom-0 left-0 w-full h-[50%] z-20">
+            <div className="absolute -top-12 left-0 w-full h-32 bg-gradient-to-b from-transparent to-rpn-card pointer-events-none"></div>
+            <div className="h-full bg-rpn-card pl-6 pr-16 pb-6 relative flex flex-col items-end justify-center">
+                <h2 className="text-2xl font-pixel text-white uppercase tracking-tighter leading-none break-all mt-4 text-right">Connect Wallet</h2>
+                <p className="text-xs text-rpn-muted mt-2 line-clamp-2 italic max-w-[250px] ml-auto text-right font-sans">Access your RPN Identity.</p>
+            </div>
+        </div>
+      )}
+
+      {/* BALOK 4: DEKORASI KURVA (Tetap Sama) */}
+      <div className="absolute top-0 left-0 w-full h-full z-[25] pointer-events-none">
+        <div className="h-full w-full" style={{ clipPath: 'ellipse(100% 101% at 100% 1%)' }}>
+            <div className="absolute left-0 top-0 w-full h-full bg-gradient-to-r from-white/5 to-transparent backdrop-blur-[1px]">
+                 <div className="absolute top-[20%] left-[10%] w-[2px] h-[60%] bg-rpn-blue/50"></div>
+                 <div className="absolute top-[25%] left-[15%] w-[1px] h-[50%] bg-white/20"></div>
+                 <span className="absolute top-1/2 left-4 -translate-y-1/2 [writing-mode:vertical-rl] rotate-180 text-[10px] font-mono text-rpn-blue/50 tracking-[0.5em]">SYSTEM_ONLINE</span>
+            </div>
+        </div>
+      </div>
+
+      {/* BALOK 3: SIDEBAR (Tetap Sama) */}
+      <div className="absolute top-0 right-0 h-full w-14 z-30 flex flex-col">
+        <div className="flex-1 bg-black/20 backdrop-blur-md border-l border-white/10 flex flex-col items-center py-4 gap-6">
+            <div className="flex flex-col items-center gap-1">
+                <Shield size={18} className="text-rpn-blue" />
+                <span className="text-[8px] font-bold text-rpn-muted font-pixel mt-1">LVL</span>
+                <span className="text-sm font-black text-white font-sans">42</span>
+            </div>
+        </div>
+        {user?.loggedIn ? (
+            <div className="w-full flex flex-col">
+                <Button onClick={handleSettingsClick} className="h-14 w-full bg-rpn-blue hover:bg-blue-400 rounded-none flex items-center justify-center text-white transition-colors border-l border-white/20 p-0" title="Setting Account">
+                  <Settings size={20} />
+                </Button>
+                <button onClick={unauthenticate} className="h-14 w-full bg-error hover:bg-red-500 flex items-center justify-center text-white transition-colors border-l border-white/20" title="Logout">
+                  <LogOut size={20} />
+                </button>
+            </div>
+          ) : (
+            <button onClick={authenticate} className="h-14 w-full bg-rpn-blue hover:bg-blue-400 flex items-center justify-center text-white transition-colors border-l border-white/20" title="Login">
+                <LogIn size={20} />
+            </button>
+          )}
       </div>
 
     </div>

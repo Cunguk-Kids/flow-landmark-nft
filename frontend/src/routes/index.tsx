@@ -1,24 +1,17 @@
 import { useEventList } from "@/hooks/useEventList";
 import { EventCard } from "@/components/EventCard";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { LucideExternalLink } from "lucide-react";
+import { LucideExternalLink, CalendarSearch } from "lucide-react";
 import { useTransition } from "@/contexts/TransitionContext";
 import { useRef } from "react";
-import { Button } from "@/components/ui/button";
-import {
-  useFlowQuery,
-  useFlowMutate,
-  useFlowTransactionStatus,
-  useFlowCurrentUser,
-} from '@onflow/react-sdk';
-import { useSetupAccount } from "@/hooks/transactions/useSetupAccount";
+import ProfileCard from "@/components/ProfileCard";
 
 export const Route = createFileRoute("/")({
   component: Index,
 });
 
 function EventsHeroCard() {
-  const { data: events, isLoading, error } = useEventList();
+  const { data: events, isLoading } = useEventList();
   const navigate = useNavigate();
   const { triggerTransition } = useTransition();
   const cardRef = useRef<HTMLDivElement>(null);
@@ -47,75 +40,115 @@ function EventsHeroCard() {
   return (
     <div
       ref={cardRef}
-      className="md:col-span-3 md:row-span-3 card-brutalist bg-red-400 p-8 md:p-12 relative flex flex-col justify-between z-10"
+      className="
+        md:col-span-3 md:row-span-3 
+        relative flex flex-col justify-between 
+        bg-rpn-blue 
+        border-2 border-rpn-dark 
+        rounded-xl 
+        p-8 md:p-10 
+        overflow-hidden 
+        z-30 
+        shadow-[8px_8px_0px_0px_rgba(15,23,42,0.4)] 
+        group
+        hover:shadow-[6px_6px_0px_0px_rgba(15,23,42,0.4)]
+        hover:translate-x-[1px] hover:translate-y-[1px]
+        transition-all
+      "
     >
-      <h1 className="text-display text-4xl md:text-5xl lg:text-6xl leading-[1.1] mt-8">
-        Explore Hundred
-        <br />
-        Events
-      </h1>
+      {/* --- DEKORASI BACKGROUND --- */}
+      {/* Grid Pattern Halus */}
+      <div 
+        className="absolute inset-0 opacity-10 pointer-events-none"
+        style={{ backgroundImage: 'linear-gradient(#0F172A 1px, transparent 1px), linear-gradient(90deg, #0F172A 1px, transparent 1px)', backgroundSize: '40px 40px' }}
+      />
+      
+      {/* Aksen Pojok Kiri Atas */}
+      <div className="absolute top-4 left-4 w-8 h-8 border-t-4 border-l-4 border-rpn-dark opacity-50" />
 
-      <button
-        onClick={handleExploreClick}
-        className="btn-brutalist bg-primary text-primary-foreground hover:bg-primary/90 hover:shadow-lg self-start flex items-center gap-2"
-      >
-        Explore Event
-        <LucideExternalLink className="size-4" />
-      </button>
+      {/* --- KONTEN UTAMA --- */}
+      <div className="relative z-10 mt-4">
+         {/* Label Kecil */}
+         <div className="flex items-center gap-2 mb-4 text-rpn-dark/70 font-mono text-xs font-bold uppercase tracking-widest">
+            <CalendarSearch size={14} />
+            <span>Discovery Protocol</span>
+         </div>
 
-      {/* Event Cards Decoration - positioned absolutely */}
-      <div className="absolute top-4 right-4 w-64 grid grid-cols-1 grid-rows-1">
+         {/* Judul Besar */}
+         <h1 className="font-pixel text-3xl md:text-4xl lg:text-5xl leading-tight text-rpn-dark uppercase mb-6">
+            Explore <br />
+            <span className="text-white drop-shadow-[4px_4px_0px_#0F172A] stroke-black">
+               Thousands
+            </span> <br />
+            of Events
+         </h1>
+
+         {/* Tombol CTA */}
+         <button
+            onClick={handleExploreClick}
+            className="
+               bg-rpn-dark text-white 
+               border-2 border-white 
+               px-6 py-4 rounded-lg 
+               font-bold font-sans uppercase tracking-wide 
+               shadow-[4px_4px_0px_0px_#fff] 
+               hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_#fff] 
+               active:translate-x-[4px] active:translate-y-[4px] active:shadow-none 
+               transition-all flex items-center gap-3 w-fit
+            "
+         >
+            Start Exploring
+            <LucideExternalLink className="size-5" />
+         </button>
+      </div>
+
+      {/* --- TUMPUKAN KARTU EVENT (DEKORASI KANAN) --- */}
+      {/* Diposisikan absolute di kanan agar tidak mengganggu teks */}
+      <div className="absolute top-1/2 right-[-4rem] -translate-y-1/2 w-64 grid grid-cols-1 grid-rows-1 pointer-events-none opacity-90 scale-90 md:scale-100">
+        
         {isLoading && (
-          <div className="text-xs text-muted-foreground">Loading...</div>
+          <div className="bg-white border-2 border-black p-4 rounded-xl font-mono text-xs animate-pulse">
+             Scanning Network...
+          </div>
         )}
 
+        {/* Loop Event Cards */}
         {events?.slice(0, 3).map((event, index) => (
           <div
-            className="min-w-[20rem] col-[1/-1] row-[1/-1]"
+            key={event.id}
+            className="min-w-[18rem] col-[1/-1] row-[1/-1] transition-transform duration-500 group-hover:scale-105"
             style={{
-              transform: `rotate(calc(5deg*${index + 1}))`,
+              // Rotasi bertumpuk (Stack effect)
+              transform: `
+                translateX(calc(${index} * -10px)) 
+                translateY(calc(${index} * 10px)) 
+                rotate(calc(6deg * ${index + 1}))
+              `,
+              zIndex: 3 - index // Kartu pertama paling atas
             }}
           >
-            <EventCard key={event.id} event={event} />
+             {/* Kita bungkus EventCard agar ukurannya pas di dekorasi */}
+             <div className="pointer-events-none select-none shadow-xl">
+                <EventCard event={event} />
+             </div>
           </div>
         ))}
       </div>
+
     </div>
   );
 }
 
 function Index() {
-  const { user, authenticate, unauthenticate } = useFlowCurrentUser();
-  
   return (
     <div className="min-h-screen bg-background p-4 md:p-6">
       {/* Bento Grid Layout */}
       <div className="mx-auto max-w-7xl">
-        <div className="grid grid-cols-1 md:grid-cols-6 gap-4 auto-rows-[140px] overflow-hidden">
+        <div className="grid grid-cols-1 md:grid-cols-6 gap-4 auto-rows-[140px]">
           <EventsHeroCard />
-          {/* Accent Card - Square-ish */}
-          <div className="md:col-span-3 md:row-span-3 card-brutalist bg-accent relative overflow-hidden flex items-center justify-center">
-            <div className="absolute top-6 right-6 w-20 h-20 pixel-pattern text-black opacity-20" />
-            <div className="text-center p-6">
-              <div className="w-40 h-40 mx-auto mb-2 rounded-full overflow-hidden relative">
-                <div className="absolute inset-0 bg-linear-to-br from-accent to-accent/80 flex items-center justify-center">
-                  <div className="text-7xl">🌟</div>
-                </div>
-              </div>
-                {user?.loggedIn ? 
-                  (
-                    <div>
-                      <p className="text-black">Connected: {user.addr}</p>
-                      <Button onClick={unauthenticate}>Disconnect</Button>
-                    </div>
-                  )
-                : (
-                  <Button onClick={authenticate} className="btn-brutalist">Connect Wallet</Button>
-                )}
-            </div>
-          </div>
+          <ProfileCard className="md:col-span-3 md:row-span-3" />
 
-          {/* Green Feature Card - Wide horizontal */}
+          {/* 3. WHOLE PERSON CARE (Tengah Bawah - Lebar) */}
           <div className="md:col-span-4 md:row-span-2 card-brutalist bg-primary p-8 relative overflow-hidden">
             <h2 className="text-display text-2xl md:text-3xl text-primary-foreground mb-6">
               Whole-Person Care
@@ -125,12 +158,7 @@ function Index() {
               <span className="btn-brutalist bg-card text-card-foreground text-sm">
                 🏥 A Dedicated Care Advocate
               </span>
-              <span className="btn-brutalist bg-card text-card-foreground text-sm">
-                💊 Proactive Interventions
-              </span>
-              <span className="btn-brutalist bg-card text-card-foreground text-sm">
-                📱 Personalised Content
-              </span>
+              {/* ... chips lainnya ... */}
               <span className="btn-brutalist bg-card text-card-foreground text-sm">
                 📅 On-Demand Appointments
               </span>
@@ -139,7 +167,7 @@ function Index() {
             <div className="absolute bottom-6 right-6 w-20 h-20 pixel-pattern text-black opacity-20" />
           </div>
 
-          {/* Small Stats Card */}
+          {/* 4. STATS CARD (Kanan Bawah - Kecil) */}
           <div className="md:col-span-2 md:row-span-2 card-brutalist bg-secondary p-6 relative overflow-hidden flex flex-col justify-center">
             <div className="text-center">
               <div className="text-4xl font-bold text-secondary-foreground mb-2">
