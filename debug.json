@@ -1,0 +1,48 @@
+[
+  {
+    "type": "Optional",
+    "value": {
+      "type": "String",
+      "value": "BudiDebug"
+    }
+  },
+  {
+    "type": "Optional",
+    "value": {
+      "type": "String",
+      "value": "Sedang testing double quote issue."
+    }
+  },
+  {
+    "type": "Dictionary",
+    "value": [
+      {
+        "key": {"type": "String", "value": "twitter"},
+        "value": {"type": "String", "value": "@budi_debug"}
+      }
+    ]
+  },
+  {
+    "type": "Optional",
+    "value": null
+  },
+  {
+    "type": "Optional",
+    "value": {
+      "type": "String",
+      "value": "Test Short Desc"
+    }
+  },
+  {
+    "type": "Optional",
+    "value": null
+  },
+  {
+    "type": "Array",
+    "value": []
+  },
+  {
+    "type": "Optional",
+    "value": null
+  }
+]
