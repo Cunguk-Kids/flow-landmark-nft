@@ -23,6 +23,9 @@ import MetadataViews from 0x%s
 import NFTMoment from 0x%s
 import EventPass from 0x%s
 
+//this transaction will be executed in backend
+//there is useFreeMint and can be executed once in lifetime
+
 transaction(
     recipient: Address,
     name: String,
@@ -90,7 +93,7 @@ func FreeMintNFTMoment(
 	var flowClient access.Client
 
 	// Koneksi Flow ke Emulator HTTP port
-	flowClient, err = http.NewClient(http.TestnetHost)
+	flowClient, err = http.NewClient(http.EmulatorHost)
 	if err != nil {
 		return fmt.Errorf("gagal membuat flow client: %w", err)
 	}

@@ -56,7 +56,7 @@ func convertCadenceDictToGoMap(dict cadence.Dictionary) map[string]string {
 		key, okK := pair.Key.(cadence.String)
 		value, okV := pair.Value.(cadence.String)
 		if okK && okV {
-			goMap[key.String()] = value.String()
+			goMap[string(key)] = string(value)
 		}
 	}
 	return goMap
@@ -86,7 +86,7 @@ func HandleCapabilityIssued(ctx context.Context, ev flow.Event, client *ent.Clie
 	Fields := ev.Value.FieldsMappedByName()
 	cadenceTypeString := Fields["type"].String()
 
-	if !strings.Contains(cadenceTypeString, "&A.1bb6b1e0a5170088.UserProfile.Profile") {
+	if !strings.Contains(cadenceTypeString, "&A.f8d6e0586b0a20c7.UserProfile.Profile") {
 		return
 	}
 
@@ -149,9 +149,9 @@ func NFTMomentMinted(ctx context.Context, ev flow.Event, client *ent.Client) {
 		return
 	}
 	ownerAddress := ownerAddressCadence.String()
-	name := nameCadence.String()
-	description := descriptionCadence.String()
-	thumbnail := thumbnailCadence.String()
+	name := string(nameCadence)
+	description := string(descriptionCadence)
+	thumbnail := string(thumbnailCadence)
 
 	isUserFound, err := client.User.Query().
 		Where(
@@ -191,9 +191,9 @@ func NFTAccessoryMinted(ctx context.Context, ev flow.Event, client *ent.Client) 
 		return
 	}
 	ownerAddress := ownerAddressCadence.String()
-	name := nameCadence.String()
-	description := descriptionCadence.String()
-	thumbnail := thumbnailCadence.String()
+	name := string(nameCadence)
+	description := string(descriptionCadence)
+	thumbnail := string(thumbnailCadence)
 
 	isUserFound, err := client.User.Query().
 		Where(
@@ -215,7 +215,7 @@ func NFTAccessoryMinted(ctx context.Context, ev flow.Event, client *ent.Client) 
 			SetThumbnail(thumbnail).
 			SetNftID(uint64(idNftCadence)).
 			SetOwnerID(isUserFound.ID).
-			SetEquipmentType(equipmentTypeCadence.String()).
+			SetEquipmentType(string(equipmentTypeCadence)).
 			Save(ctx)
 
 		if err != nil {
@@ -305,10 +305,10 @@ func EventCreated(ctx context.Context, ev flow.Event, client *ent.Client) {
 	hostAddress := hostAddressCadence.String()
 	eventID := uint64(eventIDCadence)
 	// String
-	eventName := eventNameCadence.String()
-	description := descriptionCadence.String()
-	thumbnailURL := thumbnailURLCadence.String()
-	location := locationCadence.String()
+	eventName := string(eventNameCadence)
+	description := string(descriptionCadence)
+	thumbnailURL := string(thumbnailURLCadence)
+	location := string(locationCadence)
 	// Angka
 	eventType := uint8(eventTypeCadence)
 	quota := uint64(quotaCadence)
@@ -554,9 +554,9 @@ func EventPassMinted(ctx context.Context, ev flow.Event, client *ent.Client) {
 			// Buat 'EventPass' baru
 			newPass, createErr := client.EventPass.Create().
 				SetPassID(passID).
-				SetName(nameCadence.String()).
-				SetDescription(descriptionCadence.String()).
-				SetThumbnail(thumbnailCadence.String()).
+				SetName(string(nameCadence)).
+				SetDescription(string(descriptionCadence)).
+				SetThumbnail(string(thumbnailCadence)).
 				SetEventType(uint8(eventTypeCadence)).
 				SetIsUsed(false).      // Set default
 				SetOwner(ownerUser).   // <-- Tautkan ke User (Pemilik)
@@ -613,34 +613,34 @@ func ProfileUpdated(ctx context.Context, ev flow.Event, client *ent.Client) {
 
 	// bio (String)
 	if bioCadence, ok := Fields["bio"].(cadence.String); ok {
-		updater.SetBio(bioCadence.String())
+		updater.SetBio(string(bioCadence))
 	}
 
 	// nickname ((String)?)
 	if nicknameCadence, ok := Fields["nickname"].(cadence.Optional); ok {
 		if nicknameCadence.Value != nil {
-			updater.SetNickname(nicknameCadence.Value.(cadence.String).String())
+			updater.SetNickname(string(nicknameCadence.Value.(cadence.String)))
 		}
 	}
 
 	// pfp ((String)?)
 	if pfpCadence, ok := Fields["pfp"].(cadence.Optional); ok {
 		if pfpCadence.Value != nil {
-			updater.SetPfp(pfpCadence.Value.(cadence.String).String())
+			updater.SetPfp(string(pfpCadence.Value.(cadence.String)))
 		}
 	}
 
 	// shortDescription ((String)?)
 	if shortDescCadence, ok := Fields["shortDescription"].(cadence.Optional); ok {
 		if shortDescCadence.Value != nil {
-			updater.SetShortDescription(shortDescCadence.Value.(cadence.String).String())
+			updater.SetShortDescription(string(shortDescCadence.Value.(cadence.String)))
 		}
 	}
 
 	// bgImage ((String)?)
 	if bgImageCadence, ok := Fields["bgImage"].(cadence.Optional); ok {
 		if bgImageCadence.Value != nil {
-			updater.SetBgImage(bgImageCadence.Value.(cadence.String).String())
+			updater.SetBgImage(string(bgImageCadence.Value.(cadence.String)))
 		}
 	}
 
