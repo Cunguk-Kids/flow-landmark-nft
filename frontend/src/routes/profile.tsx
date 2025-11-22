@@ -7,6 +7,7 @@ import UpdateProfileModal from '@/components/modals/UpdateProfileModal'; // Past
 import HighlightMomentModal from '@/components/modals/HighlightMomentModal';
 import MyMomentsBox from '@/components/MyMomentsBox';
 import MyEventPassBox from '@/components/profile/MyEventPassBox';
+import CustomizeActionCard from '@/components/cards/CustomizeActionCard';
 
 export const Route = createFileRoute('/profile')({
   component: Profile,
@@ -156,6 +157,11 @@ function Profile() {
 
             {/* Kanan: Stats & Socials (Col Span 1) */}
             <div className="space-y-6">
+                <CustomizeActionCard
+                    userAddress={user?.addr}
+                    profile={profile}
+                    onSuccess={refetch} 
+                />
                 
                 {/* Kotak Statistik */}
                 <div className="bg-rpn-blue/10 border border-rpn-blue/50 rounded-2xl p-6 backdrop-blur-sm">
