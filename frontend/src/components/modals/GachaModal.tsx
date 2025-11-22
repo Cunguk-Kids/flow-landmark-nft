@@ -9,6 +9,9 @@ import { useCheckReceipt } from '@/hooks/scripts/useCheckReceipt';
 import { Package, Sparkles, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useFlowCurrentUser } from '@onflow/react-sdk';
+import { useGetAccessoryMetadata } from '@/hooks/scripts/useGetAccessoryMetadata';
+import { getEventFromTx } from '@/lib/flow-utils';
+import * as fcl from "@onflow/fcl";
 
 interface GachaModalProps {
   isOpen: boolean;
@@ -22,7 +25,8 @@ export default function GachaModal({ isOpen, onClose }: GachaModalProps) {
   const { user } = useFlowCurrentUser();
   // State untuk melacak proses
   const [step, setStep] = useState<GachaStep>('IDLE');
-
+  const [resultID, setResultID] = useState<number | null>(null);
+  const { data: resultItem } = useGetAccessoryMetadata(user?.addr || "", resultID);
   const { 
     hasReceipt, 
     isLoading: isChecking, 
@@ -43,7 +47,8 @@ export default function GachaModal({ isOpen, onClose }: GachaModalProps) {
     isPending: isRevealing, 
     isSealed: isRevealSealed, 
     reset: resetReveal,
-    error: revealError
+    error: revealError,
+    txId: revealTxId
   } = useRevealGacha();
 
   // --- EFEK PERUBAHAN STATE ---
@@ -87,6 +92,29 @@ export default function GachaModal({ isOpen, onClose }: GachaModalProps) {
     }
   }, [isOpen]);
 
+  useEffect(() => {
+    if (revealTxId) {
+      // Subscribe ke transaksi
+      const unsub = fcl.tx(revealTxId).subscribe((txStatus) => {
+        
+        // Jika status = 4 (Sealed)
+        if (fcl.tx.isSealed(txStatus)) {
+            
+            // 1. CARI EVENT 'Minted' di dalam logs
+            // Sesuaikan string ini dengan nama event di kontrak Anda
+            // Bisa "NFTAccessory.Minted" atau "AccessoryPack.GachaMinted"
+            const eventData = getEventFromTx(txStatus, "NFTAccessory.Minted");
+
+            if (eventData && eventData.id) {
+                console.log("Gacha Result ID:", eventData.id);
+                setResultID(Number(eventData.id)); // Simpan ID
+                setStep('FINISHED'); // Pindah ke layar hasil
+            }
+        }
+      });
+      return unsub;
+    }
+  }, [revealTxId]);
 
   // --- HANDLERS ---
 
@@ -106,9 +134,7 @@ export default function GachaModal({ isOpen, onClose }: GachaModalProps) {
 
   // Error Handling Sederhana
   const error = buyError || revealError;
-  console.log(isBuySealed, isRevealSealed, 'sealed')
-  console.log(step, "step")
-  console.log(hasReceipt, "woi receipt")
+
   return (
     <Dialog open={isOpen} onOpenChange={handleClose} modal={!isBuying && !isRevealing}>
       <DialogContent className="bg-rpn-dark border-2 border-rpn-blue text-white sm:max-w-[400px] rounded-xl shadow-[0_0_50px_rgba(41,171,226,0.3)] p-8 text-center overflow-hidden">
@@ -122,13 +148,31 @@ export default function GachaModal({ isOpen, onClose }: GachaModalProps) {
           {step === 'FINISHED' ? (
             <motion.div 
                 key="result"
-                initial={{ scale: 0, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
                 className="flex flex-col items-center z-10 relative"
             >
                 <div className="text-6xl mb-4 animate-bounce">🎉</div>
-                <h2 className="text-2xl font-black text-rpn-blue font-pixel mb-2">ITEM RECEIVED!</h2>
-                <p className="text-xs text-gray-400 mb-6 font-mono">Item has been sent to your inventory.</p>
+                
+                {/* Tampilkan Gambar Hasil */}
+                {resultItem ? (
+                    <div className="w-32 h-32 bg-rpn-card border-2 border-rpn-blue rounded-xl mb-4 p-2 shadow-[0_0_30px_rgba(41,171,226,0.5)]">
+                        <img 
+                            src={resultItem.thumbnail} 
+                            className="w-full h-full object-contain" 
+                        />
+                    </div>
+                ) : (
+                    // Loading gambar sebentar (sambil script jalan)
+                    <div className="w-32 h-32 flex items-center justify-center mb-4">
+                        <Loader2 className="animate-spin text-rpn-blue" />
+                    </div>
+                )}
+
+                <h2 className="text-xl font-black text-white uppercase font-pixel mb-1">
+                    {resultItem ? resultItem.name : "Item Received!"}
+                </h2>
+                <p className="text-xs text-gray-400 mb-6 font-mono">
+                    Added to your inventory.
+                </p>
                 
                 <Button onClick={handleClose} className="w-full bg-rpn-blue text-black font-bold font-pixel">
                     AWESOME

@@ -45,5 +45,5 @@ export function useRevealGacha() {
     });
   };
 
-  return { revealPack, isPending, isSealed, error: txError || statusError, reset };
+  return { revealPack, isPending, isSealed, error: txError || statusError, reset, txId };
 }
