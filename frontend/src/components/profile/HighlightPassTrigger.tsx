@@ -29,7 +29,7 @@ export default function HighlightPassTrigger({ currentProfile, onSuccess }: High
       >
         <div className="flex justify-between items-center mb-3 border-b border-white/10 pb-2 relative z-10">
             <h3 className="text-sm font-bold text-white uppercase font-pixel tracking-widest flex items-center gap-2">
-               Top Badges
+               Featured Event Pass
             </h3>
             <span className="text-[8px] text-rpn-blue bg-rpn-blue/10 px-1.5 py-0.5 rounded font-mono opacity-0 group-hover:opacity-100 transition-opacity">
                 EDIT
