@@ -1,7 +1,7 @@
 import { useEventList } from "@/hooks/useEventList";
 import { EventCard } from "@/components/EventCard";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { LucideExternalLink, CalendarSearch } from "lucide-react";
+import { LucideExternalLink, CalendarSearch, Search, Plus, PlusSquare, ArrowRight, Users } from "lucide-react";
 import { useTransition } from "@/contexts/TransitionContext";
 import { useRef } from "react";
 import ProfileCard from "@/components/ProfileCard";
@@ -148,6 +148,68 @@ function EventsHeroCard() {
   );
 }
 
+function FindPeopleHeroCard() {
+  const navigate = useNavigate();
+  const { triggerTransition } = useTransition();
+  const cardRef = useRef<HTMLDivElement>(null);
+
+  const handleExploreClick = () => {
+    if (cardRef.current) {
+      const rect = cardRef.current.getBoundingClientRect();
+      const computedStyle = window.getComputedStyle(cardRef.current);
+      const borderRadius = parseFloat(computedStyle.borderRadius);
+
+      triggerTransition({
+        x: rect.left,
+        y: rect.top,
+        width: rect.width,
+        height: rect.height,
+        borderRadius: borderRadius,
+      });
+    }
+
+    setTimeout(() => {
+      navigate({ to: "/search" });
+    }, 800);
+  };
+  return (
+    <div 
+      ref={cardRef}
+      // Tambahkan onClick navigasi ke halaman search
+      onClick={handleExploreClick}
+      className="
+        col-span-1 row-span-2 md:col-span-2 md:row-span-2 
+        card-brutalist bg-rpn-dark border-2 border-rpn-blue 
+        p-6 relative overflow-hidden flex flex-col justify-center 
+        group cursor-pointer
+        hover:border-white hover:shadow-[0_0_20px_rgba(41,171,226,0.3)] 
+        transition-all
+      "
+    >
+        {/* Ikon Latar Belakang */}
+        <div className="absolute top-0 right-0 p-2 opacity-20 group-hover:opacity-50 transition-opacity group-hover:scale-110 duration-500">
+            <Users size={64} className="text-rpn-blue" />
+        </div>
+        
+        <h3 className="text-white font-pixel text-sm uppercase mb-4 tracking-widest text-rpn-blue group-hover:text-white transition-colors">
+            Community
+        </h3>
+        
+        {/* Visualisasi Tombol Search Palsu (CTA) */}
+        <div className="w-full bg-black/30 border-2 border-rpn-muted/30 text-rpn-muted p-3 rounded-lg font-mono text-sm flex items-center justify-between group-hover:border-rpn-blue group-hover:text-white transition-colors">
+            <span>Find people...</span>
+            <div className="bg-rpn-blue text-black p-1.5 rounded">
+                <Search size={16} />
+            </div>
+        </div>
+        
+        <p className="text-[10px] text-rpn-muted mt-3 group-hover:text-gray-300 transition-colors">
+            Search by Wallet Address (0x...) or Username.
+        </p>
+    </div>
+  )
+}
+
 export default EventsHeroCard;
 
 function Index() {
@@ -161,36 +223,61 @@ function Index() {
           </div>
           <ProfileCard className="col-span-1 row-span-4 md:col-span-3 md:row-span-3" />
 
-          {/* 3. WHOLE PERSON CARE (Tengah Bawah - Lebar) */}
-          <div className="col-span-1 row-span-3 md:col-span-4 md:row-span-2 card-brutalist bg-primary p-8 relative overflow-hidden">
-            <h2 className="text-display text-2xl md:text-3xl text-primary-foreground mb-6">
-              Whole-Person Care
-            </h2>
-
-            <div className="flex flex-wrap gap-3">
-              <span className="btn-brutalist bg-card text-card-foreground text-sm">
-                🏥 A Dedicated Care Advocate
-              </span>
-              {/* ... chips lainnya ... */}
-              <span className="btn-brutalist bg-card text-card-foreground text-sm">
-                📅 On-Demand Appointments
-              </span>
+          {/* 1. SEARCH PEOPLE (Kiri) */}
+          <FindPeopleHeroCard />
+          {/* 2. LEARN ABOUT US (Tengah) */}
+          <div className="col-span-1 row-span-2 md:col-span-2 md:row-span-2 card-brutalist bg-white p-6 relative overflow-hidden flex flex-col justify-between group">
+            
+            {/* Dekorasi Garis Miring */}
+            <div className="absolute -right-4 -top-4 w-24 h-24 bg-rpn-blue/10 rotate-45 group-hover:bg-rpn-blue/20 transition-colors"></div>
+            
+            <div>
+                <div className="flex items-center gap-2 mb-2">
+                    <div className="w-2 h-2 bg-rpn-blue rounded-full animate-ping"></div>
+                    <span className="text-[10px] font-bold text-rpn-dark uppercase tracking-widest font-sans">
+                        RPN Ecosystem
+                    </span>
+                </div>
+                
+                {/* Typography Efektif: Besar, Tebal, Rapat */}
+                <h2 className="text-3xl md:text-4xl font-black text-rpn-dark leading-[0.9] tracking-tighter uppercase mb-2">
+                    We Build <br/>
+                    <span className="text-rpn-blue">Digital</span> <br/>
+                    Legacy.
+                </h2>
             </div>
 
-            <div className="absolute bottom-6 right-6 w-20 h-20 pixel-pattern text-black opacity-20" />
+            <div className="flex items-center justify-between border-t-2 border-black/10 pt-4 mt-2">
+                <p className="text-xs text-gray-500 font-medium max-w-[120px] leading-tight">
+                    Learn how we tokenize memories.
+                </p>
+                <button className="w-8 h-8 rounded-full border-2 border-black flex items-center justify-center hover:bg-black hover:text-white transition-colors">
+                    <ArrowRight size={16} />
+                </button>
+            </div>
           </div>
 
-          {/* 4. STATS CARD (Kanan Bawah - Kecil) */}
-          <div className="md:col-span-2 md:row-span-2 card-brutalist bg-secondary p-6 relative overflow-hidden flex flex-col justify-center">
-            <div className="text-center">
-              <div className="text-4xl font-bold text-secondary-foreground mb-2">
-                98%
-              </div>
-              <p className="text-sm text-secondary-foreground/80">
-                Satisfaction Rate
-              </p>
+          {/* 3. ADD NEW MOMENT (Kanan) */}
+          {/* Kita gunakan MintMomentSection tapi versi 'Card Kecil' atau tombol pemicu */}
+          <div className="col-span-1 row-span-2 md:col-span-2 md:row-span-2 card-brutalist bg-rpn-blue p-6 relative overflow-hidden flex flex-col justify-center items-center text-center group cursor-pointer hover:bg-blue-400 transition-colors shadow-[4px_4px_0px_0px_rgba(15,23,42,0.4)] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[2px_2px_0px_0px_rgba(15,23,42,0.4)]">
+            
+            {/* Background Icon Besar */}
+            <div className="absolute inset-0 flex items-center justify-center opacity-10 pointer-events-none">
+                <PlusSquare size={120} className="text-black" />
             </div>
-            <div className="absolute top-4 right-4 w-12 h-12 pixel-pattern text-black opacity-10" />
+
+            <div className="relative z-10">
+                <div className="w-16 h-16 bg-black text-white rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg group-hover:scale-110 transition-transform">
+                    <Plus size={32} />
+                </div>
+                
+                <h3 className="text-xl font-black text-black uppercase font-pixel mb-1">
+                    Mint Moment
+                </h3>
+                <p className="text-xs text-black/70 font-bold max-w-[150px] mx-auto">
+                    Turn your photo into a permanent NFT asset.
+                </p>
+            </div>
           </div>
 
           {/* Info Card - Different size */}
