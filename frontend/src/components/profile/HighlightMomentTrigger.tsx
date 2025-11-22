@@ -1,7 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { useUpdateProfile, type UpdateProfileDTO } from '@/hooks/transactions/useUpdateProfile';
+import { useState } from 'react';
 import { useGetMomentsPaginated } from '@/hooks/api/useGetNFTMoment';
 import { useFlowCurrentUser } from '@onflow/react-sdk';
 import { Loader2 } from 'lucide-react';
@@ -10,11 +9,11 @@ import HighlightMomentModal from '@/components/modals/HighlightMomentModal';
 interface UserProfileData {
   nickname?: string;
   bio?: string;
-  shortDescription?: string;
+  short_description?: string;
   pfp?: string;
-  bgImage?: string;
+  bg_image?: string;
   socials?: Record<string, string>;
-  highlighted_moment_id?: number; 
+  highlighted_moment_id?: number[]; 
 }
 
 interface HighlightMomentTriggerProps {
@@ -26,32 +25,9 @@ export default function HighlightMomentTrigger({ currentProfile, onSuccess }: Hi
   const { user } = useFlowCurrentUser();
   const [isOpen, setIsOpen] = useState(false);
   
-  const { data: myMomentsData, isLoading } = useGetMomentsPaginated(user?.addr);
+  const { data: myMomentsData } = useGetMomentsPaginated(user?.addr);
   const myMoments = myMomentsData?.data || [];
   const featuredMoment = myMoments.find(m => Number(m.nft_id) === Number(currentProfile?.highlighted_moment_id));
-
-  const { updateProfile, isPending, isSealed } = useUpdateProfile();
-
-  useEffect(() => {
-    if (isSealed) {
-      onSuccess();
-      setIsOpen(false);
-    }
-  }, [isSealed, onSuccess]);
-
-  const handleSelectMoment = (momentID: number | null) => {
-    if (!currentProfile) return;
-    const payload: UpdateProfileDTO = {
-      nickname: currentProfile.nickname,
-      bio: currentProfile.bio,
-      shortDescription: currentProfile.shortDescription,
-      pfp: currentProfile.pfp,
-      bgImage: currentProfile.bgImage,
-      socials: currentProfile.socials || {},
-      momentID: momentID
-    };
-    updateProfile(payload);
-  };
 
   return (
     <>
@@ -118,13 +94,10 @@ export default function HighlightMomentTrigger({ currentProfile, onSuccess }: Hi
 
       {/* MODAL (Tetap sama) */}
       <HighlightMomentModal 
-        isLoadingMoments={isLoading}
          isOpen={isOpen}
          onClose={() => setIsOpen(false)}
-         moments={myMoments}
-         currentHighlightId={currentProfile?.highlighted_moment_id || null}
-         isPending={isPending}
-         onSelect={handleSelectMoment}
+         onSuccess={onSuccess}
+         currentProfile={currentProfile}
       />
     </>
   );

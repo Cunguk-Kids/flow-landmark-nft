@@ -51,17 +51,16 @@ export interface UpdateProfileDTO {
   shortDescription?: string;
   bgImage?: string;
   momentID: number | null;
-  highlightedEventPassIds: Array<number>;
+  highlightedEventPassIds: number[];
   // Untuk MVP Edit Profile, kita skip highlight ID dulu agar simpel,
   // atau kirim [] dan null sebagai default.
 }
 
 export function useUpdateProfile() {
-  const { mutate, data: txId, isPending: isMutating, error: txError } = useFlowMutate();
+  const { mutate, data: txId, isPending, error: txError, reset } = useFlowMutate();
   const { transactionStatus, error: statusError } = useFlowTransactionStatus({ id: txId });
 
   const isSealed = transactionStatus?.status === 4;
-  const isPending = isMutating || (!!txId && !isSealed);
 
   const toNullable = (val?: string) => {
     if (!val || val.trim() === '') return null;
@@ -79,22 +78,17 @@ export function useUpdateProfile() {
 
     // Konversi ke format Cadence Dictionary { key, value }
     const socialsArg = Object.keys(cleanSocials).map(k => ({ key: k, value: cleanSocials[k] }));
-
+    console.log(data)
     mutate({
       cadence: UPDATE_PROFILE_TX,
       args: (arg, t) => [
-        // Gunakan helper 'toNullable' untuk semua field opsional
         arg(toNullable(data.nickname), t.Optional(t.String)),
         arg(toNullable(data.bio), t.Optional(t.String)),
-        
-        // Socials selalu dikirim sebagai Dictionary (bisa kosong)
         arg(socialsArg, t.Dictionary({ key: t.String, value: t.String })),
         
         arg(toNullable(data.pfp), t.Optional(t.String)),
         arg(toNullable(data.shortDescription), t.Optional(t.String)),
         arg(toNullable(data.bgImage), t.Optional(t.String)),
-        
-        // Highlight (Sementara hardcode nil/kosong sesuai request)
         arg(data.highlightedEventPassIds, t.Array(t.Optional(t.UInt64))), 
         arg(data.momentID, t.Optional(t.UInt64))
       ]
@@ -106,5 +100,6 @@ export function useUpdateProfile() {
     isPending,
     isSealed,
     error: txError || statusError,
+    reset
   };
 }
