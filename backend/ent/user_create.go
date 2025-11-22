@@ -127,6 +127,20 @@ func (_c *UserCreate) SetSocials(v map[string]string) *UserCreate {
 	return _c
 }
 
+// SetIsFreeMinted sets the "is_free_minted" field.
+func (_c *UserCreate) SetIsFreeMinted(v bool) *UserCreate {
+	_c.mutation.SetIsFreeMinted(v)
+	return _c
+}
+
+// SetNillableIsFreeMinted sets the "is_free_minted" field if the given value is not nil.
+func (_c *UserCreate) SetNillableIsFreeMinted(v *bool) *UserCreate {
+	if v != nil {
+		_c.SetIsFreeMinted(*v)
+	}
+	return _c
+}
+
 // AddEventPassIDs adds the "event_passes" edge to the EventPass entity by IDs.
 func (_c *UserCreate) AddEventPassIDs(ids ...int) *UserCreate {
 	_c.mutation.AddEventPassIDs(ids...)
@@ -224,6 +238,7 @@ func (_c *UserCreate) Mutation() *UserMutation {
 
 // Save creates the User in the database.
 func (_c *UserCreate) Save(ctx context.Context) (*User, error) {
+	_c.defaults()
 	return withHooks(ctx, _c.sqlSave, _c.mutation, _c.hooks)
 }
 
@@ -249,10 +264,21 @@ func (_c *UserCreate) ExecX(ctx context.Context) {
 	}
 }
 
+// defaults sets the default values of the builder before save.
+func (_c *UserCreate) defaults() {
+	if _, ok := _c.mutation.IsFreeMinted(); !ok {
+		v := user.DefaultIsFreeMinted
+		_c.mutation.SetIsFreeMinted(v)
+	}
+}
+
 // check runs all checks and user-defined validators on the builder.
 func (_c *UserCreate) check() error {
 	if _, ok := _c.mutation.Address(); !ok {
 		return &ValidationError{Name: "address", err: errors.New(`ent: missing required field "User.address"`)}
+	}
+	if _, ok := _c.mutation.IsFreeMinted(); !ok {
+		return &ValidationError{Name: "is_free_minted", err: errors.New(`ent: missing required field "User.is_free_minted"`)}
 	}
 	return nil
 }
@@ -315,6 +341,10 @@ func (_c *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.Socials(); ok {
 		_spec.SetField(user.FieldSocials, field.TypeJSON, value)
 		_node.Socials = value
+	}
+	if value, ok := _c.mutation.IsFreeMinted(); ok {
+		_spec.SetField(user.FieldIsFreeMinted, field.TypeBool, value)
+		_node.IsFreeMinted = value
 	}
 	if nodes := _c.mutation.EventPassesIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
@@ -433,6 +463,7 @@ func (_c *UserCreateBulk) Save(ctx context.Context) ([]*User, error) {
 	for i := range _c.builders {
 		func(i int, root context.Context) {
 			builder := _c.builders[i]
+			builder.defaults()
 			var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
 				mutation, ok := m.(*UserMutation)
 				if !ok {

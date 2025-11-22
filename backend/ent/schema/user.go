@@ -29,6 +29,7 @@ func (User) Fields() []ent.Field {
 		field.JSON("highlighted_eventPass_ids", []uint64{}).Optional(),
 		field.Uint64("highlighted_moment_id").Optional(),
 		field.JSON("socials", map[string]string{}).Optional(),
+		field.Bool("is_free_minted").Default(false),
 	}
 }
 

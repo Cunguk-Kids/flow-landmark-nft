@@ -4938,6 +4938,7 @@ type UserMutation struct {
 	highlighted_moment_id           *uint64
 	addhighlighted_moment_id        *int64
 	socials                         *map[string]string
+	is_free_minted                  *bool
 	clearedFields                   map[string]struct{}
 	event_passes                    map[int]struct{}
 	removedevent_passes             map[int]struct{}
@@ -5525,6 +5526,42 @@ func (m *UserMutation) ResetSocials() {
 	delete(m.clearedFields, user.FieldSocials)
 }
 
+// SetIsFreeMinted sets the "is_free_minted" field.
+func (m *UserMutation) SetIsFreeMinted(b bool) {
+	m.is_free_minted = &b
+}
+
+// IsFreeMinted returns the value of the "is_free_minted" field in the mutation.
+func (m *UserMutation) IsFreeMinted() (r bool, exists bool) {
+	v := m.is_free_minted
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldIsFreeMinted returns the old "is_free_minted" field's value of the User entity.
+// If the User object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UserMutation) OldIsFreeMinted(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldIsFreeMinted is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldIsFreeMinted requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldIsFreeMinted: %w", err)
+	}
+	return oldValue.IsFreeMinted, nil
+}
+
+// ResetIsFreeMinted resets all changes to the "is_free_minted" field.
+func (m *UserMutation) ResetIsFreeMinted() {
+	m.is_free_minted = nil
+}
+
 // AddEventPassIDs adds the "event_passes" edge to the EventPass entity by ids.
 func (m *UserMutation) AddEventPassIDs(ids ...int) {
 	if m.event_passes == nil {
@@ -5883,7 +5920,7 @@ func (m *UserMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *UserMutation) Fields() []string {
-	fields := make([]string, 0, 9)
+	fields := make([]string, 0, 10)
 	if m.address != nil {
 		fields = append(fields, user.FieldAddress)
 	}
@@ -5911,6 +5948,9 @@ func (m *UserMutation) Fields() []string {
 	if m.socials != nil {
 		fields = append(fields, user.FieldSocials)
 	}
+	if m.is_free_minted != nil {
+		fields = append(fields, user.FieldIsFreeMinted)
+	}
 	return fields
 }
 
@@ -5937,6 +5977,8 @@ func (m *UserMutation) Field(name string) (ent.Value, bool) {
 		return m.HighlightedMomentID()
 	case user.FieldSocials:
 		return m.Socials()
+	case user.FieldIsFreeMinted:
+		return m.IsFreeMinted()
 	}
 	return nil, false
 }
@@ -5964,6 +6006,8 @@ func (m *UserMutation) OldField(ctx context.Context, name string) (ent.Value, er
 		return m.OldHighlightedMomentID(ctx)
 	case user.FieldSocials:
 		return m.OldSocials(ctx)
+	case user.FieldIsFreeMinted:
+		return m.OldIsFreeMinted(ctx)
 	}
 	return nil, fmt.Errorf("unknown User field %s", name)
 }
@@ -6035,6 +6079,13 @@ func (m *UserMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetSocials(v)
+		return nil
+	case user.FieldIsFreeMinted:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetIsFreeMinted(v)
 		return nil
 	}
 	return fmt.Errorf("unknown User field %s", name)
@@ -6177,6 +6228,9 @@ func (m *UserMutation) ResetField(name string) error {
 		return nil
 	case user.FieldSocials:
 		m.ResetSocials()
+		return nil
+	case user.FieldIsFreeMinted:
+		m.ResetIsFreeMinted()
 		return nil
 	}
 	return fmt.Errorf("unknown User field %s", name)

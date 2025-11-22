@@ -30,6 +30,8 @@ const (
 	FieldHighlightedMomentID = "highlighted_moment_id"
 	// FieldSocials holds the string denoting the socials field in the database.
 	FieldSocials = "socials"
+	// FieldIsFreeMinted holds the string denoting the is_free_minted field in the database.
+	FieldIsFreeMinted = "is_free_minted"
 	// EdgeEventPasses holds the string denoting the event_passes edge name in mutations.
 	EdgeEventPasses = "event_passes"
 	// EdgeHostedEvents holds the string denoting the hosted_events edge name in mutations.
@@ -100,6 +102,7 @@ var Columns = []string{
 	FieldHighlightedEventPassIds,
 	FieldHighlightedMomentID,
 	FieldSocials,
+	FieldIsFreeMinted,
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -111,6 +114,11 @@ func ValidColumn(column string) bool {
 	}
 	return false
 }
+
+var (
+	// DefaultIsFreeMinted holds the default value on creation for the "is_free_minted" field.
+	DefaultIsFreeMinted bool
+)
 
 // OrderOption defines the ordering options for the User queries.
 type OrderOption func(*sql.Selector)
@@ -153,6 +161,11 @@ func ByBgImage(opts ...sql.OrderTermOption) OrderOption {
 // ByHighlightedMomentID orders the results by the highlighted_moment_id field.
 func ByHighlightedMomentID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldHighlightedMomentID, opts...).ToFunc()
+}
+
+// ByIsFreeMinted orders the results by the is_free_minted field.
+func ByIsFreeMinted(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldIsFreeMinted, opts...).ToFunc()
 }
 
 // ByEventPassesCount orders the results by event_passes count.

@@ -35,6 +35,8 @@ type User struct {
 	HighlightedMomentID uint64 `json:"highlighted_moment_id,omitempty"`
 	// Socials holds the value of the "socials" field.
 	Socials map[string]string `json:"socials,omitempty"`
+	// IsFreeMinted holds the value of the "is_free_minted" field.
+	IsFreeMinted bool `json:"is_free_minted,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the UserQuery when eager-loading is set.
 	Edges        UserEdges `json:"edges"`
@@ -121,6 +123,8 @@ func (*User) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case user.FieldHighlightedEventPassIds, user.FieldSocials:
 			values[i] = new([]byte)
+		case user.FieldIsFreeMinted:
+			values[i] = new(sql.NullBool)
 		case user.FieldID, user.FieldHighlightedMomentID:
 			values[i] = new(sql.NullInt64)
 		case user.FieldAddress, user.FieldNickname, user.FieldBio, user.FieldPfp, user.FieldShortDescription, user.FieldBgImage:
@@ -203,6 +207,12 @@ func (_m *User) assignValues(columns []string, values []any) error {
 				if err := json.Unmarshal(*value, &_m.Socials); err != nil {
 					return fmt.Errorf("unmarshal field socials: %w", err)
 				}
+			}
+		case user.FieldIsFreeMinted:
+			if value, ok := values[i].(*sql.NullBool); !ok {
+				return fmt.Errorf("unexpected type %T for field is_free_minted", values[i])
+			} else if value.Valid {
+				_m.IsFreeMinted = value.Bool
 			}
 		default:
 			_m.selectValues.Set(columns[i], values[i])
@@ -296,6 +306,9 @@ func (_m *User) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("socials=")
 	builder.WriteString(fmt.Sprintf("%v", _m.Socials))
+	builder.WriteString(", ")
+	builder.WriteString("is_free_minted=")
+	builder.WriteString(fmt.Sprintf("%v", _m.IsFreeMinted))
 	builder.WriteByte(')')
 	return builder.String()
 }

@@ -6,6 +6,7 @@ import (
 	"backend/ent/attendance"
 	"backend/ent/eventpass"
 	"backend/ent/schema"
+	"backend/ent/user"
 	"time"
 )
 
@@ -29,4 +30,10 @@ func init() {
 	eventpassDescIsUsed := eventpassFields[5].Descriptor()
 	// eventpass.DefaultIsUsed holds the default value on creation for the is_used field.
 	eventpass.DefaultIsUsed = eventpassDescIsUsed.Default.(bool)
+	userFields := schema.User{}.Fields()
+	_ = userFields
+	// userDescIsFreeMinted is the schema descriptor for is_free_minted field.
+	userDescIsFreeMinted := userFields[9].Descriptor()
+	// user.DefaultIsFreeMinted holds the default value on creation for the is_free_minted field.
+	user.DefaultIsFreeMinted = userDescIsFreeMinted.Default.(bool)
 }

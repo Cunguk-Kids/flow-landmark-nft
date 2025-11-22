@@ -299,6 +299,21 @@ func (h *Handler) freeMintMoment(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "recipient dan name adalah field wajib"})
 	}
 
+	// 2.5. Cek apakah user sudah pernah free mint
+	user, err := h.DB.User.Query().Where(user.AddressEQ(recipient)).Only(c.Request().Context())
+	if err != nil {
+		if ent.IsNotFound(err) {
+			// Jika user belum ada, kita bisa buatkan (atau return error suruh register dulu)
+			// Untuk amannya, kita return error agar user register/login dulu
+			return c.JSON(http.StatusBadRequest, map[string]string{"error": "User not found. Please login/register first."})
+		}
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+	}
+
+	if user.IsFreeMinted {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "You have already used your free mint quota."})
+	}
+
 	// 3. Panggil helper untuk 'pekerjaan kotor' (upload)
 	thumbnailUrl, err := h.handleUGCUpload(c)
 	if err != nil {
@@ -316,6 +331,13 @@ func (h *Handler) freeMintMoment(c echo.Context) error {
 	if err != nil {
 		log.Printf("Gagal menjalankan transaksi mint: %v", err)
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+	}
+
+	// 4.5. Update status free mint user
+	_, err = user.Update().SetIsFreeMinted(true).Save(c.Request().Context())
+	if err != nil {
+		log.Printf("Gagal update status free mint user %s: %v", recipient, err)
+		// Kita tidak return error ke user karena minting on-chain sudah sukses
 	}
 
 	// 5. Kirim respon sukses

@@ -162,6 +162,15 @@ func NFTMomentMinted(ctx context.Context, ev flow.Event, client *ent.Client) {
 		log.Println("please setup moment collection")
 	} else {
 		log.Println("User found", isUserFound)
+
+		// Update status free mint user
+		_, errUpdate := isUserFound.Update().SetIsFreeMinted(true).Save(ctx)
+		if errUpdate != nil {
+			log.Printf("Gagal update status free mint user %s: %v", isUserFound.Address, errUpdate)
+		} else {
+			log.Printf("User %s marked as free minted.", isUserFound.Address)
+		}
+
 		nftMinted, err := client.NFTMoment.Create().
 			SetName(name).
 			SetDescription(description).
@@ -962,7 +971,7 @@ func NFTMomentMintedWithEventPass(ctx context.Context, ev flow.Event, client *en
 			user.AddressEQ(ownerAddress),
 		).
 		Only(ctx)
-	
+
 	if err != nil {
 		log.Println("User not found, please setup moment collection")
 		return

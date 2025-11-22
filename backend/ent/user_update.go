@@ -205,6 +205,20 @@ func (_u *UserUpdate) ClearSocials() *UserUpdate {
 	return _u
 }
 
+// SetIsFreeMinted sets the "is_free_minted" field.
+func (_u *UserUpdate) SetIsFreeMinted(v bool) *UserUpdate {
+	_u.mutation.SetIsFreeMinted(v)
+	return _u
+}
+
+// SetNillableIsFreeMinted sets the "is_free_minted" field if the given value is not nil.
+func (_u *UserUpdate) SetNillableIsFreeMinted(v *bool) *UserUpdate {
+	if v != nil {
+		_u.SetIsFreeMinted(*v)
+	}
+	return _u
+}
+
 // AddEventPassIDs adds the "event_passes" edge to the EventPass entity by IDs.
 func (_u *UserUpdate) AddEventPassIDs(ids ...int) *UserUpdate {
 	_u.mutation.AddEventPassIDs(ids...)
@@ -520,6 +534,9 @@ func (_u *UserUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	}
 	if _u.mutation.SocialsCleared() {
 		_spec.ClearField(user.FieldSocials, field.TypeJSON)
+	}
+	if value, ok := _u.mutation.IsFreeMinted(); ok {
+		_spec.SetField(user.FieldIsFreeMinted, field.TypeBool, value)
 	}
 	if _u.mutation.EventPassesCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -982,6 +999,20 @@ func (_u *UserUpdateOne) ClearSocials() *UserUpdateOne {
 	return _u
 }
 
+// SetIsFreeMinted sets the "is_free_minted" field.
+func (_u *UserUpdateOne) SetIsFreeMinted(v bool) *UserUpdateOne {
+	_u.mutation.SetIsFreeMinted(v)
+	return _u
+}
+
+// SetNillableIsFreeMinted sets the "is_free_minted" field if the given value is not nil.
+func (_u *UserUpdateOne) SetNillableIsFreeMinted(v *bool) *UserUpdateOne {
+	if v != nil {
+		_u.SetIsFreeMinted(*v)
+	}
+	return _u
+}
+
 // AddEventPassIDs adds the "event_passes" edge to the EventPass entity by IDs.
 func (_u *UserUpdateOne) AddEventPassIDs(ids ...int) *UserUpdateOne {
 	_u.mutation.AddEventPassIDs(ids...)
@@ -1327,6 +1358,9 @@ func (_u *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) {
 	}
 	if _u.mutation.SocialsCleared() {
 		_spec.ClearField(user.FieldSocials, field.TypeJSON)
+	}
+	if value, ok := _u.mutation.IsFreeMinted(); ok {
+		_spec.SetField(user.FieldIsFreeMinted, field.TypeBool, value)
 	}
 	if _u.mutation.EventPassesCleared() {
 		edge := &sqlgraph.EdgeSpec{

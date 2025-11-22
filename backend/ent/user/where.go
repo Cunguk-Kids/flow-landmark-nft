@@ -89,6 +89,11 @@ func HighlightedMomentID(v uint64) predicate.User {
 	return predicate.User(sql.FieldEQ(FieldHighlightedMomentID, v))
 }
 
+// IsFreeMinted applies equality check predicate on the "is_free_minted" field. It's identical to IsFreeMintedEQ.
+func IsFreeMinted(v bool) predicate.User {
+	return predicate.User(sql.FieldEQ(FieldIsFreeMinted, v))
+}
+
 // AddressEQ applies the EQ predicate on the "address" field.
 func AddressEQ(v string) predicate.User {
 	return predicate.User(sql.FieldEQ(FieldAddress, v))
@@ -597,6 +602,16 @@ func SocialsIsNil() predicate.User {
 // SocialsNotNil applies the NotNil predicate on the "socials" field.
 func SocialsNotNil() predicate.User {
 	return predicate.User(sql.FieldNotNull(FieldSocials))
+}
+
+// IsFreeMintedEQ applies the EQ predicate on the "is_free_minted" field.
+func IsFreeMintedEQ(v bool) predicate.User {
+	return predicate.User(sql.FieldEQ(FieldIsFreeMinted, v))
+}
+
+// IsFreeMintedNEQ applies the NEQ predicate on the "is_free_minted" field.
+func IsFreeMintedNEQ(v bool) predicate.User {
+	return predicate.User(sql.FieldNEQ(FieldIsFreeMinted, v))
 }
 
 // HasEventPasses applies the HasEdge predicate on the "event_passes" edge.

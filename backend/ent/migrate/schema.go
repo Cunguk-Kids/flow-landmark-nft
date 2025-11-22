@@ -202,6 +202,7 @@ var (
 		{Name: "highlighted_event_pass_ids", Type: field.TypeJSON, Nullable: true},
 		{Name: "highlighted_moment_id", Type: field.TypeUint64, Nullable: true},
 		{Name: "socials", Type: field.TypeJSON, Nullable: true},
+		{Name: "is_free_minted", Type: field.TypeBool, Default: false},
 	}
 	// UsersTable holds the schema information for the "users" table.
 	UsersTable = &schema.Table{
