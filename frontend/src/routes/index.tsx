@@ -5,6 +5,7 @@ import { LucideExternalLink, CalendarSearch, Search, Plus, PlusSquare, ArrowRigh
 import { useTransition } from "@/contexts/TransitionContext";
 import { useRef } from "react";
 import ProfileCard from "@/components/ProfileCard";
+import GachaCard from "@/components/cards/GachaCard";
 
 export const Route = createFileRoute("/")({
   component: Index,
@@ -191,7 +192,7 @@ function FindPeopleHeroCard() {
             <Users size={64} className="text-rpn-blue" />
         </div>
         
-        <h3 className="text-white font-pixel text-sm uppercase mb-4 tracking-widest text-rpn-blue group-hover:text-white transition-colors">
+        <h3 className="font-pixel text-sm uppercase mb-4 tracking-widest text-rpn-blue group-hover:text-white transition-colors">
             Community
         </h3>
         
@@ -225,37 +226,7 @@ function Index() {
 
           {/* 1. SEARCH PEOPLE (Kiri) */}
           <FindPeopleHeroCard />
-          {/* 2. LEARN ABOUT US (Tengah) */}
-          <div className="col-span-1 row-span-2 md:col-span-2 md:row-span-2 card-brutalist bg-white p-6 relative overflow-hidden flex flex-col justify-between group">
-            
-            {/* Dekorasi Garis Miring */}
-            <div className="absolute -right-4 -top-4 w-24 h-24 bg-rpn-blue/10 rotate-45 group-hover:bg-rpn-blue/20 transition-colors"></div>
-            
-            <div>
-                <div className="flex items-center gap-2 mb-2">
-                    <div className="w-2 h-2 bg-rpn-blue rounded-full animate-ping"></div>
-                    <span className="text-[10px] font-bold text-rpn-dark uppercase tracking-widest font-sans">
-                        RPN Ecosystem
-                    </span>
-                </div>
-                
-                {/* Typography Efektif: Besar, Tebal, Rapat */}
-                <h2 className="text-3xl md:text-4xl font-black text-rpn-dark leading-[0.9] tracking-tighter uppercase mb-2">
-                    We Build <br/>
-                    <span className="text-rpn-blue">Digital</span> <br/>
-                    Legacy.
-                </h2>
-            </div>
-
-            <div className="flex items-center justify-between border-t-2 border-black/10 pt-4 mt-2">
-                <p className="text-xs text-gray-500 font-medium max-w-[120px] leading-tight">
-                    Learn how we tokenize memories.
-                </p>
-                <button className="w-8 h-8 rounded-full border-2 border-black flex items-center justify-center hover:bg-black hover:text-white transition-colors">
-                    <ArrowRight size={16} />
-                </button>
-            </div>
-          </div>
+          <GachaCard />
 
           {/* 3. ADD NEW MOMENT (Kanan) */}
           {/* Kita gunakan MintMomentSection tapi versi 'Card Kecil' atau tombol pemicu */}
@@ -303,13 +274,36 @@ function Index() {
           </div>
 
           {/* Small CTA Card */}
-          <div className="md:col-span-3 md:row-span-1 card-brutalist bg-accent/50 p-6 relative overflow-hidden flex items-center justify-between">
-            <p className="text-accent-foreground font-bold">
-              Ready to get started?
-            </p>
-            <button className="btn-brutalist bg-primary text-primary-foreground text-sm py-1.5 px-4">
-              Book A Demo
-            </button>
+          {/* 2. LEARN ABOUT US (Tengah) */}
+          <div className="col-span-1 row-span-2 md:col-span-2 md:row-span-2 card-brutalist bg-white p-6 relative overflow-hidden flex flex-col justify-between group">
+            
+            {/* Dekorasi Garis Miring */}
+            <div className="absolute -right-4 -top-4 w-24 h-24 bg-rpn-blue/10 rotate-45 group-hover:bg-rpn-blue/20 transition-colors"></div>
+            
+            <div>
+                <div className="flex items-center gap-2 mb-2">
+                    <div className="w-2 h-2 bg-rpn-blue rounded-full animate-ping"></div>
+                    <span className="text-[10px] font-bold text-rpn-dark uppercase tracking-widest font-sans">
+                        RPN Ecosystem
+                    </span>
+                </div>
+                
+                {/* Typography Efektif: Besar, Tebal, Rapat */}
+                <h2 className="text-3xl md:text-4xl font-black text-rpn-dark leading-[0.9] tracking-tighter uppercase mb-2">
+                    We Build <br/>
+                    <span className="text-rpn-blue">Digital</span> <br/>
+                    Legacy.
+                </h2>
+            </div>
+
+            <div className="flex items-center justify-between border-t-2 border-black/10 pt-4 mt-2">
+                <p className="text-xs text-gray-500 font-medium max-w-[120px] leading-tight">
+                    Learn how we tokenize memories.
+                </p>
+                <button className="w-8 h-8 rounded-full border-2 border-black flex items-center justify-center hover:bg-black hover:text-white transition-colors">
+                    <ArrowRight size={16} />
+                </button>
+            </div>
           </div>
         </div>
       </div>
