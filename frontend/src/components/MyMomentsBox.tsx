@@ -40,9 +40,24 @@ export default function MyMomentsBox() {
         <Button
           size="sm"
           onClick={() => setIsMintModalOpen(true)}
-          className="ml-auto bg-rpn-blue text-rpn-dark font-bold text-[10px] h-7 px-3 hover:bg-white"
+          className="
+            ml-auto 
+            bg-rpn-blue text-rpn-dark 
+            font-black font-pixel text-[10px] 
+            h-8 px-4 
+            border-2 border-white 
+            rounded-md
+            shadow-[3px_3px_0px_0px_#fff] 
+            hover:translate-x-[1px] hover:translate-y-[1px]
+            hover:bg-white
+          hover:text-rpn-blue
+          hover:border-white 
+            hover:shadow-[1px_1px_0px_0px_#fff] 
+            active:translate-x-[3px] active:translate-y-[3px] active:shadow-none
+            transition-all
+          "
         >
-          <Plus size={14} className="mr-1" /> MINT
+          <Plus size={12} className="mr-2 stroke-[4]" /> MINT
         </Button>
       </div>
 

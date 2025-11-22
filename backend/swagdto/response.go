@@ -179,7 +179,8 @@ type DTOUserProfile struct {
 	HighlightedEventPassIds []uint64            `json:"highlighted_eventPass_ids,omitempty"`
 	HighlightedMomentID     uint64              `json:"highlighted_moment_id,omitempty"`
 	Socials                 map[string]string   `json:"socials,omitempty"`
-	Edges                   DTOUserProfileEdges `json:"edges"` // <-- Menggunakan struct 'edges' bersih
+	Edges                   DTOUserProfileEdges `json:"edges"`
+	IsFreeMinted            bool                `json:"is_free_minted"`
 }
 
 type GetUserProfileResponse struct {

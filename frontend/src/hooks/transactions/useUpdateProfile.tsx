@@ -89,7 +89,7 @@ export function useUpdateProfile() {
         arg(toNullable(data.pfp), t.Optional(t.String)),
         arg(toNullable(data.shortDescription), t.Optional(t.String)),
         arg(toNullable(data.bgImage), t.Optional(t.String)),
-        arg(data.highlightedEventPassIds, t.Array(t.Optional(t.UInt64))), 
+        arg(data.highlightedEventPassIds || [], t.Array(t.Optional(t.UInt64))), 
         arg(data.momentID, t.Optional(t.UInt64))
       ]
     });

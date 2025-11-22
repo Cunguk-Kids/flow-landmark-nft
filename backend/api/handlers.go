@@ -689,7 +689,6 @@ func (h *Handler) getUserProfile(c echo.Context) error {
 
 	// (Anda bisa menambahkan pagination kustom untuk 'moments', 'accessories', dll.
 	// di sini jika Anda tidak ingin 'eager load' semuanya)
-
 	return c.JSON(http.StatusOK, APIResponse{Data: user})
 }
 
@@ -997,6 +996,7 @@ func mapUserToDTO(u *ent.User) *swagdto.DTOUserProfile {
 		HighlightedEventPassIds: u.HighlightedEventPassIds,
 		HighlightedMomentID:     u.HighlightedMomentID,
 		Socials:                 u.Socials,
+		IsFreeMinted:            u.IsFreeMinted,
 		Edges: swagdto.DTOUserProfileEdges{
 			Moments:      moments,
 			Accessories:  accessories,

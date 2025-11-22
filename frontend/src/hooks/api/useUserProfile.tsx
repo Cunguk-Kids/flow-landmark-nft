@@ -13,6 +13,7 @@ export interface UserProfile {
   short_description?: string;
   socials?: Record<string, string>; // Map string ke string
   highlightedMomentID?: number;
+  is_free_minted?: boolean;
 
   // Relasi (Edges) dari 'ent'
   edges?: {
@@ -28,7 +29,7 @@ export interface UserProfile {
 const fetchUserProfile = async (address: string): Promise<UserProfile | null | undefined> => {
   try {
     // Panggil API Backend Go
-    const url = `${import.meta.env.VITE_BASE_URL}/profiles/${address}`;
+    const url = `${import.meta.env.VITE_BASE_URL}/users/${address}`;
     const { data } = await axios.get(url);
 
     // Backend kita mengembalikan struktur: { data: UserProfile, ... }
@@ -51,20 +52,20 @@ export function useUserProfile(address: string | null | undefined) {
   return useQuery({
     // Kunci Unik untuk Cache (berdasarkan alamat)
     queryKey: ['user-profile', address],
-    
+
     // Fungsi yang dijalankan
     queryFn: () => fetchUserProfile(address!),
-    
+
     // Konfigurasi:
     // 1. enabled: Hanya jalankan query jika 'address' valid (tidak null/undefined)
     enabled: !!address,
-    
+
     // 2. retry: false. Jika 404, jangan coba lagi (karena emang belum ada)
     retry: false,
-    
+
     // 3. staleTime: Anggap data 'segar' selama 1 menit (kurangi request ke server)
-    staleTime: 1000 * 60 * 1, 
-    
+    staleTime: 1000 * 60 * 1,
+
     // 4. refetchOnWindowFocus: false. Jangan refresh otomatis saat ganti tab browser
     refetchOnWindowFocus: false,
   });

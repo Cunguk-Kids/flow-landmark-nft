@@ -1,11 +1,12 @@
 import { useEventList } from "@/hooks/useEventList";
 import { EventCard } from "@/components/EventCard";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { LucideExternalLink, CalendarSearch, Search, Plus, PlusSquare, ArrowRight, Users } from "lucide-react";
+import { LucideExternalLink, CalendarSearch, Search, ArrowRight, Users } from "lucide-react";
 import { useTransition } from "@/contexts/TransitionContext";
 import { useRef } from "react";
 import ProfileCard from "@/components/ProfileCard";
 import GachaCard from "@/components/cards/GachaCard";
+import MintMomentCard from "@/components/cards/MintMomentCard";
 
 export const Route = createFileRoute("/")({
   component: Index,
@@ -60,7 +61,7 @@ function EventsHeroCard() {
       "
     >
       {/* --- DEKORASI BACKGROUND (Tetap Sama) --- */}
-      <div 
+      <div
         className="absolute inset-0 opacity-10 pointer-events-none"
         style={{ backgroundImage: 'linear-gradient(#0F172A 1px, transparent 1px), linear-gradient(90deg, #0F172A 1px, transparent 1px)', backgroundSize: '40px 40px' }}
       />
@@ -69,29 +70,29 @@ function EventsHeroCard() {
       {/* --- KONTEN UTAMA --- */}
       {/* Tambahkan 'relative z-20' agar di atas dekorasi */}
       <div className="relative z-20 mt-4 flex flex-col h-full">
-         
-         {/* Header Teks */}
-         <div className="flex-1"> {/* Flex-1 agar mendorong konten lain */}
-             <div className="flex items-center gap-2 mb-4 text-rpn-dark/70 font-mono text-xs font-bold uppercase tracking-widest">
-                <CalendarSearch size={14} />
-                <span>Discovery Protocol</span>
-             </div>
 
-             <h1 className="font-pixel text-3xl md:text-4xl lg:text-5xl leading-tight text-rpn-dark uppercase mb-6">
-                Explore <br />
-                <span className="text-white drop-shadow-[4px_4px_0px_#0F172A] stroke-black">
-                   Thousands
-                </span> <br />
-                of Events
-             </h1>
-         </div>
+        {/* Header Teks */}
+        <div className="flex-1"> {/* Flex-1 agar mendorong konten lain */}
+          <div className="flex items-center gap-2 mb-4 text-rpn-dark/70 font-mono text-xs font-bold uppercase tracking-widest">
+            <CalendarSearch size={14} />
+            <span>Discovery Protocol</span>
+          </div>
 
-         {/* Tombol CTA */}
-         {/* Di mobile, kita pastikan dia punya margin bottom agar tidak ketabrak kartu */}
-         <div className="mb-32 md:mb-0"> 
-             <button
-                onClick={handleExploreClick}
-                className="
+          <h1 className="font-pixel text-3xl md:text-4xl lg:text-5xl leading-tight text-rpn-dark uppercase mb-6">
+            Explore <br />
+            <span className="text-white drop-shadow-[4px_4px_0px_#0F172A] stroke-black">
+              Thousands
+            </span> <br />
+            of Events
+          </h1>
+        </div>
+
+        {/* Tombol CTA */}
+        {/* Di mobile, kita pastikan dia punya margin bottom agar tidak ketabrak kartu */}
+        <div className="mb-32 md:mb-0">
+          <button
+            onClick={handleExploreClick}
+            className="
                    bg-rpn-dark text-white 
                    border-2 border-white 
                    px-6 py-4 rounded-lg 
@@ -101,11 +102,11 @@ function EventsHeroCard() {
                    active:translate-x-[4px] active:translate-y-[4px] active:shadow-none 
                    transition-all flex items-center gap-3 w-fit
                 "
-             >
-                Start Exploring
-                <LucideExternalLink className="size-5" />
-             </button>
-         </div>
+          >
+            Start Exploring
+            <LucideExternalLink className="size-5" />
+          </button>
+        </div>
       </div>
 
       {/* --- TUMPUKAN KARTU EVENT (DEKORASI) --- */}
@@ -118,10 +119,10 @@ function EventsHeroCard() {
           
           w-64 grid grid-cols-1 grid-rows-1
       ">
-        
+
         {isLoading && (
           <div className="bg-white border-2 border-black p-4 rounded-xl font-mono text-xs animate-pulse">
-             Scanning Network...
+            Scanning Network...
           </div>
         )}
 
@@ -138,9 +139,9 @@ function EventsHeroCard() {
               zIndex: 3 - index
             }}
           >
-             <div className="pointer-events-none select-none shadow-xl">
-                <EventCard event={event} />
-             </div>
+            <div className="pointer-events-none select-none shadow-xl">
+              <EventCard event={event} />
+            </div>
           </div>
         ))}
       </div>
@@ -174,7 +175,7 @@ function FindPeopleHeroCard() {
     }, 800);
   };
   return (
-    <div 
+    <div
       ref={cardRef}
       // Tambahkan onClick navigasi ke halaman search
       onClick={handleExploreClick}
@@ -187,26 +188,26 @@ function FindPeopleHeroCard() {
         transition-all
       "
     >
-        {/* Ikon Latar Belakang */}
-        <div className="absolute top-0 right-0 p-2 opacity-20 group-hover:opacity-50 transition-opacity group-hover:scale-110 duration-500">
-            <Users size={64} className="text-rpn-blue" />
+      {/* Ikon Latar Belakang */}
+      <div className="absolute top-0 right-0 p-2 opacity-20 group-hover:opacity-50 transition-opacity group-hover:scale-110 duration-500">
+        <Users size={64} className="text-rpn-blue" />
+      </div>
+
+      <h3 className="font-pixel text-sm uppercase mb-4 tracking-widest text-rpn-blue group-hover:text-white transition-colors">
+        Community
+      </h3>
+
+      {/* Visualisasi Tombol Search Palsu (CTA) */}
+      <div className="w-full bg-black/30 border-2 border-rpn-muted/30 text-rpn-muted p-3 rounded-lg font-mono text-sm flex items-center justify-between group-hover:border-rpn-blue group-hover:text-white transition-colors">
+        <span>Find people...</span>
+        <div className="bg-rpn-blue text-black p-1.5 rounded">
+          <Search size={16} />
         </div>
-        
-        <h3 className="font-pixel text-sm uppercase mb-4 tracking-widest text-rpn-blue group-hover:text-white transition-colors">
-            Community
-        </h3>
-        
-        {/* Visualisasi Tombol Search Palsu (CTA) */}
-        <div className="w-full bg-black/30 border-2 border-rpn-muted/30 text-rpn-muted p-3 rounded-lg font-mono text-sm flex items-center justify-between group-hover:border-rpn-blue group-hover:text-white transition-colors">
-            <span>Find people...</span>
-            <div className="bg-rpn-blue text-black p-1.5 rounded">
-                <Search size={16} />
-            </div>
-        </div>
-        
-        <p className="text-[10px] text-rpn-muted mt-3 group-hover:text-gray-300 transition-colors">
-            Search by Wallet Address (0x...) or Username.
-        </p>
+      </div>
+
+      <p className="text-[10px] text-rpn-muted mt-3 group-hover:text-gray-300 transition-colors">
+        Search by Wallet Address (0x...) or Username.
+      </p>
     </div>
   )
 }
@@ -229,27 +230,7 @@ function Index() {
           <GachaCard />
 
           {/* 3. ADD NEW MOMENT (Kanan) */}
-          {/* Kita gunakan MintMomentSection tapi versi 'Card Kecil' atau tombol pemicu */}
-          <div className="col-span-1 row-span-2 md:col-span-2 md:row-span-2 card-brutalist bg-rpn-blue p-6 relative overflow-hidden flex flex-col justify-center items-center text-center group cursor-pointer hover:bg-blue-400 transition-colors shadow-[4px_4px_0px_0px_rgba(15,23,42,0.4)] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[2px_2px_0px_0px_rgba(15,23,42,0.4)]">
-            
-            {/* Background Icon Besar */}
-            <div className="absolute inset-0 flex items-center justify-center opacity-10 pointer-events-none">
-                <PlusSquare size={120} className="text-black" />
-            </div>
-
-            <div className="relative z-10">
-                <div className="w-16 h-16 bg-black text-white rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg group-hover:scale-110 transition-transform">
-                    <Plus size={32} />
-                </div>
-                
-                <h3 className="text-xl font-black text-black uppercase font-pixel mb-1">
-                    Mint Moment
-                </h3>
-                <p className="text-xs text-black/70 font-bold max-w-[150px] mx-auto">
-                    Turn your photo into a permanent NFT asset.
-                </p>
-            </div>
-          </div>
+          <MintMomentCard />
 
           {/* Info Card - Different size */}
           <div className="md:col-span-3 md:row-span-2 card-brutalist bg-card p-8 relative overflow-hidden">
@@ -276,33 +257,33 @@ function Index() {
           {/* Small CTA Card */}
           {/* 2. LEARN ABOUT US (Tengah) */}
           <div className="col-span-1 row-span-2 md:col-span-2 md:row-span-2 card-brutalist bg-white p-6 relative overflow-hidden flex flex-col justify-between group">
-            
+
             {/* Dekorasi Garis Miring */}
             <div className="absolute -right-4 -top-4 w-24 h-24 bg-rpn-blue/10 rotate-45 group-hover:bg-rpn-blue/20 transition-colors"></div>
-            
+
             <div>
-                <div className="flex items-center gap-2 mb-2">
-                    <div className="w-2 h-2 bg-rpn-blue rounded-full animate-ping"></div>
-                    <span className="text-[10px] font-bold text-rpn-dark uppercase tracking-widest font-sans">
-                        RPN Ecosystem
-                    </span>
-                </div>
-                
-                {/* Typography Efektif: Besar, Tebal, Rapat */}
-                <h2 className="text-3xl md:text-4xl font-black text-rpn-dark leading-[0.9] tracking-tighter uppercase mb-2">
-                    We Build <br/>
-                    <span className="text-rpn-blue">Digital</span> <br/>
-                    Legacy.
-                </h2>
+              <div className="flex items-center gap-2 mb-2">
+                <div className="w-2 h-2 bg-rpn-blue rounded-full animate-ping"></div>
+                <span className="text-[10px] font-bold text-rpn-dark uppercase tracking-widest font-sans">
+                  RPN Ecosystem
+                </span>
+              </div>
+
+              {/* Typography Efektif: Besar, Tebal, Rapat */}
+              <h2 className="text-3xl md:text-4xl font-black text-rpn-dark leading-[0.9] tracking-tighter uppercase mb-2">
+                We Build <br />
+                <span className="text-rpn-blue">Digital</span> <br />
+                Legacy.
+              </h2>
             </div>
 
             <div className="flex items-center justify-between border-t-2 border-black/10 pt-4 mt-2">
-                <p className="text-xs text-gray-500 font-medium max-w-[120px] leading-tight">
-                    Learn how we tokenize memories.
-                </p>
-                <button className="w-8 h-8 rounded-full border-2 border-black flex items-center justify-center hover:bg-black hover:text-white transition-colors">
-                    <ArrowRight size={16} />
-                </button>
+              <p className="text-xs text-gray-500 font-medium max-w-[120px] leading-tight">
+                Learn how we tokenize memories.
+              </p>
+              <button className="w-8 h-8 rounded-full border-2 border-black flex items-center justify-center hover:bg-black hover:text-white transition-colors">
+                <ArrowRight size={16} />
+              </button>
             </div>
           </div>
         </div>
