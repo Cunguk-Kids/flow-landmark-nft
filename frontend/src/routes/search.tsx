@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
-import { useUserProfile } from '@/hooks/api/useUserProfile';
-import { Search, ArrowRight, User, AlertCircle, Loader2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { useUserSearch } from '@/hooks/api/useUserSearch'; // Hook baru
+import { Search, User, Loader2, ArrowRight } from 'lucide-react';
 import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 
 export const Route = createFileRoute('/search')({
   component: SearchPage,
@@ -11,119 +11,111 @@ export const Route = createFileRoute('/search')({
 
 function SearchPage() {
   const navigate = useNavigate();
+  
+  // State input langsung
   const [query, setQuery] = useState('');
-  const [searchTrigger, setSearchTrigger] = useState<string | null>(null);
-
-  // Kita gunakan hook useUserProfile untuk mencari
-  // (Hook ini akan jalan saat searchTrigger tidak null)
-  const { data: profile, isLoading, isError, error } = useUserProfile(searchTrigger);
-
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (query.trim().length > 0) {
-        setSearchTrigger(query.trim());
-    }
-  };
+  
+  // Hook akan otomatis handle debounce dan fetching
+  const { data: users, isLoading, isFetching } = useUserSearch(query);
 
   const handleViewProfile = (address: string) => {
-      // Navigasi ke halaman profil publik (Misal: /profile/0x123)
-      // Untuk saat ini kita arahkan ke rute placeholder atau console log
-      console.log("Go to profile:", address);
-      // navigate({ to: `/profile/$address`, params: { address } }) 
+      // Arahkan ke halaman profil publik (bukan /profile diri sendiri)
+      // Asumsi rute: /users/$address
+      navigate({ to: `/users/${address}` }); 
   };
 
   return (
-    <div className="min-h-screen bg-rpn-dark text-rpn-text font-sans pb-20 selection:bg-rpn-blue selection:text-white flex flex-col items-center pt-32 px-4">
+    <div className="min-h-screen bg-rpn-dark text-rpn-text font-sans pb-20 selection:bg-rpn-blue selection:text-white pt-24 px-4">
       
-      {/* Header */}
-      <div className="text-center mb-10 space-y-4">
-        <h1 className="font-pixel text-4xl md:text-6xl text-white uppercase drop-shadow-[4px_4px_0px_rgba(41,171,226,0.3)]">
+      {/* --- HEADER & SEARCH BAR --- */}
+      <div className="max-w-3xl mx-auto text-center mb-12">
+        <h1 className="font-pixel text-3xl md:text-5xl text-white uppercase drop-shadow-[4px_4px_0px_rgba(41,171,226,0.3)] mb-6">
             Find People
         </h1>
-        <p className="text-rpn-muted max-w-md mx-auto font-mono text-sm">
-            Search for users in the Harkon ecosystem by their Flow Address.
-        </p>
+
+        <div className="relative group">
+            {/* Efek Glow */}
+            <div className="absolute inset-0 bg-rpn-blue/20 blur-xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"></div>
+            
+            <div className="relative flex items-center">
+                <Search className="absolute left-4 text-rpn-blue w-6 h-6 z-10" />
+                <Input 
+                    type="text" 
+                    placeholder="Search by username or 0x address..."
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
+                    className="w-full h-16 bg-rpn-card border-2 border-rpn-blue/50 text-white text-lg pl-14 pr-14 rounded-2xl focus:border-rpn-blue focus:ring-0 transition-all font-mono shadow-lg"
+                />
+                {/* Indikator Loading Kecil di Kanan */}
+                {isFetching && (
+                    <div className="absolute right-4">
+                        <Loader2 className="animate-spin text-rpn-blue w-5 h-5" />
+                    </div>
+                )}
+            </div>
+            <p className="text-xs text-rpn-muted mt-2 font-mono text-left pl-2">
+                {query ? `Searching for "${query}"...` : "Showing latest users"}
+            </p>
+        </div>
       </div>
 
-      {/* Search Bar Besar */}
-      <div className="w-full max-w-2xl">
-        <form onSubmit={handleSearch} className="relative group">
-            <div className="absolute inset-0 bg-rpn-blue/20 blur-xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity"></div>
-            <Input 
-                type="text" 
-                placeholder="Enter wallet address (e.g. 0x123...)"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                className="w-full h-16 bg-rpn-card border-2 border-rpn-blue/50 text-white text-lg px-6 rounded-2xl focus:border-rpn-blue focus:ring-0 transition-all font-mono shadow-2xl relative z-10"
-            />
-            <Button 
-                type="submit"
-                className="absolute right-2 top-2 h-12 w-12 bg-rpn-blue hover:bg-white hover:text-rpn-blue text-black rounded-xl flex items-center justify-center z-20 transition-all"
-            >
-                {isLoading ? <Loader2 className="animate-spin" /> : <Search size={24} />}
-            </Button>
-        </form>
-      </div>
-
-      {/* Hasil Pencarian */}
-      <div className="w-full max-w-2xl mt-12">
+      {/* --- HASIL PENCARIAN (GRID) --- */}
+      <div className="max-w-5xl mx-auto">
         
-        {/* State: Loading */}
-        {isLoading && (
-            <div className="text-center text-rpn-blue font-pixel text-xs animate-pulse">
-                SEARCHING BLOCKCHAIN...
-            </div>
-        )}
-
-        {/* State: Ketemu */}
-        {!isLoading && profile && (
-            <div className="bg-rpn-card border-2 border-rpn-blue rounded-2xl p-6 flex items-center gap-6 shadow-[8px_8px_0px_0px_rgba(0,0,0,0.5)] hover:translate-y-[-2px] transition-transform animate-in fade-in slide-in-from-bottom-4 duration-500">
-                
-                {/* Avatar */}
-                <div className="w-20 h-20 rounded-xl bg-rpn-dark border-2 border-rpn-blue overflow-hidden shrink-0">
-                    {profile.pfp ? (
-                        <img src={profile.pfp} className="w-full h-full object-cover" />
-                    ) : (
-                        <div className="w-full h-full flex items-center justify-center text-rpn-muted">
-                            <User size={32} />
+        {/* Loading Awal (Hanya saat pertama kali load halaman) */}
+        {isLoading && !users ? (
+             <div className="flex flex-col items-center justify-center py-20 text-rpn-blue animate-pulse font-pixel text-xs">
+                <div className="w-12 h-12 border-4 border-t-rpn-blue border-r-rpn-blue border-b-transparent border-l-transparent rounded-full animate-spin mb-4"></div>
+                SCANNING NETWORK...
+             </div>
+        ) : (
+             // Grid Layout
+             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {users?.map((user) => (
+                    <div 
+                        key={user.id}
+                        onClick={() => handleViewProfile(user.address)}
+                        className="bg-rpn-card border border-rpn-blue/30 rounded-xl p-4 flex items-center gap-4 hover:border-rpn-blue hover:bg-rpn-card/80 hover:-translate-y-1 hover:shadow-[4px_4px_0px_0px_rgba(41,171,226,0.2)] transition-all cursor-pointer group animate-in fade-in slide-in-from-bottom-2 duration-300"
+                    >
+                        {/* Avatar Kecil */}
+                        <div className="w-12 h-12 rounded-lg bg-rpn-dark border border-rpn-blue overflow-hidden shrink-0">
+                            {user.pfp ? (
+                                <img src={user.pfp} alt={user.nickname} className="w-full h-full object-cover" style={{ imageRendering: 'pixelated' }} />
+                            ) : (
+                                <div className="w-full h-full flex items-center justify-center text-rpn-muted bg-rpn-dark">
+                                    <User size={20} />
+                                </div>
+                            )}
                         </div>
-                    )}
-                </div>
 
-                {/* Info */}
-                <div className="flex-1 min-w-0">
-                    <h3 className="text-xl font-black text-white uppercase font-pixel truncate">
-                        {profile.nickname || "Anonymous"}
-                    </h3>
-                    <p className="text-xs font-mono text-rpn-blue bg-rpn-dark px-2 py-1 rounded inline-block mt-1 border border-rpn-blue/20">
-                        {profile.address}
-                    </p>
-                    <p className="text-sm text-rpn-muted mt-2 line-clamp-1 italic">
-                        "{profile.bio || "No bio."}"
-                    </p>
-                </div>
+                        {/* Info */}
+                        <div className="flex-1 min-w-0">
+                            <h3 className="font-bold text-white uppercase font-pixel text-xs truncate group-hover:text-rpn-blue transition-colors">
+                                {user.nickname || "Anonymous"}
+                            </h3>
+                            <p className="text-[10px] font-mono text-rpn-muted bg-rpn-dark/50 px-1.5 py-0.5 rounded inline-block mt-1 truncate max-w-full">
+                                {user.address}
+                            </p>
+                        </div>
 
-                {/* Action */}
-                <Button 
-                    onClick={() => handleViewProfile(profile.address)}
-                    className="h-12 w-12 rounded-full bg-white text-black hover:bg-rpn-blue hover:text-white border-2 border-black flex items-center justify-center shrink-0 transition-all"
-                >
-                    <ArrowRight size={20} />
-                </Button>
-            </div>
+                        {/* Arrow Icon */}
+                        <div className="opacity-0 group-hover:opacity-100 -translate-x-2 group-hover:translate-x-0 transition-all text-rpn-blue">
+                            <ArrowRight size={16} />
+                        </div>
+                    </div>
+                ))}
+             </div>
         )}
 
-        {/* State: Error / Tidak Ketemu */}
-        {!isLoading && searchTrigger && !profile && (
-            <div className="text-center p-8 border-2 border-dashed border-red-500/30 rounded-2xl bg-red-500/5 text-red-400 animate-in fade-in zoom-in-95">
-                <AlertCircle className="mx-auto mb-2" />
-                <p className="font-bold uppercase">User Not Found</p>
-                <p className="text-xs mt-1 opacity-70">Ensure the wallet address is correct and they have set up a profile.</p>
+        {/* Empty State (Jika tidak ada hasil) */}
+        {!isLoading && users && users.length === 0 && (
+            <div className="text-center py-20 border-2 border-dashed border-rpn-blue/20 rounded-2xl bg-rpn-blue/5">
+                <p className="font-bold uppercase text-rpn-muted">User Not Found</p>
+                <p className="text-xs mt-1 opacity-70">Try searching for a different address or name.</p>
             </div>
         )}
 
       </div>
-
     </div>
   );
 }
