@@ -60,46 +60,87 @@ export default function EquipModal({ isOpen, onClose, moment }: EquipModalProps)
       <DialogContent className="bg-rpn-dark border-2 border-rpn-blue text-rpn-text max-w-6xl w-[95vw] h-[90vh] rounded-xl shadow-[0_0_50px_rgba(41,171,226,0.2)] p-0 overflow-hidden gap-0 flex flex-col md:flex-row outline-none sm:max-w-7xl">
         
         {/* ================= KIRI: PREVIEW AREA (40%) ================= */}
-        <div className="relative w-full md:w-[40%] h-[350px] md:h-full bg-black border-b-2 md:border-b-0 md:border-r-2 border-rpn-blue flex flex-col items-center justify-center p-8 shrink-0 ">
+       <div className="
+            relative 
+            
+            /* MOBILE (Default): 
+               - w-full: Lebar penuh.
+               - h-auto: Tingginya menyesuaikan isinya (Card). Jangan dipaksa stretch.
+               - shrink-0: Jangan biarkan dia mengecil/gepeng.
+            */
+            w-full h-auto shrink-0
+
+            /* DESKTOP (md): 
+               - w-[40%]: Lebar 40%.
+               - h-full: Tinggi penuh modal.
+            */
+            md:w-[40%] md:h-full 
+            
+            bg-black border-b-2 md:border-b-0 md:border-r-2 border-rpn-blue 
+            flex flex-col items-center justify-center 
+            p-6 md:p-8
+        ">
             
             {/* Background Grid */}
             <div className="absolute inset-0 opacity-20 pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle, #29ABE2 1px, transparent 1px)', backgroundSize: '30px 30px' }}></div>
 
-            {/* PERBAIKAN 2: UKURAN PREVIEW LEBIH BESAR */}
-            {/* max-w-md (sebelumnya sm) agar gambar lebih puas dilihat */}
-            <div className="relative w-full aspect-square max-w-md border-4 border-rpn-blue rounded-xl overflow-hidden shadow-[0_0_40px_rgba(41,171,226,0.2)] bg-rpn-card group">
+            {/* PREVIEW CARD CONTAINER (Kotak Gambar) */}
+            <div className="
+                relative 
+                
+                /* KUNCI RASIO 1:1 */
+                aspect-square 
+
+                /* UKURAN MOBILE: 
+                   - Batasi lebar maksimal agar tidak memenuhi seluruh layar HP.
+                   - 260px - 300px biasanya pas di HP (430px width).
+                */
+                w-64 sm:w-72
+                
+                /* UKURAN DESKTOP:
+                   - Biarkan dia membesar mengisi kolom kiri, tapi jangan terlalu raksasa.
+                */
+                md:w-full md:max-w-[400px]
+                
+                border-4 border-rpn-blue 
+                rounded-xl overflow-hidden 
+                shadow-[0_0_40px_rgba(41,171,226,0.2)] 
+                bg-rpn-card group
+                z-10
+            ">
                 
                 {/* Layer 1: Moment (Base) */}
                 <img 
                     src={moment.thumbnail} 
+                    // object-cover: Memaksa gambar mengisi penuh kotak 1:1 (crop jika perlu)
                     className="absolute inset-0 w-full h-full object-cover z-10" 
                     style={{ imageRendering: 'pixelated' }} 
+                    alt="Base"
                 />
                 
                 {/* Layer 2: Accessory Preview */}
                 {previewItem && (
                     <img 
                         src={previewItem.thumbnail} 
-                        // scale-100: Pastikan ukuran penuh
-                        // object-contain: Agar seluruh bingkai terlihat (tidak terpotong)
-                        // object-cover: GANTI ke ini JIKA bingkai Anda dirancang full-bleed (memenuhi kotak)
+                        // object-contain: Memastikan seluruh bingkai terlihat utuh di dalam kotak 1:1
                         className="absolute inset-0 w-full h-full object-contain z-20 pointer-events-none animate-in fade-in zoom-in-95 duration-300"
                         style={{ imageRendering: 'pixelated' }}
+                        alt="Accessory"
                     />
                 )}
 
-                {/* Overlay Nama Moment (Hidden by default, show hover) */}
+                {/* Overlay Nama */}
                 <div className="absolute bottom-0 left-0 w-full bg-black/70 p-2 text-center translate-y-full group-hover:translate-y-0 transition-transform z-30">
-                    <p className="text-white font-bold text-sm font-pixel">{moment.name}</p>
+                    <p className="text-white font-bold text-sm font-pixel truncate px-2">{moment.name}</p>
                 </div>
             </div>
 
             {/* Status Label */}
-            <div className="absolute top-6 left-6 bg-black/80 border border-rpn-blue/50 px-3 py-1 rounded text-xs font-bold font-pixel text-rpn-blue shadow-lg">
+            {/* Di Mobile, kita taruh di pojok kiri atas Container, bukan Card, agar tidak menutupi gambar */}
+            <div className="absolute top-4 left-4 bg-black/80 border border-rpn-blue/50 px-2 py-1 rounded text-[10px] font-bold font-pixel text-rpn-blue shadow-lg z-0 opacity-50 md:opacity-100">
                 PREVIEW MODE
             </div>
         </div>
-
         {/* ================= KANAN: INVENTORY PICKER (60%) ================= */}
         <div className="w-full md:w-[60%] flex flex-col h-full bg-rpn-dark relative">
             
