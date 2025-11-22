@@ -227,3 +227,8 @@ type GetEventPassesResponse struct {
 type GetEventPassDetailResponse struct {
 	Data *DTOEventPass `json:"data"`
 }
+
+type GetUsersResponse struct {
+	Data       []*DTOUserProfile `json:"data"`
+	Pagination *Pagination       `json:"pagination"`
+}
