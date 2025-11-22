@@ -347,6 +347,9 @@ func (h *Handler) mintMomentWithEventPass(c echo.Context) error {
 	recipient := c.FormValue("recipient")
 	eventPassID := c.FormValue("eventPassID")
 	tier := c.FormValue("tier")
+	if tier == "" {
+		tier = "0"
+	}
 	name := c.FormValue("name")
 	description := c.FormValue("description")
 
