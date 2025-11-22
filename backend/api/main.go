@@ -37,7 +37,6 @@ func main() {
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
 
-	// Tambahkan CORS (PENTING untuk frontend React Anda)
 	e.Use(middleware.CORS())
 
 	h := &Handler{DB: client}
@@ -48,6 +47,8 @@ func main() {
 	e.GET("/profiles/:address", h.getUserProfile)
 	e.GET("/accessories", h.getAccessories)
 	e.GET("/moments", h.getMoments)
+	e.GET("/event-passes", h.getEventPasses)
+	e.GET("/event-passes/:id", h.getEventPassByID)
 
 	e.POST("/moment/free", h.freeMintMoment)
 	e.POST("/moment/with-event-pass", h.mintMomentWithEventPass)

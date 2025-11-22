@@ -138,8 +138,9 @@ type DTOEventPass struct {
 	Edges      DTOEventPassEdges `json:"edges"`
 }
 type DTOEventPassEdges struct {
-	Owner *DTOUser       `json:"owner,omitempty"`
-	Event *EventResponse `json:"event,omitempty"`
+	Owner  *DTOUser        `json:"owner,omitempty"`
+	Event  *EventResponse  `json:"event,omitempty"`
+	Moment *MomentResponse `json:"moment,omitempty"`
 }
 
 // DTOListing (Struct bersih untuk 'Listing')
@@ -214,4 +215,15 @@ type AttendanceResponse struct {
 	CheckedIn        bool   `json:"checked_in"`
 	RegistrationTime string `json:"registration_time"`
 	UserAddress      string `json:"user_address,omitempty"`
+}
+
+// GetEventPassesResponse (Wrapper untuk List)
+type GetEventPassesResponse struct {
+	Data       []*DTOEventPass `json:"data"`
+	Pagination *Pagination     `json:"pagination"`
+}
+
+// GetEventPassDetailResponse (Wrapper untuk Single Detail)
+type GetEventPassDetailResponse struct {
+	Data *DTOEventPass `json:"data"`
 }

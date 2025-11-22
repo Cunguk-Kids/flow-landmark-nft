@@ -4,6 +4,7 @@ import (
 	"backend/ent"
 	"backend/ent/attendance"
 	"backend/ent/event"
+	"backend/ent/eventpass"
 	"backend/ent/listing"
 	"backend/ent/nftaccessory"
 	"backend/ent/nftmoment"
@@ -720,5 +721,194 @@ func (h *Handler) checkInUser(c echo.Context) error {
 			"userAddress": req.UserAddress,
 			"eventID":     req.EventID,
 		},
+	})
+}
+
+// @Summary     Ambil Daftar Event Pass (SBT)
+// @Description Mengambil daftar Event Pass (Proof of Attendance). Mendukung filter owner_address untuk melihat koleksi user tertentu.
+// @Tags        EventPass
+// @Accept      json
+// @Produce     json
+// @Param       owner_address query    string  false  "Filter berdasarkan alamat pemilik (misal: 0x...)"
+// @Param       page          query    int     false  "Nomor Halaman (default: 1)"
+// @Param       pageSize      query    int     false  "Jumlah item per halaman (default: 20)"
+// @Success     200 {object} my-project/backend/swagdto.GetEventPassesResponse "Data berhasil diambil"
+// @Failure     500 {object} APIResponse "Internal Server Error"
+// @Router      /event-passes [get]
+func (h *Handler) getEventPasses(c echo.Context) error {
+	ctx := c.Request().Context()
+	limit, offset, page, pageSize := getPagination(c)
+
+	query := h.DB.EventPass.Query()
+
+	// 1. Filter by Owner Address
+	ownerAddress := c.QueryParam("owner_address")
+	if ownerAddress != "" {
+		query = query.Where(
+			eventpass.HasOwnerWith(user.AddressEQ(ownerAddress)),
+		)
+	}
+
+	// 2. Hitung Total
+	totalItems, err := query.Count(ctx)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, APIResponse{Error: err.Error()})
+	}
+
+	// 3. Query Data dengan Eager Loading
+	passes, err := query.
+		WithOwner().
+		WithEvent().
+		WithMoment(). // Cek apakah sudah dipakai minting moment
+		Limit(limit).
+		Offset(offset).
+		Order(ent.Desc("id")). // Terbaru dulu
+		All(ctx)
+
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, APIResponse{Error: err.Error()})
+	}
+
+	// 4. Mapping ke DTO (swagdto)
+	// (Kita lakukan manual mapping agar swagger konsisten)
+	dtos := make([]*swagdto.DTOEventPass, len(passes))
+	for i, p := range passes {
+
+		// Map Owner
+		var ownerDto *swagdto.DTOUser
+		if p.Edges.Owner != nil {
+			ownerDto = &swagdto.DTOUser{
+				ID:      p.Edges.Owner.ID,
+				Address: p.Edges.Owner.Address,
+			}
+		}
+
+		// Map Event
+		var eventDto *swagdto.EventResponse
+		if p.Edges.Event != nil {
+			eventDto = &swagdto.EventResponse{
+				ID:          p.Edges.Event.ID,
+				EventID:     p.Edges.Event.EventID,
+				Name:        p.Edges.Event.Name,
+				Description: p.Edges.Event.Description,
+				Thumbnail:   p.Edges.Event.Thumbnail,
+				Location:    p.Edges.Event.Location,
+				StartDate:   p.Edges.Event.StartDate,
+				Quota:       p.Edges.Event.Quota,
+				// (Edges event tidak perlu deep load di sini untuk hemat resource)
+			}
+		}
+
+		// Map Moment (Jika ada)
+		var momentDto *swagdto.MomentResponse
+		if p.Edges.Moment != nil {
+			momentDto = &swagdto.MomentResponse{
+				ID:        p.Edges.Moment.ID,
+				NftID:     p.Edges.Moment.NftID,
+				Name:      p.Edges.Moment.Name,
+				Thumbnail: p.Edges.Moment.Thumbnail,
+			}
+		}
+
+		dtos[i] = &swagdto.DTOEventPass{
+			ID:         p.ID,
+			PassID:     p.PassID,
+			IsRedeemed: p.IsUsed,
+			Edges: swagdto.DTOEventPassEdges{
+				Owner:  ownerDto,
+				Event:  eventDto,
+				Moment: momentDto,
+			},
+		}
+	}
+
+	// 5. Return Response
+	return c.JSON(http.StatusOK, swagdto.GetEventPassesResponse{
+		Data: dtos,
+		Pagination: &swagdto.Pagination{
+			TotalItems:  totalItems,
+			TotalPages:  int(math.Ceil(float64(totalItems) / float64(pageSize))),
+			CurrentPage: page,
+			PageSize:    pageSize,
+		},
+	})
+}
+
+// @Summary     Ambil Detail Event Pass
+// @Description Mengambil detail satu Event Pass berdasarkan 'pass_id' (ID On-Chain).
+// @Tags        EventPass
+// @Accept      json
+// @Produce     json
+// @Param       id   path      int  true  "Pass ID (On-Chain ID)"
+// @Success     200 {object} my-project/backend/swagdto.GetEventPassDetailResponse "Detail pass berhasil diambil"
+// @Failure     404 {object} APIResponse "Event Pass tidak ditemukan"
+// @Failure     500 {object} APIResponse "Internal Server Error"
+// @Router      /event-passes/{id} [get]
+
+func (h *Handler) getEventPassByID(c echo.Context) error {
+	ctx := c.Request().Context()
+	idStr := c.Param("id")
+
+	// Parse ID (PassID on-chain adalah uint64)
+	passID, err := strconv.ParseUint(idStr, 10, 64)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, APIResponse{Error: "Invalid Pass ID format"})
+	}
+
+	// Query
+	p, err := h.DB.EventPass.Query().
+		Where(eventpass.PassIDEQ(passID)). // Cari berdasarkan PassID on-chain
+		WithOwner().
+		WithEvent().
+		WithMoment().
+		Only(ctx)
+
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return c.JSON(http.StatusNotFound, APIResponse{Error: "Event Pass not found"})
+		}
+		return c.JSON(http.StatusInternalServerError, APIResponse{Error: err.Error()})
+	}
+
+	// Mapping Single DTO
+	var ownerDto *swagdto.DTOUser
+	if p.Edges.Owner != nil {
+		ownerDto = &swagdto.DTOUser{ID: p.Edges.Owner.ID, Address: p.Edges.Owner.Address}
+	}
+
+	var eventDto *swagdto.EventResponse
+	if p.Edges.Event != nil {
+		eventDto = &swagdto.EventResponse{
+			ID:        p.Edges.Event.ID,
+			EventID:   p.Edges.Event.EventID,
+			Name:      p.Edges.Event.Name,
+			Thumbnail: p.Edges.Event.Thumbnail,
+			StartDate: p.Edges.Event.StartDate,
+		}
+	}
+
+	var momentDto *swagdto.MomentResponse
+	if p.Edges.Moment != nil {
+		momentDto = &swagdto.MomentResponse{
+			ID:        p.Edges.Moment.ID,
+			NftID:     p.Edges.Moment.NftID,
+			Name:      p.Edges.Moment.Name,
+			Thumbnail: p.Edges.Moment.Thumbnail,
+		}
+	}
+
+	response := &swagdto.DTOEventPass{
+		ID:         p.ID,
+		PassID:     p.PassID,
+		IsRedeemed: p.IsUsed,
+		Edges: swagdto.DTOEventPassEdges{
+			Owner:  ownerDto,
+			Event:  eventDto,
+			Moment: momentDto,
+		},
+	}
+
+	return c.JSON(http.StatusOK, swagdto.GetEventPassDetailResponse{
+		Data: response,
 	})
 }
