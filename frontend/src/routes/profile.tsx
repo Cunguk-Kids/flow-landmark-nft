@@ -8,6 +8,8 @@ import HighlightMomentModal from '@/components/modals/HighlightMomentModal';
 import MyMomentsBox from '@/components/MyMomentsBox';
 import MyEventPassBox from '@/components/profile/MyEventPassBox';
 import CustomizeActionCard from '@/components/cards/CustomizeActionCard';
+import HighlightMomentTrigger from '@/components/profile/HighlightMomentTrigger';
+import HighlightPassTrigger from '@/components/profile/HighlightPassTrigger';
 
 export const Route = createFileRoute('/profile')({
   component: Profile,
@@ -144,10 +146,20 @@ function Profile() {
                 </div>
 
                 {/* Kotak Featured Moment */}
-                <HighlightMomentModal 
-                  currentProfile={profile || null} 
-                  onSuccess={refetch} 
-                />
+                <div className="grid grid-cols-2 gap-4">
+                    {/* Kiri: Moment (1:1) */}
+                    <div>
+                        <HighlightMomentTrigger 
+                            currentProfile={profile || null} 
+                            onSuccess={refetch} 
+                        />
+                    </div>
+
+                    {/* Kanan: Pass (SBT) */}
+                    <div>
+                        <HighlightPassTrigger />
+                    </div>
+                </div>
 
                 {/* Kotak My Moments */}
                 <MyMomentsBox />
