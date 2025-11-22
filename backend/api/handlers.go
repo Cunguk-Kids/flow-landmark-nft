@@ -912,3 +912,177 @@ func (h *Handler) getEventPassByID(c echo.Context) error {
 		Data: response,
 	})
 }
+
+func mapUserToDTO(u *ent.User) *swagdto.DTOUserProfile {
+
+	// 1. Map Moments
+	var moments []*swagdto.MomentResponse
+	for _, m := range u.Edges.Moments {
+		moments = append(moments, &swagdto.MomentResponse{
+			ID:        m.ID,
+			NftID:     m.NftID,
+			Name:      m.Name,
+			Thumbnail: m.Thumbnail,
+			// (Edges moment bisa disederhanakan di sini untuk mencegah circular loop atau load berlebih)
+		})
+	}
+
+	// 2. Map Accessories
+	var accessories []*swagdto.DTOAccessory
+	for _, a := range u.Edges.Accessories {
+		accessories = append(accessories, &swagdto.DTOAccessory{
+			ID:        a.ID,
+			NftID:     a.NftID,
+			Name:      a.Name,
+			Thumbnail: a.Thumbnail,
+		})
+	}
+
+	// 3. Map EventPasses
+	var passes []*swagdto.DTOEventPass
+	for _, p := range u.Edges.EventPasses {
+		passes = append(passes, &swagdto.DTOEventPass{
+			ID:         p.ID,
+			PassID:     p.PassID,
+			IsRedeemed: p.IsUsed,
+		})
+	}
+
+	// 4. Map Hosted Events
+	var hostedEvents []*swagdto.EventResponse
+	for _, e := range u.Edges.HostedEvents {
+		hostedEvents = append(hostedEvents, &swagdto.EventResponse{
+			ID:        e.ID,
+			EventID:   e.EventID,
+			Name:      e.Name,
+			Thumbnail: e.Thumbnail,
+			StartDate: e.StartDate,
+		})
+	}
+
+	// 5. Construct DTO User
+	return &swagdto.DTOUserProfile{
+		ID:                      u.ID,
+		Address:                 u.Address,
+		Nickname:                u.Nickname,
+		Bio:                     u.Bio,
+		Pfp:                     u.Pfp,
+		ShortDescription:        u.ShortDescription,
+		BgImage:                 u.BgImage,
+		HighlightedEventPassIds: u.HighlightedEventPassIds,
+		HighlightedMomentID:     u.HighlightedMomentID,
+		Socials:                 u.Socials,
+		Edges: swagdto.DTOUserProfileEdges{
+			Moments:      moments,
+			Accessories:  accessories,
+			EventPasses:  passes,
+			HostedEvents: hostedEvents,
+			// Listings: ... (tambahkan jika perlu)
+		},
+	}
+}
+
+// --- HANDLERS ---
+
+// @Summary     Ambil Daftar User (Search People)
+// @Description Mengambil daftar pengguna di platform. Mendukung pagination dan pencarian sederhana by address.
+// @Tags        Profiles
+// @Accept      json
+// @Produce     json
+// @Param       address    query    string  false  "Cari berdasarkan sebagian alamat (misal: 0x12...)"
+// @Param       page       query    int     false  "Nomor Halaman (default: 1)"
+// @Param       pageSize   query    int     false  "Jumlah item per halaman (default: 20)"
+// @Success     200 {object} my-project/backend/swagdto.GetUsersResponse "Daftar user berhasil diambil"
+// @Failure     500 {object} APIResponse "Internal Server Error"
+// @Router      /users [get]
+func (h *Handler) getUsers(c echo.Context) error {
+	ctx := c.Request().Context()
+	limit, offset, page, pageSize := getPagination(c)
+
+	query := h.DB.User.Query()
+
+	// Filter sederhana (Search by Address)
+	addressSearch := c.QueryParam("address")
+	if addressSearch != "" {
+		// Contains (case-insensitive biasanya ditangani DB, tapi address flow case-sensitive)
+		query = query.Where(user.AddressContains(addressSearch))
+	}
+
+	// Hitung Total
+	totalItems, err := query.Count(ctx)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, APIResponse{Error: err.Error()})
+	}
+
+	// Query Data (Dengan Eager Loading Relasi)
+	users, err := query.
+		WithMoments().
+		WithAccessories().
+		WithEventPasses().
+		WithHostedEvents().
+		Limit(limit).
+		Offset(offset).
+		Order(ent.Desc("id")). // User terbaru dulu
+		All(ctx)
+
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, APIResponse{Error: err.Error()})
+	}
+
+	// Mapping ke DTO
+	dtos := make([]*swagdto.DTOUserProfile, len(users))
+	for i, u := range users {
+		dtos[i] = mapUserToDTO(u)
+	}
+
+	// Response
+	return c.JSON(http.StatusOK, swagdto.GetUsersResponse{
+		Data: dtos,
+		Pagination: &swagdto.Pagination{
+			TotalItems:  totalItems,
+			TotalPages:  int(math.Ceil(float64(totalItems) / float64(pageSize))),
+			CurrentPage: page,
+			PageSize:    pageSize,
+		},
+	})
+}
+
+// @Summary     Ambil Detail Profil User (By Address)
+// @Description Mengambil detail profil pengguna berdasarkan alamat wallet.
+// @Tags        Profiles
+// @Accept      json
+// @Produce     json
+// @Param       address    path     string  true   "Alamat Wallet User (0x...)"
+// @Success     200 {object} my-project/backend/swagdto.GetUserProfileResponse "User ditemukan"
+// @Failure     404 {object} APIResponse "User tidak ditemukan"
+// @Failure     500 {object} APIResponse "Internal Server Error"
+// @Router      /users/{address} [get]
+func (h *Handler) getUserByAddress(c echo.Context) error {
+	ctx := c.Request().Context()
+	address := c.Param("address")
+
+	if address == "" {
+		return c.JSON(http.StatusBadRequest, APIResponse{Error: "Address wajib diisi"})
+	}
+
+	// Query Single User
+	u, err := h.DB.User.Query().
+		Where(user.AddressEQ(address)).
+		WithMoments().
+		WithAccessories().
+		WithEventPasses().
+		WithHostedEvents().
+		Only(ctx)
+
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return c.JSON(http.StatusNotFound, APIResponse{Error: "User tidak ditemukan"})
+		}
+		return c.JSON(http.StatusInternalServerError, APIResponse{Error: err.Error()})
+	}
+
+	// Mapping & Response
+	return c.JSON(http.StatusOK, swagdto.GetUserProfileResponse{
+		Data: mapUserToDTO(u),
+	})
+}
