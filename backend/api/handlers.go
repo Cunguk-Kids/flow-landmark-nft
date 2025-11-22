@@ -992,7 +992,7 @@ func mapUserToDTO(u *ent.User) *swagdto.DTOUserProfile {
 // @Param       address    query    string  false  "Cari berdasarkan sebagian alamat (misal: 0x12...)"
 // @Param       page       query    int     false  "Nomor Halaman (default: 1)"
 // @Param       pageSize   query    int     false  "Jumlah item per halaman (default: 20)"
-// @Success     200 {object} my-project/backend/swagdto.GetUsersResponse "Daftar user berhasil diambil"
+// @Success     200 {object} swagdto.GetUsersResponse "Daftar user berhasil diambil"
 // @Failure     500 {object} APIResponse "Internal Server Error"
 // @Router      /users [get]
 func (h *Handler) getUsers(c echo.Context) error {
@@ -1053,7 +1053,7 @@ func (h *Handler) getUsers(c echo.Context) error {
 // @Accept      json
 // @Produce     json
 // @Param       address    path     string  true   "Alamat Wallet User (0x...)"
-// @Success     200 {object} my-project/backend/swagdto.GetUserProfileResponse "User ditemukan"
+// @Success     200 {object} swagdto.GetUserProfileResponse "User ditemukan"
 // @Failure     404 {object} APIResponse "User tidak ditemukan"
 // @Failure     500 {object} APIResponse "Internal Server Error"
 // @Router      /users/{address} [get]
@@ -1084,5 +1084,80 @@ func (h *Handler) getUserByAddress(c echo.Context) error {
 	// Mapping & Response
 	return c.JSON(http.StatusOK, swagdto.GetUserProfileResponse{
 		Data: mapUserToDTO(u),
+	})
+}
+
+// @Summary     Cari User (Search Bar)
+// @Description Mencari user berdasarkan sebagian Address ATAU Nickname. Cocok untuk fitur 'live search' dengan debounce.
+// @Tags        Profiles
+// @Accept      json
+// @Produce     json
+// @Param       q          query    string  true   "Kata kunci pencarian (0x... atau nama)"
+// @Param       page       query    int     false  "Nomor Halaman (default: 1)"
+// @Param       pageSize   query    int     false  "Jumlah item per halaman (default: 10)"
+// @Success     200 {object} swagdto.GetUsersResponse "Hasil pencarian"
+// @Failure     400 {object} APIResponse "Query kosong"
+// @Failure     500 {object} APIResponse "Internal Server Error"
+// @Router      /users/search [get]
+func (h *Handler) searchUsers(c echo.Context) error {
+	ctx := c.Request().Context()
+	limit, offset, page, pageSize := getPagination(c)
+
+	// 1. Ambil query param 'q'
+	searchTerm := c.QueryParam("q")
+	if searchTerm == "" {
+		// Jika kosong, kembalikan list kosong (atau error, tergantung selera UX)
+		return c.JSON(http.StatusOK, swagdto.GetUsersResponse{
+			Data:       []*swagdto.DTOUserProfile{},
+			Pagination: &swagdto.Pagination{CurrentPage: 1, PageSize: pageSize},
+		})
+	}
+
+	// 2. Siapkan Query Dasar
+	query := h.DB.User.Query().
+		Where(
+			// LOGIKA PENCARIAN: Address COCOK -ATAU- Nickname COCOK
+			user.Or(
+				user.AddressContains(searchTerm),      // Case-sensitive (biasanya address flow lowercase)
+				user.NicknameContainsFold(searchTerm), // Case-INSENSITIVE (untuk nama)
+			),
+		)
+
+	// 3. Hitung Total (untuk pagination)
+	totalItems, err := query.Count(ctx)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, APIResponse{Error: err.Error()})
+	}
+
+	// 4. Ambil Data dengan Relasi
+	users, err := query.
+		WithMoments().
+		WithAccessories().
+		WithEventPasses().
+		WithHostedEvents().
+		Limit(limit).
+		Offset(offset).
+		Order(ent.Desc("id")). // Relevansi bisa diatur, tapi ID desc cukup untuk sekarang
+		All(ctx)
+
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, APIResponse{Error: err.Error()})
+	}
+
+	// 5. Mapping ke DTO (Gunakan helper yang sudah kita buat)
+	dtos := make([]*swagdto.DTOUserProfile, len(users))
+	for i, u := range users {
+		dtos[i] = mapUserToDTO(u)
+	}
+
+	// 6. Return Response
+	return c.JSON(http.StatusOK, swagdto.GetUsersResponse{
+		Data: dtos,
+		Pagination: &swagdto.Pagination{
+			TotalItems:  totalItems,
+			TotalPages:  int(math.Ceil(float64(totalItems) / float64(pageSize))),
+			CurrentPage: page,
+			PageSize:    pageSize,
+		},
 	})
 }

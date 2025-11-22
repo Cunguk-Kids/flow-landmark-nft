@@ -51,6 +51,7 @@ func main() {
 	e.GET("/event-passes/:id", h.getEventPassByID)
 	e.GET("/users", h.getUsers)
 	e.GET("/users/:address", h.getUserByAddress)
+	e.GET("/users/search", h.searchUsers)
 
 	e.POST("/moment/free", h.freeMintMoment)
 	e.POST("/moment/with-event-pass", h.mintMomentWithEventPass)
