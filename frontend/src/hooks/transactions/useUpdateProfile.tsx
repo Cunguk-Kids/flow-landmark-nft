@@ -51,6 +51,7 @@ export interface UpdateProfileDTO {
   shortDescription?: string;
   bgImage?: string;
   momentID: number | null;
+  highlightedEventPassIds: Array<number>;
   // Untuk MVP Edit Profile, kita skip highlight ID dulu agar simpel,
   // atau kirim [] dan null sebagai default.
 }
@@ -94,7 +95,7 @@ export function useUpdateProfile() {
         arg(toNullable(data.bgImage), t.Optional(t.String)),
         
         // Highlight (Sementara hardcode nil/kosong sesuai request)
-        arg([], t.Array(t.Optional(t.UInt64))), 
+        arg(data.highlightedEventPassIds, t.Array(t.Optional(t.UInt64))), 
         arg(data.momentID, t.Optional(t.UInt64))
       ]
     });

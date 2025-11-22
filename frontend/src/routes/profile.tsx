@@ -19,7 +19,7 @@ function Profile() {
   const navigate = useNavigate();
   const { user } = useFlowCurrentUser();
   const { data: profile, isLoading, refetch } = useUserProfile(user?.addr);
-
+  console.log(profile)
   const handleBack = () => {
     navigate({ to: '/' });
   };
@@ -157,7 +157,10 @@ function Profile() {
 
                     {/* Kanan: Pass (SBT) */}
                     <div>
-                        <HighlightPassTrigger />
+                        <HighlightPassTrigger
+                          currentProfile={profile} 
+                          onSuccess={refetch}
+                        />
                     </div>
                 </div>
 
