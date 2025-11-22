@@ -1,6 +1,5 @@
 'use client';
 
-import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useGetMomentsPaginated, type NFTMoment } from '@/hooks/api/useGetNFTMoment';
 import { useFlowCurrentUser } from '@onflow/react-sdk';

@@ -77,12 +77,13 @@ export default function UpdateProfileModal({ currentProfile, onSuccess }: Update
       pfp: pfpUrl,
       bgImage: bgUrl,
       socials: socialsMap,
-      momentID: currentProfile?.highlightedMomentID || null
+      momentID: currentProfile?.highlighted_moment_id || null,
+      highlightedEventPassIds: currentProfile?.highlighted_eventPass_ids || null
     };
 
     updateProfile(payload);
   };
-
+  console.log(currentProfile)
   return (
     <>
       {/* TOMBOL PEMICU */}
