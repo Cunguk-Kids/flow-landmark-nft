@@ -6,6 +6,7 @@ import { ArrowLeft, Edit2, MapPin, Calendar, Share2, Hexagon } from 'lucide-reac
 import UpdateProfileModal from '@/components/modals/UpdateProfileModal'; // Pastikan path benar
 import HighlightMomentModal from '@/components/modals/HighlightMomentModal';
 import MyMomentsBox from '@/components/MyMomentsBox';
+import MyEventPassBox from '@/components/profile/MyEventPassBox';
 
 export const Route = createFileRoute('/profile')({
   component: Profile,
@@ -149,6 +150,8 @@ function Profile() {
 
                 {/* Kotak My Moments */}
                 <MyMomentsBox />
+
+                <MyEventPassBox />
             </div>
 
             {/* Kanan: Stats & Socials (Col Span 1) */}

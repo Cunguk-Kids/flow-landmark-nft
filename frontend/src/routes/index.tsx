@@ -31,7 +31,6 @@ function EventsHeroCard() {
       });
     }
 
-    // Wait for animation, then navigate
     setTimeout(() => {
       navigate({ to: "/events" });
     }, 800);
@@ -46,7 +45,7 @@ function EventsHeroCard() {
         bg-rpn-blue 
         border-2 border-rpn-dark 
         rounded-xl 
-        p-8 md:p-10 
+        p-6 md:p-10 
         overflow-hidden 
         z-30 
         shadow-[8px_8px_0px_0px_rgba(15,23,42,0.4)] 
@@ -54,57 +53,70 @@ function EventsHeroCard() {
         hover:shadow-[6px_6px_0px_0px_rgba(15,23,42,0.4)]
         hover:translate-x-[1px] hover:translate-y-[1px]
         transition-all
+        
+        /* --- TAMBAHAN RESPONSIF --- */
+        min-h-full
       "
     >
-      {/* --- DEKORASI BACKGROUND --- */}
-      {/* Grid Pattern Halus */}
+      {/* --- DEKORASI BACKGROUND (Tetap Sama) --- */}
       <div 
         className="absolute inset-0 opacity-10 pointer-events-none"
         style={{ backgroundImage: 'linear-gradient(#0F172A 1px, transparent 1px), linear-gradient(90deg, #0F172A 1px, transparent 1px)', backgroundSize: '40px 40px' }}
       />
-      
-      {/* Aksen Pojok Kiri Atas */}
       <div className="absolute top-4 left-4 w-8 h-8 border-t-4 border-l-4 border-rpn-dark opacity-50" />
 
       {/* --- KONTEN UTAMA --- */}
-      <div className="relative z-10 mt-4">
-         {/* Label Kecil */}
-         <div className="flex items-center gap-2 mb-4 text-rpn-dark/70 font-mono text-xs font-bold uppercase tracking-widest">
-            <CalendarSearch size={14} />
-            <span>Discovery Protocol</span>
+      {/* Tambahkan 'relative z-20' agar di atas dekorasi */}
+      <div className="relative z-20 mt-4 flex flex-col h-full">
+         
+         {/* Header Teks */}
+         <div className="flex-1"> {/* Flex-1 agar mendorong konten lain */}
+             <div className="flex items-center gap-2 mb-4 text-rpn-dark/70 font-mono text-xs font-bold uppercase tracking-widest">
+                <CalendarSearch size={14} />
+                <span>Discovery Protocol</span>
+             </div>
+
+             <h1 className="font-pixel text-3xl md:text-4xl lg:text-5xl leading-tight text-rpn-dark uppercase mb-6">
+                Explore <br />
+                <span className="text-white drop-shadow-[4px_4px_0px_#0F172A] stroke-black">
+                   Thousands
+                </span> <br />
+                of Events
+             </h1>
          </div>
 
-         {/* Judul Besar */}
-         <h1 className="font-pixel text-3xl md:text-4xl lg:text-5xl leading-tight text-rpn-dark uppercase mb-6">
-            Explore <br />
-            <span className="text-white drop-shadow-[4px_4px_0px_#0F172A] stroke-black">
-               Thousands
-            </span> <br />
-            of Events
-         </h1>
-
          {/* Tombol CTA */}
-         <button
-            onClick={handleExploreClick}
-            className="
-               bg-rpn-dark text-white 
-               border-2 border-white 
-               px-6 py-4 rounded-lg 
-               font-bold font-sans uppercase tracking-wide 
-               shadow-[4px_4px_0px_0px_#fff] 
-               hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_#fff] 
-               active:translate-x-[4px] active:translate-y-[4px] active:shadow-none 
-               transition-all flex items-center gap-3 w-fit
-            "
-         >
-            Start Exploring
-            <LucideExternalLink className="size-5" />
-         </button>
+         {/* Di mobile, kita pastikan dia punya margin bottom agar tidak ketabrak kartu */}
+         <div className="mb-32 md:mb-0"> 
+             <button
+                onClick={handleExploreClick}
+                className="
+                   bg-rpn-dark text-white 
+                   border-2 border-white 
+                   px-6 py-4 rounded-lg 
+                   font-bold font-sans uppercase tracking-wide 
+                   shadow-[4px_4px_0px_0px_#fff] 
+                   hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_#fff] 
+                   active:translate-x-[4px] active:translate-y-[4px] active:shadow-none 
+                   transition-all flex items-center gap-3 w-fit
+                "
+             >
+                Start Exploring
+                <LucideExternalLink className="size-5" />
+             </button>
+         </div>
       </div>
 
-      {/* --- TUMPUKAN KARTU EVENT (DEKORASI KANAN) --- */}
-      {/* Diposisikan absolute di kanan agar tidak mengganggu teks */}
-      <div className="absolute top-1/2 right-[-4rem] -translate-y-1/2 w-64 grid grid-cols-1 grid-rows-1 pointer-events-none opacity-90 scale-90 md:scale-100">
+      {/* --- TUMPUKAN KARTU EVENT (DEKORASI) --- */}
+      <div className="
+          pointer-events-none opacity-90
+          absolute bottom-[-2rem] left-1/2 -translate-x-1/2 scale-75
+          md:top-1/2 md:right-[-4rem] md:bottom-auto md:left-auto 
+          md:-translate-y-1/2 md:translate-x-0 md:scale-90 
+          lg:scale-100
+          
+          w-64 grid grid-cols-1 grid-rows-1
+      ">
         
         {isLoading && (
           <div className="bg-white border-2 border-black p-4 rounded-xl font-mono text-xs animate-pulse">
@@ -112,22 +124,19 @@ function EventsHeroCard() {
           </div>
         )}
 
-        {/* Loop Event Cards */}
         {events?.slice(0, 3).map((event, index) => (
           <div
             key={event.id}
             className="min-w-[18rem] col-[1/-1] row-[1/-1] transition-transform duration-500 group-hover:scale-105"
             style={{
-              // Rotasi bertumpuk (Stack effect)
               transform: `
                 translateX(calc(${index} * -10px)) 
                 translateY(calc(${index} * 10px)) 
                 rotate(calc(6deg * ${index + 1}))
               `,
-              zIndex: 3 - index // Kartu pertama paling atas
+              zIndex: 3 - index
             }}
           >
-             {/* Kita bungkus EventCard agar ukurannya pas di dekorasi */}
              <div className="pointer-events-none select-none shadow-xl">
                 <EventCard event={event} />
              </div>
@@ -139,17 +148,21 @@ function EventsHeroCard() {
   );
 }
 
+export default EventsHeroCard;
+
 function Index() {
   return (
     <div className="min-h-screen bg-background p-4 md:p-6">
       {/* Bento Grid Layout */}
       <div className="mx-auto max-w-7xl">
         <div className="grid grid-cols-1 md:grid-cols-6 gap-4 auto-rows-[140px]">
-          <EventsHeroCard />
-          <ProfileCard className="md:col-span-3 md:row-span-3" />
+          <div className="col-span-1 row-span-3 md:col-span-3 md:row-span-3">
+            <EventsHeroCard />
+          </div>
+          <ProfileCard className="col-span-1 row-span-4 md:col-span-3 md:row-span-3" />
 
           {/* 3. WHOLE PERSON CARE (Tengah Bawah - Lebar) */}
-          <div className="md:col-span-4 md:row-span-2 card-brutalist bg-primary p-8 relative overflow-hidden">
+          <div className="col-span-1 row-span-3 md:col-span-4 md:row-span-2 card-brutalist bg-primary p-8 relative overflow-hidden">
             <h2 className="text-display text-2xl md:text-3xl text-primary-foreground mb-6">
               Whole-Person Care
             </h2>
