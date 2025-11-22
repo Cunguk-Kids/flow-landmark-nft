@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useUserSearch } from '@/hooks/api/useUserSearch'; // Hook baru
-import { Search, User, Loader2, ArrowRight } from 'lucide-react';
+import { Search, User, Loader2, ArrowRight, ArrowLeft } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 
@@ -24,9 +24,22 @@ function SearchPage() {
       navigate({ to: `/users/${address}` }); 
   };
 
+  const handleBack = () => {
+      // Arahkan ke halaman profil publik (bukan /profile diri sendiri)
+      // Asumsi rute: /users/$address
+      navigate({ to: `/` }); 
+  };
+
   return (
     <div className="min-h-screen bg-rpn-dark text-rpn-text font-sans pb-20 selection:bg-rpn-blue selection:text-white pt-24 px-4">
-      
+      <div className="max-w-7xl mx-auto flex justify-between">
+        <button 
+          onClick={handleBack}
+          className="pointer-events-auto bg-rpn-card/80 backdrop-blur-md border border-rpn-blue/30 text-rpn-text p-3 rounded-xl hover:bg-rpn-blue hover:text-white transition-all group shadow-lg"
+        >
+          <ArrowLeft size={24} className="group-hover:-translate-x-1 transition-transform" />
+        </button>
+      </div>
       {/* --- HEADER & SEARCH BAR --- */}
       <div className="max-w-3xl mx-auto text-center mb-12">
         <h1 className="font-pixel text-3xl md:text-5xl text-white uppercase drop-shadow-[4px_4px_0px_rgba(41,171,226,0.3)] mb-6">

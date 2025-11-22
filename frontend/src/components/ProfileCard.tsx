@@ -8,6 +8,7 @@ import { Button } from './ui/button';
 import { LogOut, User as UserIcon, Shield, LogIn, Settings } from 'lucide-react'; 
 import { useTransition } from "@/contexts/TransitionContext";
 import { useNavigate } from '@tanstack/react-router';
+import ProfileShowcase from './profile/ProfileShowcase';
 
 interface ProfileCardProps {
   className?: string;
@@ -118,6 +119,16 @@ export default function ProfileCard({ className = "" }: ProfileCardProps) {
                         </div>
                     </div>
                 </div>
+
+                {/* =====================================================
+                    BALOK 5: SHOWCASE (Code Splitting)
+                    Kita cukup lempar ID-nya saja. Component anak yang akan fetch.
+                   =====================================================
+                */}
+                <ProfileShowcase 
+                    highlightedMomentID={profile.highlighted_moment_id ? Number(profile.highlighted_moment_id) : undefined}
+                    highlightedPassIDs={profile.highlighted_eventPass_ids} // Kirim array ID
+                />
 
                 {/* TEXT INFO */}
                 <div className="text-right flex flex-col items-end z-30 relative w-full">

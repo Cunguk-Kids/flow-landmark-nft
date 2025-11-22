@@ -60,7 +60,7 @@ export default function EquipModal({ isOpen, onClose, moment }: EquipModalProps)
       <DialogContent className="bg-rpn-dark border-2 border-rpn-blue text-rpn-text max-w-6xl w-[95vw] h-[90vh] rounded-xl shadow-[0_0_50px_rgba(41,171,226,0.2)] p-0 overflow-hidden gap-0 flex flex-col md:flex-row outline-none sm:max-w-7xl">
         
         {/* ================= KIRI: PREVIEW AREA (40%) ================= */}
-        <div className="relative w-full md:w-[40%] h-[40%] md:h-full bg-black border-b-2 md:border-b-0 md:border-r-2 border-rpn-blue flex flex-col items-center justify-center p-8 shrink-0">
+        <div className="relative w-full md:w-[40%] h-[350px] md:h-full bg-black border-b-2 md:border-b-0 md:border-r-2 border-rpn-blue flex flex-col items-center justify-center p-8 shrink-0 ">
             
             {/* Background Grid */}
             <div className="absolute inset-0 opacity-20 pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle, #29ABE2 1px, transparent 1px)', backgroundSize: '30px 30px' }}></div>

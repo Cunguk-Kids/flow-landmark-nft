@@ -7,6 +7,7 @@ import { useRef } from "react";
 import ProfileCard from "@/components/ProfileCard";
 import GachaCard from "@/components/cards/GachaCard";
 import MintMomentCard from "@/components/cards/MintMomentCard";
+import AboutUsCard from "@/components/cards/AboutUsCard";
 
 export const Route = createFileRoute("/")({
   component: Index,
@@ -233,7 +234,7 @@ function Index() {
           <MintMomentCard />
 
           {/* Info Card - Different size */}
-          <div className="md:col-span-3 md:row-span-2 card-brutalist bg-card p-8 relative overflow-hidden">
+          <div className="md:col-span-4 md:row-span-2 card-brutalist bg-card p-8 relative overflow-hidden">
             <h2 className="text-display text-xl md:text-2xl text-card-foreground mb-4 leading-tight">
               Comprehensive
               <br />
@@ -256,36 +257,7 @@ function Index() {
 
           {/* Small CTA Card */}
           {/* 2. LEARN ABOUT US (Tengah) */}
-          <div className="col-span-1 row-span-2 md:col-span-2 md:row-span-2 card-brutalist bg-white p-6 relative overflow-hidden flex flex-col justify-between group">
-
-            {/* Dekorasi Garis Miring */}
-            <div className="absolute -right-4 -top-4 w-24 h-24 bg-rpn-blue/10 rotate-45 group-hover:bg-rpn-blue/20 transition-colors"></div>
-
-            <div>
-              <div className="flex items-center gap-2 mb-2">
-                <div className="w-2 h-2 bg-rpn-blue rounded-full animate-ping"></div>
-                <span className="text-[10px] font-bold text-rpn-dark uppercase tracking-widest font-sans">
-                  RPN Ecosystem
-                </span>
-              </div>
-
-              {/* Typography Efektif: Besar, Tebal, Rapat */}
-              <h2 className="text-3xl md:text-4xl font-black text-rpn-dark leading-[0.9] tracking-tighter uppercase mb-2">
-                We Build <br />
-                <span className="text-rpn-blue">Digital</span> <br />
-                Legacy.
-              </h2>
-            </div>
-
-            <div className="flex items-center justify-between border-t-2 border-black/10 pt-4 mt-2">
-              <p className="text-xs text-gray-500 font-medium max-w-[120px] leading-tight">
-                Learn how we tokenize memories.
-              </p>
-              <button className="w-8 h-8 rounded-full border-2 border-black flex items-center justify-center hover:bg-black hover:text-white transition-colors">
-                <ArrowRight size={16} />
-              </button>
-            </div>
-          </div>
+          <AboutUsCard />
         </div>
       </div>
     </div>

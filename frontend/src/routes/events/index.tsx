@@ -1,9 +1,9 @@
 import { useState } from "react";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEventList } from "@/hooks/api/useEventList"; // <-- Import hook baru
 import { EventCard } from "@/components/EventCard";
 import { motion } from "framer-motion"; 
-import { CalendarSearch, Terminal, RefreshCw, PlusSquare } from "lucide-react";
+import { CalendarSearch, Terminal, RefreshCw, PlusSquare, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import CreateEventModal from "@/components/modals/CreateEventModal";
 import { useFlowCurrentUser } from "@onflow/react-sdk";
@@ -14,15 +14,30 @@ export const Route = createFileRoute("/events/")({
 
 function Events() {
   // Panggil hook (default page 1)
+  const navigate = useNavigate();
   const { user } = useFlowCurrentUser();
   const { data: events, isLoading, error, refetch, isRefetching } = useEventList();
   const [isCreateOpen, setIsCreateOpen] = useState(false)
+
+  const handleBack = () => {
+    navigate({ to: '/' });
+  };
+
   return (
     <div className="min-h-screen bg-rpn-dark text-rpn-text font-sans relative selection:bg-rpn-blue selection:text-white">
-      
+      <div className="fixed top-0 left-0 w-full z-50 p-4 pointer-events-none">
+        <div className="max-w-7xl mx-auto flex justify-between">
+          <button 
+            onClick={handleBack}
+            className="pointer-events-auto bg-rpn-card/80 backdrop-blur-md border border-rpn-blue/30 text-rpn-text p-3 rounded-xl hover:bg-rpn-blue hover:text-white transition-all group shadow-lg"
+          >
+            <ArrowLeft size={24} className="group-hover:-translate-x-1 transition-transform" />
+          </button>
+        </div>
+      </div>
       {/* --- BACKGROUND DECORATION --- */}
       <div 
-        className="absolute inset-0 opacity-5 pointer-events-none fixed"
+        className="absolute inset-0 opacity-5 pointer-events-none"
         style={{ 
             backgroundImage: 'linear-gradient(#29ABE2 1px, transparent 1px), linear-gradient(90deg, #29ABE2 1px, transparent 1px)', 
             backgroundSize: '40px 40px' 
