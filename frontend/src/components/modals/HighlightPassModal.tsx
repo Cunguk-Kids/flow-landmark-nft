@@ -39,7 +39,7 @@ export default function HighlightPassModal({ isOpen, onClose, onSuccess, current
       onSuccess();
       onClose();
     }
-  }, [isSealed, onSuccess, onClose]);
+  }, [isSealed]);
 
   // --- LOGIKA SELEKSI (MAX 4) ---
   const handleToggle = (passID: number) => {
@@ -57,7 +57,6 @@ export default function HighlightPassModal({ isOpen, onClose, onSuccess, current
       }
     });
   };
-  console.log(selectedIDs, "current")
   // --- SIMPAN ---
   const handleSave = () => {
     if (!currentProfile) return;
@@ -144,7 +143,7 @@ export default function HighlightPassModal({ isOpen, onClose, onSuccess, current
             <Button variant="ghost" onClick={onClose} className="text-rpn-muted hover:text-white">Cancel</Button>
             <Button 
                 onClick={handleSave}
-                disabled={isPending || selectedIDs.length == 0}
+                disabled={isPending}
                 className="bg-rpn-blue text-rpn-dark hover:bg-white font-bold font-pixel text-xs shadow-[2px_2px_0px_0px_#fff]"
             >
                 {isPending ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : null}
