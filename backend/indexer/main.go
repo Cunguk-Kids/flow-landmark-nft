@@ -36,6 +36,7 @@ var (
 	ListingAvailable               = "A.f8d6e0586b0a20c7.NFTStorefrontV2.ListingAvailable"
 	ListingCompleted               = "A.f8d6e0586b0a20c7.NFTStorefrontV2.ListingCompleted"
 	NFTDeposited                   = "A.f8d6e0586b0a20c7.NonFungibleToken.Deposited"
+	NFTMomentMintedWithEventPass   = "A.f8d6e0586b0a20c7.NFTMoment.MintedWithEventPass"
 )
 
 func main() {
@@ -76,6 +77,7 @@ func main() {
 				NFTMomentMinted, NFTAccessoryMinted, NFTMomentEquipAccessory, NFTMomentUnequipAccessory,
 				FlowCapabilityControllerIssued, EventCreated, UserRegisteredEvent, UserCheckedInEvent,
 				EventPassMinted, ProfileUpdated, ListingAvailable, NFTDeposited, ListingCompleted,
+				NFTMomentMintedWithEventPass,
 			},
 		},
 	)
@@ -123,6 +125,8 @@ func main() {
 					utils.ListingCompleted(ctx, ev, client)
 				case NFTDeposited:
 					utils.NFTDeposited(ctx, ev, client)
+				case NFTMomentMintedWithEventPass:
+					utils.NFTMomentMintedWithEventPass(ctx, ev, client)
 				}
 			}
 		case err := <-errCh:

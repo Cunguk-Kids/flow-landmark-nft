@@ -936,3 +936,72 @@ func NFTDeposited(ctx context.Context, ev flow.Event, client *ent.Client) {
 	}
 	// (Abaikan jika bukan tipe NFT yang kita pedulikan)
 }
+
+func NFTMomentMintedWithEventPass(ctx context.Context, ev flow.Event, client *ent.Client) {
+	var Fields = ev.Value.FieldsMappedByName()
+	ownerAddressCadence, err := getCadenceField[cadence.Address](Fields, "recipient")
+	idNftCadence, _ := getCadenceField[cadence.UInt64](Fields, "id")
+	nameCadence, _ := getCadenceField[cadence.String](Fields, "name")
+	descriptionCadence, _ := getCadenceField[cadence.String](Fields, "description")
+	thumbnailCadence, _ := getCadenceField[cadence.String](Fields, "thumbnail")
+	eventPassIDCadence, _ := getCadenceField[cadence.UInt64](Fields, "eventPassID")
+
+	if err != nil {
+		log.Println("Gagal parsing recipient:", err)
+		return
+	}
+	ownerAddress := ownerAddressCadence.String()
+	name := string(nameCadence)
+	description := string(descriptionCadence)
+	thumbnail := string(thumbnailCadence)
+	eventPassID := uint64(eventPassIDCadence)
+
+	// 1. Cari User
+	isUserFound, err := client.User.Query().
+		Where(
+			user.AddressEQ(ownerAddress),
+		).
+		Only(ctx)
+	
+	if err != nil {
+		log.Println("User not found, please setup moment collection")
+		return
+	}
+
+	// 2. Cari Event Pass yang digunakan
+	usedPass, err := client.EventPass.Query().
+		Where(eventpass.PassIDEQ(eventPassID)).
+		Only(ctx)
+
+	if err != nil {
+		log.Printf("Event Pass ID %d tidak ditemukan di DB: %v", eventPassID, err)
+		// Lanjut minting moment meski pass tidak ketemu (edge case), atau return?
+		// Idealnya kita tetap mint moment, tapi log error pass.
+	} else {
+		// 3. Update Status Event Pass -> is_used = true
+		_, err = usedPass.Update().
+			SetIsUsed(true).
+			Save(ctx)
+		if err != nil {
+			log.Printf("Gagal update status Event Pass ID %d: %v", eventPassID, err)
+		} else {
+			log.Printf("Event Pass ID %d berhasil ditandai sebagai terpakai.", eventPassID)
+		}
+	}
+
+	// 4. Mint Moment
+	nftMinted, err := client.NFTMoment.Create().
+		SetName(name).
+		SetDescription(description).
+		SetThumbnail(thumbnail).
+		SetNftID(uint64(idNftCadence)).
+		SetOwnerID(isUserFound.ID).
+		SetMintedWithPass(usedPass). // Link ke Pass (Opsional, jika ada relasi di schema)
+		Save(ctx)
+
+	if err != nil {
+		log.Println("error when create insert NFT Moment:", err)
+	} else {
+		log.Println("NFT Moment minted with Pass:", nftMinted)
+	}
+}

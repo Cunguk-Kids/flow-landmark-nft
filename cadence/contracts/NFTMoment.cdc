@@ -15,6 +15,7 @@ access(all) contract NFTMoment: NonFungibleToken {
     access(all) event Deposit(id: UInt64, to: Address?)
     // Event kustom
     access(all) event Minted(recipient: Address, id: UInt64, name: String, description: String, thumbnail: String)
+    access(all) event MintedWithEventPass(recipient: Address, id: UInt64, name: String, description: String, thumbnail: String, eventPassID: UInt64)
     access(all) event AccessoryEquipped(NftMomentId: UInt64, NftAccessoryId: UInt64?, prevNFTAccessoryId: UInt64?)
     access(all) event AccessoryUnequipped(NftMomentId: UInt64, NftAccessoryId: UInt64?)
     
@@ -440,7 +441,7 @@ access(all) contract NFTMoment: NonFungibleToken {
 
             let id = newNFT.id
 
-            emit Minted(recipient: recipient.owner!.address, id: id, name: name, description: description, thumbnail: thumbnail)
+            emit MintedWithEventPass(recipient: recipient.owner!.address, id: id, name: name, description: description, thumbnail: thumbnail, eventPassID: recipientPass.id)
 
             recipient.deposit(token: <-newNFT)
         }
