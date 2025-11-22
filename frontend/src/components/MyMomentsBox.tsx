@@ -24,7 +24,7 @@ export default function MyMomentsBox() {
   const hasPrevPage = page > 1;
 
   return (
-    <div className="bg-rpn-card border border-rpn-blue/30 rounded-2xl p-6 shadow-lg flex flex-col h-[600px]">
+    <div className="bg-rpn-card border border-rpn-blue/30 rounded-2xl p-6 shadow-lg flex flex-col">
       
       {/* Header */}
       <div className="flex justify-between items-center mb-4 border-b border-white/10 pb-2 shrink-0">
