@@ -34,7 +34,7 @@ interface GetListingsResponse {
 
 // --- Fetcher ---
 const fetchListings = async (page: number, pageSize: number) => {
-  const response = await axios.get<GetListingsResponse>(`${import.meta.env.VITE_API_URL}/listings`, {
+  const response = await axios.get<GetListingsResponse>(`${import.meta.env.VITE_BASE_URL}/listings`, {
     params: {
       page,
       pageSize,

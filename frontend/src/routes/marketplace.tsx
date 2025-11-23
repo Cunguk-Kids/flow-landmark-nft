@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
-import { createFileRoute } from '@tanstack/react-router';
+import { useState } from 'react';
+import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useGetListings } from '@/hooks/api/useGetListings';
 import ListingCard from '@/components/cards/ListingCard';
-import { Loader2, TrendingUp, ShoppingBag, Filter } from 'lucide-react';
+import { Loader2, TrendingUp, ShoppingBag, Filter, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import SellItemTrigger from '@/components/SellItemTrigger';
 
 export const Route = createFileRoute('/marketplace')({
   component: Marketplace,
@@ -11,7 +12,8 @@ export const Route = createFileRoute('/marketplace')({
 
 function Marketplace() {
   const [page, setPage] = useState(1);
-  const { data: listingsData, isLoading } = useGetListings(page, 12);
+  const { data: listingsData, isLoading, refetch } = useGetListings(page, 12);
+  const navigate = useNavigate()
 
   const listings = listingsData?.data || [];
   const pagination = listingsData?.pagination;
@@ -28,7 +30,12 @@ function Marketplace() {
       <div className="absolute inset-0 opacity-5 pointer-events-none fixed" style={{ backgroundImage: 'linear-gradient(#22c55e 1px, transparent 1px), linear-gradient(90deg, #22c55e 1px, transparent 1px)', backgroundSize: '50px 50px' }} />
 
       <div className="max-w-7xl mx-auto relative z-10">
-
+        <button 
+            onClick={() => navigate({ to: '/' })}
+            className="md:-left-24 absolute pointer-events-auto bg-rpn-card/80 backdrop-blur-md border border-rpn-blue/30 text-rpn-text p-3 rounded-xl hover:bg-rpn-blue hover:text-white transition-all group shadow-lg z-10"
+          >
+            <ArrowLeft size={24} className="group-hover:-translate-x-1 transition-transform" />
+        </button>
         {/* --- MARKET HEADER --- */}
         <div className="flex flex-col md:flex-row justify-between items-end mb-12 gap-6 border-b-2 border-white/10 pb-8">
           <div>
@@ -51,6 +58,7 @@ function Marketplace() {
               <p className="text-[10px] text-gray-400 uppercase font-bold mb-1">Listings</p>
               <p className="text-xl font-mono font-black text-white">{pagination?.totalItems || 0}</p>
             </div>
+            <SellItemTrigger refetchListing={refetch} />
           </div>
         </div>
 

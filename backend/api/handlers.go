@@ -196,7 +196,9 @@ func (h *Handler) getAccessories(c echo.Context) error {
 
 	// 6. Jalankan Query UTAMA dengan Limit/Offset
 	accessories, err := query.
-		WithOwner(). // (Opsional: 'preload' data owner)
+		WithOwner().
+		WithEquippedOnMoment().
+		WithListing().
 		Limit(limit).
 		Offset(offset).
 		Order(ent.Desc("id")). // Urutkan dari yang terbaru

@@ -20,7 +20,11 @@ export interface Accessory {
     listing?: {
         id: number;
         price: number;
-    }
+    };
+    equipped_on_moment?: {
+        id: number;
+        name: string;
+    } | null;
   };
 }
 

@@ -162,7 +162,7 @@ transaction(
 const NFT_TYPE_ID = "A.f8d6e0586b0a20c7.NFTMoment.NFT"; 
 const FT_TYPE_ID = "A.0ae53cb6e3f42a79.FlowToken.Vault";
 
-export function useSellAccessory() {
+export function useSellMoment() {
   const { mutate, data: txId, isPending: isMutating, error: txError } = useFlowMutate();
   const { transactionStatus, error: statusError } = useFlowTransactionStatus({ id: txId });
 
