@@ -74,6 +74,16 @@ func Thumbnail(v string) predicate.NFTMoment {
 	return predicate.NFTMoment(sql.FieldEQ(FieldThumbnail, v))
 }
 
+// LikeCount applies equality check predicate on the "like_count" field. It's identical to LikeCountEQ.
+func LikeCount(v int) predicate.NFTMoment {
+	return predicate.NFTMoment(sql.FieldEQ(FieldLikeCount, v))
+}
+
+// CommentCount applies equality check predicate on the "comment_count" field. It's identical to CommentCountEQ.
+func CommentCount(v int) predicate.NFTMoment {
+	return predicate.NFTMoment(sql.FieldEQ(FieldCommentCount, v))
+}
+
 // NftIDEQ applies the EQ predicate on the "nft_id" field.
 func NftIDEQ(v uint64) predicate.NFTMoment {
 	return predicate.NFTMoment(sql.FieldEQ(FieldNftID, v))
@@ -309,6 +319,86 @@ func ThumbnailContainsFold(v string) predicate.NFTMoment {
 	return predicate.NFTMoment(sql.FieldContainsFold(FieldThumbnail, v))
 }
 
+// LikeCountEQ applies the EQ predicate on the "like_count" field.
+func LikeCountEQ(v int) predicate.NFTMoment {
+	return predicate.NFTMoment(sql.FieldEQ(FieldLikeCount, v))
+}
+
+// LikeCountNEQ applies the NEQ predicate on the "like_count" field.
+func LikeCountNEQ(v int) predicate.NFTMoment {
+	return predicate.NFTMoment(sql.FieldNEQ(FieldLikeCount, v))
+}
+
+// LikeCountIn applies the In predicate on the "like_count" field.
+func LikeCountIn(vs ...int) predicate.NFTMoment {
+	return predicate.NFTMoment(sql.FieldIn(FieldLikeCount, vs...))
+}
+
+// LikeCountNotIn applies the NotIn predicate on the "like_count" field.
+func LikeCountNotIn(vs ...int) predicate.NFTMoment {
+	return predicate.NFTMoment(sql.FieldNotIn(FieldLikeCount, vs...))
+}
+
+// LikeCountGT applies the GT predicate on the "like_count" field.
+func LikeCountGT(v int) predicate.NFTMoment {
+	return predicate.NFTMoment(sql.FieldGT(FieldLikeCount, v))
+}
+
+// LikeCountGTE applies the GTE predicate on the "like_count" field.
+func LikeCountGTE(v int) predicate.NFTMoment {
+	return predicate.NFTMoment(sql.FieldGTE(FieldLikeCount, v))
+}
+
+// LikeCountLT applies the LT predicate on the "like_count" field.
+func LikeCountLT(v int) predicate.NFTMoment {
+	return predicate.NFTMoment(sql.FieldLT(FieldLikeCount, v))
+}
+
+// LikeCountLTE applies the LTE predicate on the "like_count" field.
+func LikeCountLTE(v int) predicate.NFTMoment {
+	return predicate.NFTMoment(sql.FieldLTE(FieldLikeCount, v))
+}
+
+// CommentCountEQ applies the EQ predicate on the "comment_count" field.
+func CommentCountEQ(v int) predicate.NFTMoment {
+	return predicate.NFTMoment(sql.FieldEQ(FieldCommentCount, v))
+}
+
+// CommentCountNEQ applies the NEQ predicate on the "comment_count" field.
+func CommentCountNEQ(v int) predicate.NFTMoment {
+	return predicate.NFTMoment(sql.FieldNEQ(FieldCommentCount, v))
+}
+
+// CommentCountIn applies the In predicate on the "comment_count" field.
+func CommentCountIn(vs ...int) predicate.NFTMoment {
+	return predicate.NFTMoment(sql.FieldIn(FieldCommentCount, vs...))
+}
+
+// CommentCountNotIn applies the NotIn predicate on the "comment_count" field.
+func CommentCountNotIn(vs ...int) predicate.NFTMoment {
+	return predicate.NFTMoment(sql.FieldNotIn(FieldCommentCount, vs...))
+}
+
+// CommentCountGT applies the GT predicate on the "comment_count" field.
+func CommentCountGT(v int) predicate.NFTMoment {
+	return predicate.NFTMoment(sql.FieldGT(FieldCommentCount, v))
+}
+
+// CommentCountGTE applies the GTE predicate on the "comment_count" field.
+func CommentCountGTE(v int) predicate.NFTMoment {
+	return predicate.NFTMoment(sql.FieldGTE(FieldCommentCount, v))
+}
+
+// CommentCountLT applies the LT predicate on the "comment_count" field.
+func CommentCountLT(v int) predicate.NFTMoment {
+	return predicate.NFTMoment(sql.FieldLT(FieldCommentCount, v))
+}
+
+// CommentCountLTE applies the LTE predicate on the "comment_count" field.
+func CommentCountLTE(v int) predicate.NFTMoment {
+	return predicate.NFTMoment(sql.FieldLTE(FieldCommentCount, v))
+}
+
 // HasOwner applies the HasEdge predicate on the "owner" edge.
 func HasOwner() predicate.NFTMoment {
 	return predicate.NFTMoment(func(s *sql.Selector) {
@@ -370,6 +460,52 @@ func HasMintedWithPass() predicate.NFTMoment {
 func HasMintedWithPassWith(preds ...predicate.EventPass) predicate.NFTMoment {
 	return predicate.NFTMoment(func(s *sql.Selector) {
 		step := newMintedWithPassStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasLikes applies the HasEdge predicate on the "likes" edge.
+func HasLikes() predicate.NFTMoment {
+	return predicate.NFTMoment(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, LikesTable, LikesColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasLikesWith applies the HasEdge predicate on the "likes" edge with a given conditions (other predicates).
+func HasLikesWith(preds ...predicate.Like) predicate.NFTMoment {
+	return predicate.NFTMoment(func(s *sql.Selector) {
+		step := newLikesStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasComments applies the HasEdge predicate on the "comments" edge.
+func HasComments() predicate.NFTMoment {
+	return predicate.NFTMoment(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, CommentsTable, CommentsColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasCommentsWith applies the HasEdge predicate on the "comments" edge with a given conditions (other predicates).
+func HasCommentsWith(preds ...predicate.Comment) predicate.NFTMoment {
+	return predicate.NFTMoment(func(s *sql.Selector) {
+		step := newCommentsStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

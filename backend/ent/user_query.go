@@ -4,8 +4,10 @@ package ent
 
 import (
 	"backend/ent/attendance"
+	"backend/ent/comment"
 	"backend/ent/event"
 	"backend/ent/eventpass"
+	"backend/ent/like"
 	"backend/ent/listing"
 	"backend/ent/nftaccessory"
 	"backend/ent/nftmoment"
@@ -35,6 +37,8 @@ type UserQuery struct {
 	withAccessories  *NFTAccessoryQuery
 	withAttendances  *AttendanceQuery
 	withListings     *ListingQuery
+	withLikes        *LikeQuery
+	withComments     *CommentQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -196,6 +200,50 @@ func (_q *UserQuery) QueryListings() *ListingQuery {
 			sqlgraph.From(user.Table, user.FieldID, selector),
 			sqlgraph.To(listing.Table, listing.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, user.ListingsTable, user.ListingsColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryLikes chains the current query on the "likes" edge.
+func (_q *UserQuery) QueryLikes() *LikeQuery {
+	query := (&LikeClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, selector),
+			sqlgraph.To(like.Table, like.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.LikesTable, user.LikesColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryComments chains the current query on the "comments" edge.
+func (_q *UserQuery) QueryComments() *CommentQuery {
+	query := (&CommentClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, selector),
+			sqlgraph.To(comment.Table, comment.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.CommentsTable, user.CommentsColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
@@ -401,6 +449,8 @@ func (_q *UserQuery) Clone() *UserQuery {
 		withAccessories:  _q.withAccessories.Clone(),
 		withAttendances:  _q.withAttendances.Clone(),
 		withListings:     _q.withListings.Clone(),
+		withLikes:        _q.withLikes.Clone(),
+		withComments:     _q.withComments.Clone(),
 		// clone intermediate query.
 		sql:  _q.sql.Clone(),
 		path: _q.path,
@@ -470,6 +520,28 @@ func (_q *UserQuery) WithListings(opts ...func(*ListingQuery)) *UserQuery {
 		opt(query)
 	}
 	_q.withListings = query
+	return _q
+}
+
+// WithLikes tells the query-builder to eager-load the nodes that are connected to
+// the "likes" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *UserQuery) WithLikes(opts ...func(*LikeQuery)) *UserQuery {
+	query := (&LikeClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withLikes = query
+	return _q
+}
+
+// WithComments tells the query-builder to eager-load the nodes that are connected to
+// the "comments" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *UserQuery) WithComments(opts ...func(*CommentQuery)) *UserQuery {
+	query := (&CommentClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withComments = query
 	return _q
 }
 
@@ -551,13 +623,15 @@ func (_q *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 	var (
 		nodes       = []*User{}
 		_spec       = _q.querySpec()
-		loadedTypes = [6]bool{
+		loadedTypes = [8]bool{
 			_q.withEventPasses != nil,
 			_q.withHostedEvents != nil,
 			_q.withMoments != nil,
 			_q.withAccessories != nil,
 			_q.withAttendances != nil,
 			_q.withListings != nil,
+			_q.withLikes != nil,
+			_q.withComments != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
@@ -617,6 +691,20 @@ func (_q *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 		if err := _q.loadListings(ctx, query, nodes,
 			func(n *User) { n.Edges.Listings = []*Listing{} },
 			func(n *User, e *Listing) { n.Edges.Listings = append(n.Edges.Listings, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := _q.withLikes; query != nil {
+		if err := _q.loadLikes(ctx, query, nodes,
+			func(n *User) { n.Edges.Likes = []*Like{} },
+			func(n *User, e *Like) { n.Edges.Likes = append(n.Edges.Likes, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := _q.withComments; query != nil {
+		if err := _q.loadComments(ctx, query, nodes,
+			func(n *User) { n.Edges.Comments = []*Comment{} },
+			func(n *User, e *Comment) { n.Edges.Comments = append(n.Edges.Comments, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -804,6 +892,68 @@ func (_q *UserQuery) loadListings(ctx context.Context, query *ListingQuery, node
 		node, ok := nodeids[*fk]
 		if !ok {
 			return fmt.Errorf(`unexpected referenced foreign-key "user_listings" returned %v for node %v`, *fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (_q *UserQuery) loadLikes(ctx context.Context, query *LikeQuery, nodes []*User, init func(*User), assign func(*User, *Like)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*User)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	query.withFKs = true
+	query.Where(predicate.Like(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(user.LikesColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.user_likes
+		if fk == nil {
+			return fmt.Errorf(`foreign-key "user_likes" is nil for node %v`, n.ID)
+		}
+		node, ok := nodeids[*fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "user_likes" returned %v for node %v`, *fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (_q *UserQuery) loadComments(ctx context.Context, query *CommentQuery, nodes []*User, init func(*User), assign func(*User, *Comment)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*User)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	query.withFKs = true
+	query.Where(predicate.Comment(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(user.CommentsColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.user_comments
+		if fk == nil {
+			return fmt.Errorf(`foreign-key "user_comments" is nil for node %v`, n.ID)
+		}
+		node, ok := nodeids[*fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "user_comments" returned %v for node %v`, *fk, n.ID)
 		}
 		assign(node, n)
 	}

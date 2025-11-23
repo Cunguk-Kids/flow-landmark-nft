@@ -40,6 +40,37 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
+
+  --color-rpn-blue: #29ABE2;
+  
+  /* Background: Biru Gelap */
+  --color-rpn-dark: #0F172A;
+  
+  /* Card/Surface: Biru Abu-abu */
+  --color-rpn-card: #1E293B;
+  
+  /* Text: Putih Kebiruan */
+  --color-rpn-text: #F8FAFC;
+  
+  /* Muted Text: Abu-abu */
+  --color-rpn-muted: #94A3B8;
+
+  /* --- WARNA STATUS --- */
+  --color-success: #00EF8B; /* Hijau Flow */
+  --color-error: #FF4444;   /* Merah */
+
+  /* --- FONT --- */
+  /* Pastikan font sudah diimport dari Google Fonts di index.html */
+  --font-pixel: "Press Start 2P", cursive;
+  --font-sans: "Inter", sans-serif;
+  
+  /* --- ANIMASI CUSTOM (Opsional) --- */
+  --animate-wiggle: wiggle 1s ease-in-out infinite;
+  
+  @keyframes wiggle {
+    0%, 100% { transform: rotate(-3deg); }
+    50% { transform: rotate(3deg); }
+  }
 }
 
 :root {
@@ -158,6 +189,9 @@
     @apply rounded-full border-2 border-black px-6 py-2 font-medium transition-all hover:translate-x-0.5 hover:translate-y-0.5;
   }
   .pixel-pattern {
+    background-color: var(--color-rpn-dark);
+    color: var(--color-rpn-text);
+    font-family: var(--font-sans);
     background-image:
       linear-gradient(45deg, currentColor 25%, transparent 25%),
       linear-gradient(-45deg, currentColor 25%, transparent 25%),

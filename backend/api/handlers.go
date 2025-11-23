@@ -2,11 +2,16 @@ package main
 
 import (
 	"backend/ent"
+	"backend/ent/attendance"
+	"backend/ent/comment"
 	"backend/ent/event"
+	"backend/ent/eventpass"
+	"backend/ent/like"
 	"backend/ent/listing"
 	"backend/ent/nftaccessory"
 	"backend/ent/nftmoment"
 	"backend/ent/user"
+	"backend/swagdto"
 	"backend/transactions"
 	"backend/utils"
 	"fmt"
@@ -42,6 +47,13 @@ type APIResponse struct {
 	Data       interface{} `json:"data,omitempty"`
 	Pagination *Pagination `json:"pagination,omitempty"`
 	Error      string      `json:"error,omitempty"`
+}
+
+type MomentResponse struct {
+	*ent.NFTMoment
+	IsLiked      bool `json:"is_liked"`
+	LikeCount    int  `json:"like_count"`
+	CommentCount int  `json:"comment_count"`
 }
 
 type GetEventsResponse struct {
@@ -103,6 +115,15 @@ func (h *Handler) getMoments(c echo.Context) error {
 			nftmoment.HasOwnerWith(user.AddressEQ(ownerAddress)),
 		)
 	}
+
+	// Filter by NFT ID
+	nftIDStr := c.QueryParam("nft_id")
+	if nftIDStr != "" {
+		nftID, err := strconv.ParseUint(nftIDStr, 10, 64)
+		if err == nil {
+			query = query.Where(nftmoment.NftIDEQ(nftID))
+		}
+	}
 	// ---
 
 	// 4. Hitung total item (setelah filter diterapkan)
@@ -134,9 +155,64 @@ func (h *Handler) getMoments(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, APIResponse{Error: err.Error()})
 	}
 
+	// 6.5 Cek 'IsLiked' jika ada viewer
+	viewerAddress := c.QueryParam("viewer")
+	likedMomentIDs := make(map[uint64]bool)
+
+	if viewerAddress != "" {
+		// Cari User ID dari viewer
+		viewer, err := h.DB.User.Query().Where(user.AddressEQ(viewerAddress)).Only(ctx)
+		if err == nil {
+			// Ambil semua ID moment yang di-like user ini, yang ada di list 'moments'
+			// (Optimasi: Filter 'moment_id' IN [moments IDs])
+			var momentIDs []uint64
+			for _, m := range moments {
+				momentIDs = append(momentIDs, m.NftID) // Note: Relasi Like pakai ID internal atau NftID?
+				// Schema Like: edge 'moment' ref 'likes'. Edge pakai ID internal ent.
+				// Jadi kita butuh ID internal moment (m.ID)
+			}
+
+			// Ambil ID internal moment
+			var internalIDs []int
+			for _, m := range moments {
+				internalIDs = append(internalIDs, m.ID)
+			}
+
+			likes, err := h.DB.Like.Query().
+				Where(
+					like.HasUserWith(user.IDEQ(viewer.ID)),
+					like.HasMomentWith(nftmoment.IDIn(internalIDs...)),
+				).
+				WithMoment().
+				All(ctx)
+
+			if err == nil {
+				for _, l := range likes {
+					if l.Edges.Moment != nil {
+						likedMomentIDs[uint64(l.Edges.Moment.ID)] = true
+					}
+				}
+			}
+		}
+	}
+
+	// Mapping ke MomentResponse
+	data := make([]MomentResponse, 0) // Initialize as empty array instead of nil
+	for _, m := range moments {
+		lCount, _ := m.QueryLikes().Count(ctx)
+		cCount, _ := m.QueryComments().Count(ctx)
+
+		data = append(data, MomentResponse{
+			NFTMoment:    m,
+			IsLiked:      likedMomentIDs[uint64(m.ID)],
+			LikeCount:    lCount,
+			CommentCount: cCount,
+		})
+	}
+
 	// 7. Kembalikan Respon Standar (Terbungkus)
 	response := APIResponse{
-		Data:       moments,
+		Data:       data,
 		Pagination: pagination,
 	}
 	return c.JSON(http.StatusOK, response)
@@ -193,7 +269,9 @@ func (h *Handler) getAccessories(c echo.Context) error {
 
 	// 6. Jalankan Query UTAMA dengan Limit/Offset
 	accessories, err := query.
-		WithOwner(). // (Opsional: 'preload' data owner)
+		WithOwner().
+		WithEquippedOnMoment().
+		WithListing().
 		Limit(limit).
 		Offset(offset).
 		Order(ent.Desc("id")). // Urutkan dari yang terbaru
@@ -272,6 +350,29 @@ func (h *Handler) handleUGCUpload(c echo.Context) (string, error) {
 	return thumbnailUrl, nil
 }
 
+// @Summary     Upload Image
+// @Description Generic endpoint untuk upload gambar ke IPFS (Pinata). Bisa digunakan untuk event thumbnail, profile picture, dll.
+// @Tags        Upload
+// @Accept      multipart/form-data
+// @Produce     json
+// @Param       file formData file true "File gambar (JPG/PNG/WEBP)"
+// @Success     200 {object} map[string]string "Upload sukses, returns URL"
+// @Failure     400 {object} APIResponse "File tidak valid"
+// @Failure     500 {object} APIResponse "Upload gagal"
+// @Router      /upload [post]
+func (h *Handler) uploadImage(c echo.Context) error {
+	// Panggil helper untuk upload
+	imageUrl, err := h.handleUGCUpload(c)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+	}
+
+	return c.JSON(http.StatusOK, map[string]string{
+		"url":     imageUrl,
+		"message": "Image uploaded successfully",
+	})
+}
+
 // @Summary     Mint NFT Moment (Gratis)
 // @Description Minting 'NFTMoment' (UGC) gratis. Endpoint ini menerima 'multipart/form-data'.
 // @Tags        Moments
@@ -296,6 +397,21 @@ func (h *Handler) freeMintMoment(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "recipient dan name adalah field wajib"})
 	}
 
+	// 2.5. Cek apakah user sudah pernah free mint
+	user, err := h.DB.User.Query().Where(user.AddressEQ(recipient)).Only(c.Request().Context())
+	if err != nil {
+		if ent.IsNotFound(err) {
+			// Jika user belum ada, kita bisa buatkan (atau return error suruh register dulu)
+			// Untuk amannya, kita return error agar user register/login dulu
+			return c.JSON(http.StatusBadRequest, map[string]string{"error": "User not found. Please login/register first."})
+		}
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+	}
+
+	if user.IsFreeMinted {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "You have already used your free mint quota."})
+	}
+
 	// 3. Panggil helper untuk 'pekerjaan kotor' (upload)
 	thumbnailUrl, err := h.handleUGCUpload(c)
 	if err != nil {
@@ -313,6 +429,13 @@ func (h *Handler) freeMintMoment(c echo.Context) error {
 	if err != nil {
 		log.Printf("Gagal menjalankan transaksi mint: %v", err)
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+	}
+
+	// 4.5. Update status free mint user
+	_, err = user.Update().SetIsFreeMinted(true).Save(c.Request().Context())
+	if err != nil {
+		log.Printf("Gagal update status free mint user %s: %v", recipient, err)
+		// Kita tidak return error ke user karena minting on-chain sudah sukses
 	}
 
 	// 5. Kirim respon sukses
@@ -344,6 +467,9 @@ func (h *Handler) mintMomentWithEventPass(c echo.Context) error {
 	recipient := c.FormValue("recipient")
 	eventPassID := c.FormValue("eventPassID")
 	tier := c.FormValue("tier")
+	if tier == "" {
+		tier = "0"
+	}
 	name := c.FormValue("name")
 	description := c.FormValue("description")
 
@@ -496,7 +622,7 @@ func (h *Handler) getEvents(c echo.Context) error {
 	// 6. Jalankan Query UTAMA dengan Limit/Offset
 	events, err := query.
 		WithHost(). // Ambil data 'User' (host)
-		// WithAttendances(). // Hati-hati: 'Eager loading' ini bisa sangat berat jika ada 1000 peserta
+		WithAttendances().
 		Limit(limit).
 		Offset(offset).
 		Order(ent.Desc("start_date")). // Urutkan dari yang paling baru
@@ -512,6 +638,114 @@ func (h *Handler) getEvents(c echo.Context) error {
 		Pagination: pagination,
 	}
 	return c.JSON(http.StatusOK, response)
+}
+
+// @Summary     Ambil Detail Event
+// @Description Mengambil satu event berdasarkan 'event_id' (ID on-chain).
+// @Tags        Events
+// @Accept      json
+// @Produce     json
+// @Param       id   path      int  true  "Event ID (On-Chain ID)"
+// @Param       viewer   query      string  false  "userAddress"
+// @Success     200 {object} APIResponse{data=swagdto.EventResponse} "Detail event"
+// @Failure     404 {object} APIResponse "Event tidak ditemukan"
+// @Failure     500 {object} APIResponse "Internal Server Error"
+// @Router      /events/{id} [get]
+func (h *Handler) getEventByID(c echo.Context) error {
+	ctx := c.Request().Context()
+	idStr := c.Param("id")
+	viewerAddress := c.QueryParam("viewer")
+
+	// 1. Parse ID
+	eventID, err := strconv.ParseUint(idStr, 10, 64)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, APIResponse{Error: "Invalid Event ID format"})
+	}
+
+	// 2. Query Database
+	ev, err := h.DB.Event.Query().
+		Where(event.EventIDEQ(eventID)). // Cari berdasarkan event_id (bukan ID internal)
+		WithHost().
+		WithAttendances(func(q *ent.AttendanceQuery) {
+			q.WithUser() // Agar kita tahu siapa yang hadir (Address)
+		}). // Preload Host
+		Only(ctx)
+
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return c.JSON(http.StatusNotFound, APIResponse{Error: "Event not found"})
+		}
+		return c.JSON(http.StatusInternalServerError, APIResponse{Error: err.Error()})
+	}
+
+	isRegistered := false
+
+	// Hanya cek jika viewerAddress dikirim
+	if viewerAddress != "" {
+		// Cek apakah ada 'Attendance' yang menghubungkan Event ini dengan User ini
+		count, _ := h.DB.Attendance.Query().
+			Where(
+				attendance.HasEventWith(event.EventIDEQ(ev.EventID)),
+				attendance.HasUserWith(user.AddressEQ(viewerAddress)),
+			).
+			Count(ctx)
+
+		if count > 0 {
+			isRegistered = true
+		}
+	}
+
+	// 3. Mapping ke DTO Bersih (Sama seperti getEvents)
+	// Kita pakai struct dari 'swagdto' atau struct lokal 'EventResponse' di handlers.go
+	// (Asumsi Anda menaruh struct EventResponse di handlers.go atau import dari swagdto)
+
+	// Konversi Host
+	var hostResponse *swagdto.HostResponse
+	if ev.Edges.Host != nil {
+		hostResponse = &swagdto.HostResponse{
+			ID:      ev.Edges.Host.ID,
+			Address: ev.Edges.Host.Address,
+		}
+	}
+
+	var attendanceResponses []*swagdto.AttendanceResponse
+	for _, att := range ev.Edges.Attendances {
+
+		// Ambil address user jika ada
+		userAddr := ""
+		if att.Edges.User != nil {
+			userAddr = att.Edges.User.Address
+		}
+
+		attendanceResponses = append(attendanceResponses, &swagdto.AttendanceResponse{
+			ID:               att.ID,
+			CheckedIn:        att.CheckedIn,
+			RegistrationTime: att.RegistrationTime.String(),
+			UserAddress:      userAddr,
+		})
+	}
+
+	response := &swagdto.EventResponse{
+		ID:           ev.ID,
+		EventID:      ev.EventID,
+		Name:         ev.Name,
+		Description:  ev.Description,
+		Thumbnail:    ev.Thumbnail,
+		Location:     ev.Location,
+		StartDate:    ev.StartDate,
+		EndDate:      ev.EndDate,
+		Quota:        ev.Quota,
+		IsRegistered: isRegistered,
+		Edges: swagdto.EventEdges{
+			Host:        hostResponse,
+			Attendances: attendanceResponses,
+		},
+	}
+
+	// 4. Return Single Object
+	return c.JSON(http.StatusOK, APIResponse{
+		Data: response,
+	})
 }
 
 // @Summary     Ambil Profil User (Lengkap)
@@ -553,7 +787,6 @@ func (h *Handler) getUserProfile(c echo.Context) error {
 
 	// (Anda bisa menambahkan pagination kustom untuk 'moments', 'accessories', dll.
 	// di sini jika Anda tidak ingin 'eager load' semuanya)
-
 	return c.JSON(http.StatusOK, APIResponse{Data: user})
 }
 
@@ -610,5 +843,614 @@ func (h *Handler) checkInUser(c echo.Context) error {
 			"userAddress": req.UserAddress,
 			"eventID":     req.EventID,
 		},
+	})
+}
+
+// @Summary     Ambil Daftar Event Pass (SBT)
+// @Description Mengambil daftar Event Pass (Proof of Attendance). Mendukung filter owner_address untuk melihat koleksi user tertentu.
+// @Tags        EventPass
+// @Accept      json
+// @Produce     json
+// @Param       owner_address query    string  false  "Filter berdasarkan alamat pemilik (misal: 0x...)"
+// @Param       page          query    int     false  "Nomor Halaman (default: 1)"
+// @Param       pageSize      query    int     false  "Jumlah item per halaman (default: 20)"
+// @Success     200 {object} my-project/backend/swagdto.GetEventPassesResponse "Data berhasil diambil"
+// @Failure     500 {object} APIResponse "Internal Server Error"
+// @Router      /event-passes [get]
+func (h *Handler) getEventPasses(c echo.Context) error {
+	ctx := c.Request().Context()
+	limit, offset, page, pageSize := getPagination(c)
+
+	query := h.DB.EventPass.Query()
+
+	// 1. Filter by Owner Address
+	ownerAddress := c.QueryParam("owner_address")
+	if ownerAddress != "" {
+		query = query.Where(
+			eventpass.HasOwnerWith(user.AddressEQ(ownerAddress)),
+		)
+	}
+
+	// 2. Hitung Total
+	totalItems, err := query.Count(ctx)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, APIResponse{Error: err.Error()})
+	}
+
+	// 3. Query Data dengan Eager Loading
+	passes, err := query.
+		WithOwner().
+		WithEvent().
+		WithMoment(). // Cek apakah sudah dipakai minting moment
+		Limit(limit).
+		Offset(offset).
+		Order(ent.Desc("id")). // Terbaru dulu
+		All(ctx)
+
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, APIResponse{Error: err.Error()})
+	}
+
+	// 4. Mapping ke DTO (swagdto)
+	// (Kita lakukan manual mapping agar swagger konsisten)
+	dtos := make([]*swagdto.DTOEventPass, len(passes))
+	for i, p := range passes {
+		var ownerDto *swagdto.DTOUser
+		if p.Edges.Owner != nil {
+			ownerDto = &swagdto.DTOUser{ID: p.Edges.Owner.ID, Address: p.Edges.Owner.Address}
+		}
+
+		var eventDto *swagdto.EventResponse
+		if p.Edges.Event != nil {
+			eventDto = &swagdto.EventResponse{
+				ID:        p.Edges.Event.ID,
+				EventID:   p.Edges.Event.EventID,
+				Name:      p.Edges.Event.Name,
+				Thumbnail: p.Edges.Event.Thumbnail,
+				StartDate: p.Edges.Event.StartDate,
+				Quota:     p.Edges.Event.Quota,
+			}
+		}
+
+		var momentDto *swagdto.MomentResponse
+		if p.Edges.Moment != nil {
+			momentDto = &swagdto.MomentResponse{
+				ID:        p.Edges.Moment.ID,
+				NftID:     p.Edges.Moment.NftID,
+				Name:      p.Edges.Moment.Name,
+				Thumbnail: p.Edges.Moment.Thumbnail,
+			}
+		}
+
+		dtos[i] = &swagdto.DTOEventPass{
+			ID:          p.ID,
+			PassID:      p.PassID,
+			Name:        p.Name,
+			Description: p.Description,
+			Thumbnail:   p.Thumbnail,
+			EventType:   p.EventType,
+			IsRedeemed:  p.IsUsed,
+			Edges: swagdto.DTOEventPassEdges{
+				Owner:  ownerDto,
+				Event:  eventDto,
+				Moment: momentDto,
+			},
+		}
+	}
+
+	// 5. Return Response
+	return c.JSON(http.StatusOK, swagdto.GetEventPassesResponse{
+		Data: dtos,
+		Pagination: &swagdto.Pagination{
+			TotalItems:  totalItems,
+			TotalPages:  int(math.Ceil(float64(totalItems) / float64(pageSize))),
+			CurrentPage: page,
+			PageSize:    pageSize,
+		},
+	})
+}
+
+// @Summary     Ambil Detail Event Pass
+// @Description Mengambil detail satu Event Pass berdasarkan 'pass_id' (ID On-Chain).
+// @Tags        EventPass
+// @Accept      json
+// @Produce     json
+// @Param       id   path      int  true  "Pass ID (On-Chain ID)"
+// @Success     200 {object} my-project/backend/swagdto.GetEventPassDetailResponse "Detail pass berhasil diambil"
+// @Failure     404 {object} APIResponse "Event Pass tidak ditemukan"
+// @Failure     500 {object} APIResponse "Internal Server Error"
+// @Router      /event-passes/{id} [get]
+
+func (h *Handler) getEventPassByID(c echo.Context) error {
+	ctx := c.Request().Context()
+	idStr := c.Param("id")
+
+	// Parse ID (PassID on-chain adalah uint64)
+	passID, err := strconv.ParseUint(idStr, 10, 64)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, APIResponse{Error: "Invalid Pass ID format"})
+	}
+
+	// Query
+	p, err := h.DB.EventPass.Query().
+		Where(eventpass.PassIDEQ(passID)). // Cari berdasarkan PassID on-chain
+		WithOwner().
+		WithEvent().
+		WithMoment().
+		Only(ctx)
+
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return c.JSON(http.StatusNotFound, APIResponse{Error: "Event Pass not found"})
+		}
+		return c.JSON(http.StatusInternalServerError, APIResponse{Error: err.Error()})
+	}
+
+	// Mapping Single DTO
+	var ownerDto *swagdto.DTOUser
+	if p.Edges.Owner != nil {
+		ownerDto = &swagdto.DTOUser{ID: p.Edges.Owner.ID, Address: p.Edges.Owner.Address}
+	}
+
+	var eventDto *swagdto.EventResponse
+	if p.Edges.Event != nil {
+		eventDto = &swagdto.EventResponse{
+			ID:        p.Edges.Event.ID,
+			EventID:   p.Edges.Event.EventID,
+			Name:      p.Edges.Event.Name,
+			Thumbnail: p.Edges.Event.Thumbnail,
+			StartDate: p.Edges.Event.StartDate,
+		}
+	}
+
+	var momentDto *swagdto.MomentResponse
+	if p.Edges.Moment != nil {
+		momentDto = &swagdto.MomentResponse{
+			ID:        p.Edges.Moment.ID,
+			NftID:     p.Edges.Moment.NftID,
+			Name:      p.Edges.Moment.Name,
+			Thumbnail: p.Edges.Moment.Thumbnail,
+		}
+	}
+
+	response := &swagdto.DTOEventPass{
+		ID:         p.ID,
+		PassID:     p.PassID,
+		IsRedeemed: p.IsUsed,
+		Edges: swagdto.DTOEventPassEdges{
+			Owner:  ownerDto,
+			Event:  eventDto,
+			Moment: momentDto,
+		},
+	}
+
+	return c.JSON(http.StatusOK, swagdto.GetEventPassDetailResponse{
+		Data: response,
+	})
+}
+
+func mapUserToDTO(u *ent.User) *swagdto.DTOUserProfile {
+
+	// 1. Map Moments
+	var moments []*swagdto.MomentResponse
+	for _, m := range u.Edges.Moments {
+		moments = append(moments, &swagdto.MomentResponse{
+			ID:        m.ID,
+			NftID:     m.NftID,
+			Name:      m.Name,
+			Thumbnail: m.Thumbnail,
+			// (Edges moment bisa disederhanakan di sini untuk mencegah circular loop atau load berlebih)
+		})
+	}
+
+	// 2. Map Accessories
+	var accessories []*swagdto.DTOAccessory
+	for _, a := range u.Edges.Accessories {
+		accessories = append(accessories, &swagdto.DTOAccessory{
+			ID:        a.ID,
+			NftID:     a.NftID,
+			Name:      a.Name,
+			Thumbnail: a.Thumbnail,
+		})
+	}
+
+	// 3. Map EventPasses
+	var passes []*swagdto.DTOEventPass
+	for _, p := range u.Edges.EventPasses {
+		passes = append(passes, &swagdto.DTOEventPass{
+			ID:         p.ID,
+			PassID:     p.PassID,
+			IsRedeemed: p.IsUsed,
+		})
+	}
+
+	// 4. Map Hosted Events
+	var hostedEvents []*swagdto.EventResponse
+	for _, e := range u.Edges.HostedEvents {
+		hostedEvents = append(hostedEvents, &swagdto.EventResponse{
+			ID:        e.ID,
+			EventID:   e.EventID,
+			Name:      e.Name,
+			Thumbnail: e.Thumbnail,
+			StartDate: e.StartDate,
+		})
+	}
+
+	// 5. Construct DTO User
+	return &swagdto.DTOUserProfile{
+		ID:                      u.ID,
+		Address:                 u.Address,
+		Nickname:                u.Nickname,
+		Bio:                     u.Bio,
+		Pfp:                     u.Pfp,
+		ShortDescription:        u.ShortDescription,
+		BgImage:                 u.BgImage,
+		HighlightedEventPassIds: u.HighlightedEventPassIds,
+		HighlightedMomentID:     u.HighlightedMomentID,
+		Socials:                 u.Socials,
+		IsFreeMinted:            u.IsFreeMinted,
+		Edges: swagdto.DTOUserProfileEdges{
+			Moments:      moments,
+			Accessories:  accessories,
+			EventPasses:  passes,
+			HostedEvents: hostedEvents,
+			// Listings: ... (tambahkan jika perlu)
+		},
+	}
+}
+
+// --- HANDLERS ---
+
+// @Summary     Ambil Daftar User (Search People)
+// @Description Mengambil daftar pengguna di platform. Mendukung pagination dan pencarian sederhana by address.
+// @Tags        Profiles
+// @Accept      json
+// @Produce     json
+// @Param       address    query    string  false  "Cari berdasarkan sebagian alamat (misal: 0x12...)"
+// @Param       page       query    int     false  "Nomor Halaman (default: 1)"
+// @Param       pageSize   query    int     false  "Jumlah item per halaman (default: 20)"
+// @Success     200 {object} swagdto.GetUsersResponse "Daftar user berhasil diambil"
+// @Failure     500 {object} APIResponse "Internal Server Error"
+// @Router      /users [get]
+func (h *Handler) getUsers(c echo.Context) error {
+	ctx := c.Request().Context()
+	limit, offset, page, pageSize := getPagination(c)
+
+	query := h.DB.User.Query()
+
+	// Filter sederhana (Search by Address)
+	addressSearch := c.QueryParam("address")
+	if addressSearch != "" {
+		// Contains (case-insensitive biasanya ditangani DB, tapi address flow case-sensitive)
+		query = query.Where(user.AddressContains(addressSearch))
+	}
+
+	// Hitung Total
+	totalItems, err := query.Count(ctx)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, APIResponse{Error: err.Error()})
+	}
+
+	// Query Data (Dengan Eager Loading Relasi)
+	users, err := query.
+		WithMoments().
+		WithAccessories().
+		WithEventPasses().
+		WithHostedEvents().
+		Limit(limit).
+		Offset(offset).
+		Order(ent.Desc("id")). // User terbaru dulu
+		All(ctx)
+
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, APIResponse{Error: err.Error()})
+	}
+
+	// Mapping ke DTO
+	dtos := make([]*swagdto.DTOUserProfile, len(users))
+	for i, u := range users {
+		dtos[i] = mapUserToDTO(u)
+	}
+
+	// Response
+	return c.JSON(http.StatusOK, swagdto.GetUsersResponse{
+		Data: dtos,
+		Pagination: &swagdto.Pagination{
+			TotalItems:  totalItems,
+			TotalPages:  int(math.Ceil(float64(totalItems) / float64(pageSize))),
+			CurrentPage: page,
+			PageSize:    pageSize,
+		},
+	})
+}
+
+// @Summary     Ambil Detail Profil User (By Address)
+// @Description Mengambil detail profil pengguna berdasarkan alamat wallet.
+// @Tags        Profiles
+// @Accept      json
+// @Produce     json
+// @Param       address    path     string  true   "Alamat Wallet User (0x...)"
+// @Success     200 {object} swagdto.GetUserProfileResponse "User ditemukan"
+// @Failure     404 {object} APIResponse "User tidak ditemukan"
+// @Failure     500 {object} APIResponse "Internal Server Error"
+// @Router      /users/{address} [get]
+func (h *Handler) getUserByAddress(c echo.Context) error {
+	ctx := c.Request().Context()
+	address := c.Param("address")
+
+	if address == "" {
+		return c.JSON(http.StatusBadRequest, APIResponse{Error: "Address wajib diisi"})
+	}
+
+	// Query Single User
+	u, err := h.DB.User.Query().
+		Where(user.AddressEQ(address)).
+		WithMoments().
+		WithAccessories().
+		WithEventPasses().
+		WithHostedEvents().
+		Only(ctx)
+
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return c.JSON(http.StatusNotFound, APIResponse{Error: "User tidak ditemukan"})
+		}
+		return c.JSON(http.StatusInternalServerError, APIResponse{Error: err.Error()})
+	}
+
+	// Mapping & Response
+	return c.JSON(http.StatusOK, swagdto.GetUserProfileResponse{
+		Data: mapUserToDTO(u),
+	})
+}
+
+// @Summary     Cari User (Search Bar)
+// @Description Mencari user berdasarkan sebagian Address ATAU Nickname. Cocok untuk fitur 'live search' dengan debounce.
+// @Tags        Profiles
+// @Accept      json
+// @Produce     json
+// @Param       q          query    string  true   "Kata kunci pencarian (0x... atau nama)"
+// @Param       page       query    int     false  "Nomor Halaman (default: 1)"
+// @Param       pageSize   query    int     false  "Jumlah item per halaman (default: 10)"
+// @Success     200 {object} swagdto.GetUsersResponse "Hasil pencarian"
+// @Failure     400 {object} APIResponse "Query kosong"
+// @Failure     500 {object} APIResponse "Internal Server Error"
+// @Router      /users/search [get]
+func (h *Handler) searchUsers(c echo.Context) error {
+	ctx := c.Request().Context()
+	limit, offset, page, pageSize := getPagination(c)
+
+	// 1. Ambil query param 'q'
+	searchTerm := c.QueryParam("q")
+	if searchTerm == "" {
+		// Jika kosong, kembalikan list kosong (atau error, tergantung selera UX)
+		return c.JSON(http.StatusOK, swagdto.GetUsersResponse{
+			Data:       []*swagdto.DTOUserProfile{},
+			Pagination: &swagdto.Pagination{CurrentPage: 1, PageSize: pageSize},
+		})
+	}
+
+	// 2. Siapkan Query Dasar
+	query := h.DB.User.Query().
+		Where(
+			// LOGIKA PENCARIAN: Address COCOK -ATAU- Nickname COCOK
+			user.Or(
+				user.AddressContains(searchTerm),      // Case-sensitive (biasanya address flow lowercase)
+				user.NicknameContainsFold(searchTerm), // Case-INSENSITIVE (untuk nama)
+			),
+		)
+
+	// 3. Hitung Total (untuk pagination)
+	totalItems, err := query.Count(ctx)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, APIResponse{Error: err.Error()})
+	}
+
+	// 4. Ambil Data dengan Relasi
+	users, err := query.
+		WithMoments().
+		WithAccessories().
+		WithEventPasses().
+		WithHostedEvents().
+		Limit(limit).
+		Offset(offset).
+		Order(ent.Desc("id")). // Relevansi bisa diatur, tapi ID desc cukup untuk sekarang
+		All(ctx)
+
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, APIResponse{Error: err.Error()})
+	}
+
+	// 5. Mapping ke DTO (Gunakan helper yang sudah kita buat)
+	dtos := make([]*swagdto.DTOUserProfile, len(users))
+	for i, u := range users {
+		dtos[i] = mapUserToDTO(u)
+	}
+
+	// 6. Return Response
+	return c.JSON(http.StatusOK, swagdto.GetUsersResponse{
+		Data: dtos,
+		Pagination: &swagdto.Pagination{
+			TotalItems:  totalItems,
+			TotalPages:  int(math.Ceil(float64(totalItems) / float64(pageSize))),
+			CurrentPage: page,
+			PageSize:    pageSize,
+		},
+	})
+}
+
+// @Summary     Toggle Like Moment
+// @Description Like atau Unlike sebuah moment.
+// @Tags        Social
+// @Accept      json
+// @Produce     json
+// @Param       id   path      int  true  "Moment ID (Internal ID)"
+// @Param       user query     string true  "User Address (0x...)"
+// @Success     200 {object} APIResponse "Success"
+// @Router      /moments/{id}/like [post]
+func (h *Handler) toggleLike(c echo.Context) error {
+	ctx := c.Request().Context()
+	idStr := c.Param("id")
+	userAddress := c.QueryParam("user")
+
+	if userAddress == "" {
+		return c.JSON(http.StatusBadRequest, APIResponse{Error: "User address is required"})
+	}
+
+	momentID, err := strconv.Atoi(idStr)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, APIResponse{Error: "Invalid Moment ID"})
+	}
+
+	// 1. Get User ID
+	u, err := h.DB.User.Query().Where(user.AddressEQ(userAddress)).Only(ctx)
+	if err != nil {
+		return c.JSON(http.StatusNotFound, APIResponse{Error: "User not found"})
+	}
+
+	// 2. Check if already liked
+	existingLike, err := h.DB.Like.Query().
+		Where(
+			like.HasUserWith(user.IDEQ(u.ID)),
+			like.HasMomentWith(nftmoment.IDEQ(momentID)),
+		).
+		Only(ctx)
+
+	if err != nil && !ent.IsNotFound(err) {
+		return c.JSON(http.StatusInternalServerError, APIResponse{Error: err.Error()})
+	}
+
+	if existingLike != nil {
+		// Unlike
+		err = h.DB.Like.DeleteOne(existingLike).Exec(ctx)
+		if err != nil {
+			return c.JSON(http.StatusInternalServerError, APIResponse{Error: err.Error()})
+		}
+		return c.JSON(http.StatusOK, APIResponse{Data: map[string]bool{"liked": false}})
+	} else {
+		// Like
+		_, err = h.DB.Like.Create().
+			SetUser(u).
+			SetMomentID(momentID).
+			Save(ctx)
+		if err != nil {
+			return c.JSON(http.StatusInternalServerError, APIResponse{Error: err.Error()})
+		}
+		return c.JSON(http.StatusOK, APIResponse{Data: map[string]bool{"liked": true}})
+	}
+}
+
+// @Summary     Create Comment
+// @Description Membuat komentar baru pada sebuah moment.
+// @Tags        Social
+// @Accept      json
+// @Produce     json
+// @Param       id   path      int  true  "Moment ID (Internal ID)"
+// @Param       body body      CreateCommentRequest true "Comment Content & User Address"
+// @Success     201 {object} APIResponse "Comment created"
+// @Router      /moments/{id}/comments [post]
+func (h *Handler) createComment(c echo.Context) error {
+	ctx := c.Request().Context()
+	idStr := c.Param("id")
+	momentID, err := strconv.Atoi(idStr)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, APIResponse{Error: "Invalid Moment ID"})
+	}
+
+	var req struct {
+		UserAddress string `json:"userAddress"`
+		Content     string `json:"content"`
+	}
+	if err := c.Bind(&req); err != nil {
+		return c.JSON(http.StatusBadRequest, APIResponse{Error: "Invalid request body"})
+	}
+
+	if req.UserAddress == "" || req.Content == "" {
+		return c.JSON(http.StatusBadRequest, APIResponse{Error: "User address and content are required"})
+	}
+
+	// 1. Get User
+	u, err := h.DB.User.Query().Where(user.AddressEQ(req.UserAddress)).Only(ctx)
+	if err != nil {
+		return c.JSON(http.StatusNotFound, APIResponse{Error: "User not found"})
+	}
+
+	// 2. Create Comment
+	comment, err := h.DB.Comment.Create().
+		SetContent(req.Content).
+		SetUser(u).
+		SetMomentID(momentID).
+		Save(ctx)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, APIResponse{Error: err.Error()})
+	}
+
+	return c.JSON(http.StatusCreated, APIResponse{Data: comment})
+}
+
+// @Summary     Get Comments
+// @Description Mengambil daftar komentar untuk sebuah moment.
+// @Tags        Social
+// @Accept      json
+// @Produce     json
+// @Param       id   path      int  true  "Moment ID (Internal ID)"
+// @Param       page query     int  false "Page number"
+// @Param       pageSize query int  false "Page size"
+// @Success     200 {object} APIResponse "List of comments"
+// @Router      /moments/{id}/comments [get]
+func (h *Handler) getComments(c echo.Context) error {
+	ctx := c.Request().Context()
+	idStr := c.Param("id")
+	momentID, err := strconv.Atoi(idStr)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, APIResponse{Error: "Invalid Moment ID"})
+	}
+
+	limit, offset, page, pageSize := getPagination(c)
+
+	query := h.DB.Comment.Query().
+		Where(comment.HasMomentWith(nftmoment.IDEQ(momentID)))
+
+	totalItems, err := query.Count(ctx)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, APIResponse{Error: err.Error()})
+	}
+
+	comments, err := query.
+		WithUser().
+		Limit(limit).
+		Offset(offset).
+		Order(ent.Desc("created_at")).
+		All(ctx)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, APIResponse{Error: err.Error()})
+	}
+
+	var data []map[string]interface{}
+	for _, cm := range comments {
+		userDto := map[string]interface{}{
+			"address":  cm.Edges.User.Address,
+			"nickname": cm.Edges.User.Nickname,
+			"pfp":      cm.Edges.User.Pfp,
+		}
+		data = append(data, map[string]interface{}{
+			"id":         cm.ID,
+			"content":    cm.Content,
+			"created_at": cm.CreatedAt,
+			"user":       userDto,
+		})
+	}
+
+	totalPages := int(math.Ceil(float64(totalItems) / float64(pageSize)))
+	pagination := &Pagination{
+		TotalItems:  totalItems,
+		TotalPages:  totalPages,
+		CurrentPage: page,
+		PageSize:    pageSize,
+	}
+
+	return c.JSON(http.StatusOK, APIResponse{
+		Data:       data,
+		Pagination: pagination,
 	})
 }

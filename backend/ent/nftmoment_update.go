@@ -3,7 +3,9 @@
 package ent
 
 import (
+	"backend/ent/comment"
 	"backend/ent/eventpass"
+	"backend/ent/like"
 	"backend/ent/nftaccessory"
 	"backend/ent/nftmoment"
 	"backend/ent/predicate"
@@ -93,6 +95,48 @@ func (_u *NFTMomentUpdate) SetNillableThumbnail(v *string) *NFTMomentUpdate {
 	return _u
 }
 
+// SetLikeCount sets the "like_count" field.
+func (_u *NFTMomentUpdate) SetLikeCount(v int) *NFTMomentUpdate {
+	_u.mutation.ResetLikeCount()
+	_u.mutation.SetLikeCount(v)
+	return _u
+}
+
+// SetNillableLikeCount sets the "like_count" field if the given value is not nil.
+func (_u *NFTMomentUpdate) SetNillableLikeCount(v *int) *NFTMomentUpdate {
+	if v != nil {
+		_u.SetLikeCount(*v)
+	}
+	return _u
+}
+
+// AddLikeCount adds value to the "like_count" field.
+func (_u *NFTMomentUpdate) AddLikeCount(v int) *NFTMomentUpdate {
+	_u.mutation.AddLikeCount(v)
+	return _u
+}
+
+// SetCommentCount sets the "comment_count" field.
+func (_u *NFTMomentUpdate) SetCommentCount(v int) *NFTMomentUpdate {
+	_u.mutation.ResetCommentCount()
+	_u.mutation.SetCommentCount(v)
+	return _u
+}
+
+// SetNillableCommentCount sets the "comment_count" field if the given value is not nil.
+func (_u *NFTMomentUpdate) SetNillableCommentCount(v *int) *NFTMomentUpdate {
+	if v != nil {
+		_u.SetCommentCount(*v)
+	}
+	return _u
+}
+
+// AddCommentCount adds value to the "comment_count" field.
+func (_u *NFTMomentUpdate) AddCommentCount(v int) *NFTMomentUpdate {
+	_u.mutation.AddCommentCount(v)
+	return _u
+}
+
 // SetOwnerID sets the "owner" edge to the User entity by ID.
 func (_u *NFTMomentUpdate) SetOwnerID(id int) *NFTMomentUpdate {
 	_u.mutation.SetOwnerID(id)
@@ -138,6 +182,36 @@ func (_u *NFTMomentUpdate) SetMintedWithPass(v *EventPass) *NFTMomentUpdate {
 	return _u.SetMintedWithPassID(v.ID)
 }
 
+// AddLikeIDs adds the "likes" edge to the Like entity by IDs.
+func (_u *NFTMomentUpdate) AddLikeIDs(ids ...int) *NFTMomentUpdate {
+	_u.mutation.AddLikeIDs(ids...)
+	return _u
+}
+
+// AddLikes adds the "likes" edges to the Like entity.
+func (_u *NFTMomentUpdate) AddLikes(v ...*Like) *NFTMomentUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddLikeIDs(ids...)
+}
+
+// AddCommentIDs adds the "comments" edge to the Comment entity by IDs.
+func (_u *NFTMomentUpdate) AddCommentIDs(ids ...int) *NFTMomentUpdate {
+	_u.mutation.AddCommentIDs(ids...)
+	return _u
+}
+
+// AddComments adds the "comments" edges to the Comment entity.
+func (_u *NFTMomentUpdate) AddComments(v ...*Comment) *NFTMomentUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddCommentIDs(ids...)
+}
+
 // Mutation returns the NFTMomentMutation object of the builder.
 func (_u *NFTMomentUpdate) Mutation() *NFTMomentMutation {
 	return _u.mutation
@@ -174,6 +248,48 @@ func (_u *NFTMomentUpdate) RemoveEquippedAccessories(v ...*NFTAccessory) *NFTMom
 func (_u *NFTMomentUpdate) ClearMintedWithPass() *NFTMomentUpdate {
 	_u.mutation.ClearMintedWithPass()
 	return _u
+}
+
+// ClearLikes clears all "likes" edges to the Like entity.
+func (_u *NFTMomentUpdate) ClearLikes() *NFTMomentUpdate {
+	_u.mutation.ClearLikes()
+	return _u
+}
+
+// RemoveLikeIDs removes the "likes" edge to Like entities by IDs.
+func (_u *NFTMomentUpdate) RemoveLikeIDs(ids ...int) *NFTMomentUpdate {
+	_u.mutation.RemoveLikeIDs(ids...)
+	return _u
+}
+
+// RemoveLikes removes "likes" edges to Like entities.
+func (_u *NFTMomentUpdate) RemoveLikes(v ...*Like) *NFTMomentUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveLikeIDs(ids...)
+}
+
+// ClearComments clears all "comments" edges to the Comment entity.
+func (_u *NFTMomentUpdate) ClearComments() *NFTMomentUpdate {
+	_u.mutation.ClearComments()
+	return _u
+}
+
+// RemoveCommentIDs removes the "comments" edge to Comment entities by IDs.
+func (_u *NFTMomentUpdate) RemoveCommentIDs(ids ...int) *NFTMomentUpdate {
+	_u.mutation.RemoveCommentIDs(ids...)
+	return _u
+}
+
+// RemoveComments removes "comments" edges to Comment entities.
+func (_u *NFTMomentUpdate) RemoveComments(v ...*Comment) *NFTMomentUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveCommentIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -237,6 +353,18 @@ func (_u *NFTMomentUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	}
 	if value, ok := _u.mutation.Thumbnail(); ok {
 		_spec.SetField(nftmoment.FieldThumbnail, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.LikeCount(); ok {
+		_spec.SetField(nftmoment.FieldLikeCount, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.AddedLikeCount(); ok {
+		_spec.AddField(nftmoment.FieldLikeCount, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.CommentCount(); ok {
+		_spec.SetField(nftmoment.FieldCommentCount, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.AddedCommentCount(); ok {
+		_spec.AddField(nftmoment.FieldCommentCount, field.TypeInt, value)
 	}
 	if _u.mutation.OwnerCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -341,6 +469,96 @@ func (_u *NFTMomentUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	if _u.mutation.LikesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   nftmoment.LikesTable,
+			Columns: []string{nftmoment.LikesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(like.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedLikesIDs(); len(nodes) > 0 && !_u.mutation.LikesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   nftmoment.LikesTable,
+			Columns: []string{nftmoment.LikesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(like.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.LikesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   nftmoment.LikesTable,
+			Columns: []string{nftmoment.LikesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(like.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.CommentsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   nftmoment.CommentsTable,
+			Columns: []string{nftmoment.CommentsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(comment.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedCommentsIDs(); len(nodes) > 0 && !_u.mutation.CommentsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   nftmoment.CommentsTable,
+			Columns: []string{nftmoment.CommentsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(comment.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.CommentsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   nftmoment.CommentsTable,
+			Columns: []string{nftmoment.CommentsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(comment.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{nftmoment.Label}
@@ -424,6 +642,48 @@ func (_u *NFTMomentUpdateOne) SetNillableThumbnail(v *string) *NFTMomentUpdateOn
 	return _u
 }
 
+// SetLikeCount sets the "like_count" field.
+func (_u *NFTMomentUpdateOne) SetLikeCount(v int) *NFTMomentUpdateOne {
+	_u.mutation.ResetLikeCount()
+	_u.mutation.SetLikeCount(v)
+	return _u
+}
+
+// SetNillableLikeCount sets the "like_count" field if the given value is not nil.
+func (_u *NFTMomentUpdateOne) SetNillableLikeCount(v *int) *NFTMomentUpdateOne {
+	if v != nil {
+		_u.SetLikeCount(*v)
+	}
+	return _u
+}
+
+// AddLikeCount adds value to the "like_count" field.
+func (_u *NFTMomentUpdateOne) AddLikeCount(v int) *NFTMomentUpdateOne {
+	_u.mutation.AddLikeCount(v)
+	return _u
+}
+
+// SetCommentCount sets the "comment_count" field.
+func (_u *NFTMomentUpdateOne) SetCommentCount(v int) *NFTMomentUpdateOne {
+	_u.mutation.ResetCommentCount()
+	_u.mutation.SetCommentCount(v)
+	return _u
+}
+
+// SetNillableCommentCount sets the "comment_count" field if the given value is not nil.
+func (_u *NFTMomentUpdateOne) SetNillableCommentCount(v *int) *NFTMomentUpdateOne {
+	if v != nil {
+		_u.SetCommentCount(*v)
+	}
+	return _u
+}
+
+// AddCommentCount adds value to the "comment_count" field.
+func (_u *NFTMomentUpdateOne) AddCommentCount(v int) *NFTMomentUpdateOne {
+	_u.mutation.AddCommentCount(v)
+	return _u
+}
+
 // SetOwnerID sets the "owner" edge to the User entity by ID.
 func (_u *NFTMomentUpdateOne) SetOwnerID(id int) *NFTMomentUpdateOne {
 	_u.mutation.SetOwnerID(id)
@@ -469,6 +729,36 @@ func (_u *NFTMomentUpdateOne) SetMintedWithPass(v *EventPass) *NFTMomentUpdateOn
 	return _u.SetMintedWithPassID(v.ID)
 }
 
+// AddLikeIDs adds the "likes" edge to the Like entity by IDs.
+func (_u *NFTMomentUpdateOne) AddLikeIDs(ids ...int) *NFTMomentUpdateOne {
+	_u.mutation.AddLikeIDs(ids...)
+	return _u
+}
+
+// AddLikes adds the "likes" edges to the Like entity.
+func (_u *NFTMomentUpdateOne) AddLikes(v ...*Like) *NFTMomentUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddLikeIDs(ids...)
+}
+
+// AddCommentIDs adds the "comments" edge to the Comment entity by IDs.
+func (_u *NFTMomentUpdateOne) AddCommentIDs(ids ...int) *NFTMomentUpdateOne {
+	_u.mutation.AddCommentIDs(ids...)
+	return _u
+}
+
+// AddComments adds the "comments" edges to the Comment entity.
+func (_u *NFTMomentUpdateOne) AddComments(v ...*Comment) *NFTMomentUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddCommentIDs(ids...)
+}
+
 // Mutation returns the NFTMomentMutation object of the builder.
 func (_u *NFTMomentUpdateOne) Mutation() *NFTMomentMutation {
 	return _u.mutation
@@ -505,6 +795,48 @@ func (_u *NFTMomentUpdateOne) RemoveEquippedAccessories(v ...*NFTAccessory) *NFT
 func (_u *NFTMomentUpdateOne) ClearMintedWithPass() *NFTMomentUpdateOne {
 	_u.mutation.ClearMintedWithPass()
 	return _u
+}
+
+// ClearLikes clears all "likes" edges to the Like entity.
+func (_u *NFTMomentUpdateOne) ClearLikes() *NFTMomentUpdateOne {
+	_u.mutation.ClearLikes()
+	return _u
+}
+
+// RemoveLikeIDs removes the "likes" edge to Like entities by IDs.
+func (_u *NFTMomentUpdateOne) RemoveLikeIDs(ids ...int) *NFTMomentUpdateOne {
+	_u.mutation.RemoveLikeIDs(ids...)
+	return _u
+}
+
+// RemoveLikes removes "likes" edges to Like entities.
+func (_u *NFTMomentUpdateOne) RemoveLikes(v ...*Like) *NFTMomentUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveLikeIDs(ids...)
+}
+
+// ClearComments clears all "comments" edges to the Comment entity.
+func (_u *NFTMomentUpdateOne) ClearComments() *NFTMomentUpdateOne {
+	_u.mutation.ClearComments()
+	return _u
+}
+
+// RemoveCommentIDs removes the "comments" edge to Comment entities by IDs.
+func (_u *NFTMomentUpdateOne) RemoveCommentIDs(ids ...int) *NFTMomentUpdateOne {
+	_u.mutation.RemoveCommentIDs(ids...)
+	return _u
+}
+
+// RemoveComments removes "comments" edges to Comment entities.
+func (_u *NFTMomentUpdateOne) RemoveComments(v ...*Comment) *NFTMomentUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveCommentIDs(ids...)
 }
 
 // Where appends a list predicates to the NFTMomentUpdate builder.
@@ -599,6 +931,18 @@ func (_u *NFTMomentUpdateOne) sqlSave(ctx context.Context) (_node *NFTMoment, er
 	if value, ok := _u.mutation.Thumbnail(); ok {
 		_spec.SetField(nftmoment.FieldThumbnail, field.TypeString, value)
 	}
+	if value, ok := _u.mutation.LikeCount(); ok {
+		_spec.SetField(nftmoment.FieldLikeCount, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.AddedLikeCount(); ok {
+		_spec.AddField(nftmoment.FieldLikeCount, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.CommentCount(); ok {
+		_spec.SetField(nftmoment.FieldCommentCount, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.AddedCommentCount(); ok {
+		_spec.AddField(nftmoment.FieldCommentCount, field.TypeInt, value)
+	}
 	if _u.mutation.OwnerCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
@@ -695,6 +1039,96 @@ func (_u *NFTMomentUpdateOne) sqlSave(ctx context.Context) (_node *NFTMoment, er
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(eventpass.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.LikesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   nftmoment.LikesTable,
+			Columns: []string{nftmoment.LikesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(like.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedLikesIDs(); len(nodes) > 0 && !_u.mutation.LikesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   nftmoment.LikesTable,
+			Columns: []string{nftmoment.LikesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(like.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.LikesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   nftmoment.LikesTable,
+			Columns: []string{nftmoment.LikesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(like.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.CommentsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   nftmoment.CommentsTable,
+			Columns: []string{nftmoment.CommentsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(comment.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedCommentsIDs(); len(nodes) > 0 && !_u.mutation.CommentsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   nftmoment.CommentsTable,
+			Columns: []string{nftmoment.CommentsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(comment.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.CommentsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   nftmoment.CommentsTable,
+			Columns: []string{nftmoment.CommentsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(comment.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

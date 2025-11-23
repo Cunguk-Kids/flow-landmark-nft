@@ -18,6 +18,8 @@ const (
 	FieldPrice = "price"
 	// FieldPaymentVaultType holds the string denoting the payment_vault_type field in the database.
 	FieldPaymentVaultType = "payment_vault_type"
+	// FieldNftTypeID holds the string denoting the nft_type_id field in the database.
+	FieldNftTypeID = "nft_type_id"
 	// FieldCustomID holds the string denoting the custom_id field in the database.
 	FieldCustomID = "custom_id"
 	// FieldExpiry holds the string denoting the expiry field in the database.
@@ -50,6 +52,7 @@ var Columns = []string{
 	FieldListingID,
 	FieldPrice,
 	FieldPaymentVaultType,
+	FieldNftTypeID,
 	FieldCustomID,
 	FieldExpiry,
 }
@@ -96,6 +99,11 @@ func ByPrice(opts ...sql.OrderTermOption) OrderOption {
 // ByPaymentVaultType orders the results by the payment_vault_type field.
 func ByPaymentVaultType(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldPaymentVaultType, opts...).ToFunc()
+}
+
+// ByNftTypeID orders the results by the nft_type_id field.
+func ByNftTypeID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldNftTypeID, opts...).ToFunc()
 }
 
 // ByCustomID orders the results by the custom_id field.

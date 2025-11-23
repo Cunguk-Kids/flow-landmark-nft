@@ -4,8 +4,12 @@ package ent
 
 import (
 	"backend/ent/attendance"
+	"backend/ent/comment"
 	"backend/ent/eventpass"
+	"backend/ent/like"
+	"backend/ent/nftmoment"
 	"backend/ent/schema"
+	"backend/ent/user"
 	"time"
 )
 
@@ -23,10 +27,48 @@ func init() {
 	attendanceDescRegistrationTime := attendanceFields[1].Descriptor()
 	// attendance.DefaultRegistrationTime holds the default value on creation for the registration_time field.
 	attendance.DefaultRegistrationTime = attendanceDescRegistrationTime.Default.(func() time.Time)
+	commentFields := schema.Comment{}.Fields()
+	_ = commentFields
+	// commentDescContent is the schema descriptor for content field.
+	commentDescContent := commentFields[0].Descriptor()
+	// comment.ContentValidator is a validator for the "content" field. It is called by the builders before save.
+	comment.ContentValidator = commentDescContent.Validators[0].(func(string) error)
+	// commentDescCreatedAt is the schema descriptor for created_at field.
+	commentDescCreatedAt := commentFields[1].Descriptor()
+	// comment.DefaultCreatedAt holds the default value on creation for the created_at field.
+	comment.DefaultCreatedAt = commentDescCreatedAt.Default.(func() time.Time)
+	// commentDescUpdatedAt is the schema descriptor for updated_at field.
+	commentDescUpdatedAt := commentFields[2].Descriptor()
+	// comment.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	comment.DefaultUpdatedAt = commentDescUpdatedAt.Default.(func() time.Time)
+	// comment.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	comment.UpdateDefaultUpdatedAt = commentDescUpdatedAt.UpdateDefault.(func() time.Time)
 	eventpassFields := schema.EventPass{}.Fields()
 	_ = eventpassFields
 	// eventpassDescIsUsed is the schema descriptor for is_used field.
 	eventpassDescIsUsed := eventpassFields[5].Descriptor()
 	// eventpass.DefaultIsUsed holds the default value on creation for the is_used field.
 	eventpass.DefaultIsUsed = eventpassDescIsUsed.Default.(bool)
+	likeFields := schema.Like{}.Fields()
+	_ = likeFields
+	// likeDescCreatedAt is the schema descriptor for created_at field.
+	likeDescCreatedAt := likeFields[0].Descriptor()
+	// like.DefaultCreatedAt holds the default value on creation for the created_at field.
+	like.DefaultCreatedAt = likeDescCreatedAt.Default.(func() time.Time)
+	nftmomentFields := schema.NFTMoment{}.Fields()
+	_ = nftmomentFields
+	// nftmomentDescLikeCount is the schema descriptor for like_count field.
+	nftmomentDescLikeCount := nftmomentFields[4].Descriptor()
+	// nftmoment.DefaultLikeCount holds the default value on creation for the like_count field.
+	nftmoment.DefaultLikeCount = nftmomentDescLikeCount.Default.(int)
+	// nftmomentDescCommentCount is the schema descriptor for comment_count field.
+	nftmomentDescCommentCount := nftmomentFields[5].Descriptor()
+	// nftmoment.DefaultCommentCount holds the default value on creation for the comment_count field.
+	nftmoment.DefaultCommentCount = nftmomentDescCommentCount.Default.(int)
+	userFields := schema.User{}.Fields()
+	_ = userFields
+	// userDescIsFreeMinted is the schema descriptor for is_free_minted field.
+	userDescIsFreeMinted := userFields[9].Descriptor()
+	// user.DefaultIsFreeMinted holds the default value on creation for the is_free_minted field.
+	user.DefaultIsFreeMinted = userDescIsFreeMinted.Default.(bool)
 }

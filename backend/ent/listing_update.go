@@ -86,6 +86,20 @@ func (_u *ListingUpdate) SetNillablePaymentVaultType(v *string) *ListingUpdate {
 	return _u
 }
 
+// SetNftTypeID sets the "nft_type_id" field.
+func (_u *ListingUpdate) SetNftTypeID(v string) *ListingUpdate {
+	_u.mutation.SetNftTypeID(v)
+	return _u
+}
+
+// SetNillableNftTypeID sets the "nft_type_id" field if the given value is not nil.
+func (_u *ListingUpdate) SetNillableNftTypeID(v *string) *ListingUpdate {
+	if v != nil {
+		_u.SetNftTypeID(*v)
+	}
+	return _u
+}
+
 // SetCustomID sets the "custom_id" field.
 func (_u *ListingUpdate) SetCustomID(v string) *ListingUpdate {
 	_u.mutation.SetCustomID(v)
@@ -223,6 +237,9 @@ func (_u *ListingUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	}
 	if value, ok := _u.mutation.PaymentVaultType(); ok {
 		_spec.SetField(listing.FieldPaymentVaultType, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.NftTypeID(); ok {
+		_spec.SetField(listing.FieldNftTypeID, field.TypeString, value)
 	}
 	if value, ok := _u.mutation.CustomID(); ok {
 		_spec.SetField(listing.FieldCustomID, field.TypeString, value)
@@ -363,6 +380,20 @@ func (_u *ListingUpdateOne) SetPaymentVaultType(v string) *ListingUpdateOne {
 func (_u *ListingUpdateOne) SetNillablePaymentVaultType(v *string) *ListingUpdateOne {
 	if v != nil {
 		_u.SetPaymentVaultType(*v)
+	}
+	return _u
+}
+
+// SetNftTypeID sets the "nft_type_id" field.
+func (_u *ListingUpdateOne) SetNftTypeID(v string) *ListingUpdateOne {
+	_u.mutation.SetNftTypeID(v)
+	return _u
+}
+
+// SetNillableNftTypeID sets the "nft_type_id" field if the given value is not nil.
+func (_u *ListingUpdateOne) SetNillableNftTypeID(v *string) *ListingUpdateOne {
+	if v != nil {
+		_u.SetNftTypeID(*v)
 	}
 	return _u
 }
@@ -534,6 +565,9 @@ func (_u *ListingUpdateOne) sqlSave(ctx context.Context) (_node *Listing, err er
 	}
 	if value, ok := _u.mutation.PaymentVaultType(); ok {
 		_spec.SetField(listing.FieldPaymentVaultType, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.NftTypeID(); ok {
+		_spec.SetField(listing.FieldNftTypeID, field.TypeString, value)
 	}
 	if value, ok := _u.mutation.CustomID(); ok {
 		_spec.SetField(listing.FieldCustomID, field.TypeString, value)

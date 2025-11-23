@@ -1,6 +1,8 @@
 package transactions
 
+import "backend/config"
+
 const (
-	deployerAddress   = "1bb6b1e0a5170088"
+	deployerAddress   = config.ContractAddress
 	NFTTestnetAddress = "631e88ae7f1d7c20"
 )

@@ -3,7 +3,9 @@
 package ent
 
 import (
+	"backend/ent/comment"
 	"backend/ent/eventpass"
+	"backend/ent/like"
 	"backend/ent/nftaccessory"
 	"backend/ent/nftmoment"
 	"backend/ent/user"
@@ -43,6 +45,34 @@ func (_c *NFTMomentCreate) SetDescription(v string) *NFTMomentCreate {
 // SetThumbnail sets the "thumbnail" field.
 func (_c *NFTMomentCreate) SetThumbnail(v string) *NFTMomentCreate {
 	_c.mutation.SetThumbnail(v)
+	return _c
+}
+
+// SetLikeCount sets the "like_count" field.
+func (_c *NFTMomentCreate) SetLikeCount(v int) *NFTMomentCreate {
+	_c.mutation.SetLikeCount(v)
+	return _c
+}
+
+// SetNillableLikeCount sets the "like_count" field if the given value is not nil.
+func (_c *NFTMomentCreate) SetNillableLikeCount(v *int) *NFTMomentCreate {
+	if v != nil {
+		_c.SetLikeCount(*v)
+	}
+	return _c
+}
+
+// SetCommentCount sets the "comment_count" field.
+func (_c *NFTMomentCreate) SetCommentCount(v int) *NFTMomentCreate {
+	_c.mutation.SetCommentCount(v)
+	return _c
+}
+
+// SetNillableCommentCount sets the "comment_count" field if the given value is not nil.
+func (_c *NFTMomentCreate) SetNillableCommentCount(v *int) *NFTMomentCreate {
+	if v != nil {
+		_c.SetCommentCount(*v)
+	}
 	return _c
 }
 
@@ -91,6 +121,36 @@ func (_c *NFTMomentCreate) SetMintedWithPass(v *EventPass) *NFTMomentCreate {
 	return _c.SetMintedWithPassID(v.ID)
 }
 
+// AddLikeIDs adds the "likes" edge to the Like entity by IDs.
+func (_c *NFTMomentCreate) AddLikeIDs(ids ...int) *NFTMomentCreate {
+	_c.mutation.AddLikeIDs(ids...)
+	return _c
+}
+
+// AddLikes adds the "likes" edges to the Like entity.
+func (_c *NFTMomentCreate) AddLikes(v ...*Like) *NFTMomentCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddLikeIDs(ids...)
+}
+
+// AddCommentIDs adds the "comments" edge to the Comment entity by IDs.
+func (_c *NFTMomentCreate) AddCommentIDs(ids ...int) *NFTMomentCreate {
+	_c.mutation.AddCommentIDs(ids...)
+	return _c
+}
+
+// AddComments adds the "comments" edges to the Comment entity.
+func (_c *NFTMomentCreate) AddComments(v ...*Comment) *NFTMomentCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddCommentIDs(ids...)
+}
+
 // Mutation returns the NFTMomentMutation object of the builder.
 func (_c *NFTMomentCreate) Mutation() *NFTMomentMutation {
 	return _c.mutation
@@ -98,6 +158,7 @@ func (_c *NFTMomentCreate) Mutation() *NFTMomentMutation {
 
 // Save creates the NFTMoment in the database.
 func (_c *NFTMomentCreate) Save(ctx context.Context) (*NFTMoment, error) {
+	_c.defaults()
 	return withHooks(ctx, _c.sqlSave, _c.mutation, _c.hooks)
 }
 
@@ -123,6 +184,18 @@ func (_c *NFTMomentCreate) ExecX(ctx context.Context) {
 	}
 }
 
+// defaults sets the default values of the builder before save.
+func (_c *NFTMomentCreate) defaults() {
+	if _, ok := _c.mutation.LikeCount(); !ok {
+		v := nftmoment.DefaultLikeCount
+		_c.mutation.SetLikeCount(v)
+	}
+	if _, ok := _c.mutation.CommentCount(); !ok {
+		v := nftmoment.DefaultCommentCount
+		_c.mutation.SetCommentCount(v)
+	}
+}
+
 // check runs all checks and user-defined validators on the builder.
 func (_c *NFTMomentCreate) check() error {
 	if _, ok := _c.mutation.NftID(); !ok {
@@ -136,6 +209,12 @@ func (_c *NFTMomentCreate) check() error {
 	}
 	if _, ok := _c.mutation.Thumbnail(); !ok {
 		return &ValidationError{Name: "thumbnail", err: errors.New(`ent: missing required field "NFTMoment.thumbnail"`)}
+	}
+	if _, ok := _c.mutation.LikeCount(); !ok {
+		return &ValidationError{Name: "like_count", err: errors.New(`ent: missing required field "NFTMoment.like_count"`)}
+	}
+	if _, ok := _c.mutation.CommentCount(); !ok {
+		return &ValidationError{Name: "comment_count", err: errors.New(`ent: missing required field "NFTMoment.comment_count"`)}
 	}
 	if len(_c.mutation.OwnerIDs()) == 0 {
 		return &ValidationError{Name: "owner", err: errors.New(`ent: missing required edge "NFTMoment.owner"`)}
@@ -181,6 +260,14 @@ func (_c *NFTMomentCreate) createSpec() (*NFTMoment, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.Thumbnail(); ok {
 		_spec.SetField(nftmoment.FieldThumbnail, field.TypeString, value)
 		_node.Thumbnail = value
+	}
+	if value, ok := _c.mutation.LikeCount(); ok {
+		_spec.SetField(nftmoment.FieldLikeCount, field.TypeInt, value)
+		_node.LikeCount = value
+	}
+	if value, ok := _c.mutation.CommentCount(); ok {
+		_spec.SetField(nftmoment.FieldCommentCount, field.TypeInt, value)
+		_node.CommentCount = value
 	}
 	if nodes := _c.mutation.OwnerIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
@@ -232,6 +319,38 @@ func (_c *NFTMomentCreate) createSpec() (*NFTMoment, *sqlgraph.CreateSpec) {
 		_node.event_pass_moment = &nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
+	if nodes := _c.mutation.LikesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   nftmoment.LikesTable,
+			Columns: []string{nftmoment.LikesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(like.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.CommentsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   nftmoment.CommentsTable,
+			Columns: []string{nftmoment.CommentsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(comment.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
 	return _node, _spec
 }
 
@@ -253,6 +372,7 @@ func (_c *NFTMomentCreateBulk) Save(ctx context.Context) ([]*NFTMoment, error) {
 	for i := range _c.builders {
 		func(i int, root context.Context) {
 			builder := _c.builders[i]
+			builder.defaults()
 			var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
 				mutation, ok := m.(*NFTMomentMutation)
 				if !ok {

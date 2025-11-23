@@ -9,13 +9,34 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as EventsRouteImport } from './routes/events'
+import { Route as SearchRouteImport } from './routes/search'
+import { Route as ProfileRouteImport } from './routes/profile'
+import { Route as MomentsRouteImport } from './routes/moments'
+import { Route as MarketplaceRouteImport } from './routes/marketplace'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as EventsIndexRouteImport } from './routes/events/index'
+import { Route as UsersAddressRouteImport } from './routes/users/$address'
+import { Route as EventsEventIdRouteImport } from './routes/events/$eventId'
 
-const EventsRoute = EventsRouteImport.update({
-  id: '/events',
-  path: '/events',
+const SearchRoute = SearchRouteImport.update({
+  id: '/search',
+  path: '/search',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProfileRoute = ProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MomentsRoute = MomentsRouteImport.update({
+  id: '/moments',
+  path: '/moments',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MarketplaceRoute = MarketplaceRouteImport.update({
+  id: '/marketplace',
+  path: '/marketplace',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AboutRoute = AboutRouteImport.update({
@@ -28,44 +49,132 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const EventsIndexRoute = EventsIndexRouteImport.update({
+  id: '/events/',
+  path: '/events/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const UsersAddressRoute = UsersAddressRouteImport.update({
+  id: '/users/$address',
+  path: '/users/$address',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EventsEventIdRoute = EventsEventIdRouteImport.update({
+  id: '/events/$eventId',
+  path: '/events/$eventId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
-  '/events': typeof EventsRoute
+  '/marketplace': typeof MarketplaceRoute
+  '/moments': typeof MomentsRoute
+  '/profile': typeof ProfileRoute
+  '/search': typeof SearchRoute
+  '/events/$eventId': typeof EventsEventIdRoute
+  '/users/$address': typeof UsersAddressRoute
+  '/events': typeof EventsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
-  '/events': typeof EventsRoute
+  '/marketplace': typeof MarketplaceRoute
+  '/moments': typeof MomentsRoute
+  '/profile': typeof ProfileRoute
+  '/search': typeof SearchRoute
+  '/events/$eventId': typeof EventsEventIdRoute
+  '/users/$address': typeof UsersAddressRoute
+  '/events': typeof EventsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
-  '/events': typeof EventsRoute
+  '/marketplace': typeof MarketplaceRoute
+  '/moments': typeof MomentsRoute
+  '/profile': typeof ProfileRoute
+  '/search': typeof SearchRoute
+  '/events/$eventId': typeof EventsEventIdRoute
+  '/users/$address': typeof UsersAddressRoute
+  '/events/': typeof EventsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/about' | '/events'
+  fullPaths:
+    | '/'
+    | '/about'
+    | '/marketplace'
+    | '/moments'
+    | '/profile'
+    | '/search'
+    | '/events/$eventId'
+    | '/users/$address'
+    | '/events'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/about' | '/events'
-  id: '__root__' | '/' | '/about' | '/events'
+  to:
+    | '/'
+    | '/about'
+    | '/marketplace'
+    | '/moments'
+    | '/profile'
+    | '/search'
+    | '/events/$eventId'
+    | '/users/$address'
+    | '/events'
+  id:
+    | '__root__'
+    | '/'
+    | '/about'
+    | '/marketplace'
+    | '/moments'
+    | '/profile'
+    | '/search'
+    | '/events/$eventId'
+    | '/users/$address'
+    | '/events/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AboutRoute: typeof AboutRoute
-  EventsRoute: typeof EventsRoute
+  MarketplaceRoute: typeof MarketplaceRoute
+  MomentsRoute: typeof MomentsRoute
+  ProfileRoute: typeof ProfileRoute
+  SearchRoute: typeof SearchRoute
+  EventsEventIdRoute: typeof EventsEventIdRoute
+  UsersAddressRoute: typeof UsersAddressRoute
+  EventsIndexRoute: typeof EventsIndexRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/events': {
-      id: '/events'
-      path: '/events'
-      fullPath: '/events'
-      preLoaderRoute: typeof EventsRouteImport
+    '/search': {
+      id: '/search'
+      path: '/search'
+      fullPath: '/search'
+      preLoaderRoute: typeof SearchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/profile': {
+      id: '/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof ProfileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/moments': {
+      id: '/moments'
+      path: '/moments'
+      fullPath: '/moments'
+      preLoaderRoute: typeof MomentsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/marketplace': {
+      id: '/marketplace'
+      path: '/marketplace'
+      fullPath: '/marketplace'
+      preLoaderRoute: typeof MarketplaceRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/about': {
@@ -82,13 +191,40 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/events/': {
+      id: '/events/'
+      path: '/events'
+      fullPath: '/events'
+      preLoaderRoute: typeof EventsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/users/$address': {
+      id: '/users/$address'
+      path: '/users/$address'
+      fullPath: '/users/$address'
+      preLoaderRoute: typeof UsersAddressRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/events/$eventId': {
+      id: '/events/$eventId'
+      path: '/events/$eventId'
+      fullPath: '/events/$eventId'
+      preLoaderRoute: typeof EventsEventIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AboutRoute: AboutRoute,
-  EventsRoute: EventsRoute,
+  MarketplaceRoute: MarketplaceRoute,
+  MomentsRoute: MomentsRoute,
+  ProfileRoute: ProfileRoute,
+  SearchRoute: SearchRoute,
+  EventsEventIdRoute: EventsEventIdRoute,
+  UsersAddressRoute: UsersAddressRoute,
+  EventsIndexRoute: EventsIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

@@ -12,6 +12,7 @@ export interface Event {
   maxAttendees: number;
   price: number;
   organizer: string;
+  quota: number;
 }
 
 // Mock data
