@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import axios from 'axios';
+import api from '@/lib/axios';
 
 export interface MintMomentDTO {
   recipient: string;
@@ -25,8 +25,8 @@ export function useMintMoment() {
         formData.append('tier', data.tier);
       }
 
-      const response = await axios.post(
-        `${import.meta.env.VITE_BASE_URL}/moment/with-event-pass`,
+      const response = await api.post(
+        `/moment/with-event-pass`,
         formData,
         {
           headers: {

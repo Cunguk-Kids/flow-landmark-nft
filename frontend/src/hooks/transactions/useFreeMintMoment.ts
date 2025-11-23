@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import axios from 'axios';
+import api from '@/lib/axios';
 
 interface FreeMintMomentParams {
   recipient: string;
@@ -19,8 +19,8 @@ export function useFreeMintMoment() {
       if (params.description) formData.append('description', params.description);
       formData.append('thumbnail', params.thumbnail);
 
-      const response = await axios.post(
-        `${import.meta.env.VITE_BASE_URL}/moment/free`,
+      const response = await api.post(
+        `/moment/free`,
         formData,
         {
           headers: {
