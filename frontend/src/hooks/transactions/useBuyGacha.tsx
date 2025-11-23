@@ -1,6 +1,8 @@
 'use client';
 
 import { useFlowMutate, useFlowTransactionStatus } from '@onflow/react-sdk';
+import { useEffect } from 'react';
+import { toast } from 'sonner';
 
 const BUY_GACHA_TX = `
 /// This transaction is what an account would run
@@ -47,6 +49,23 @@ export function useBuyGacha() {
 
   const isSealed = transactionStatus?.status === 4;
   const isPending = isMutating || (!!txId && !isSealed && transactionStatus?.status !== 5);
+  const error = txError || statusError;
+
+  useEffect(() => {
+    if (error) {
+      console.error("Gacha Buy Error:", error);
+      const msg = error.toString();
+      if (msg.includes("Amount withdrawn must be less than or equal than the balance of the Vault")) {
+        toast.error("Insufficient Flow Token balance", {
+          description: "Please top up your account to purchase Gacha."
+        });
+      } else {
+        toast.error("Transaction Failed", {
+          description: "Something went wrong while buying Gacha."
+        });
+      }
+    }
+  }, [error]);
 
   const buyPack = () => {
 

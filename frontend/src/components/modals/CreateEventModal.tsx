@@ -46,7 +46,7 @@ export default function CreateEventModal({ isOpen, onClose, onSuccess }: CreateE
       onSuccess();
       onClose();
     }
-  }, [isSealed, onSuccess, onClose]);
+  }, [isSealed]);
 
   useEffect(() => {
     if (error) {
