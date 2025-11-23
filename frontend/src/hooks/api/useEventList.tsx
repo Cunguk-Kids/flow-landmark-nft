@@ -19,7 +19,15 @@ export interface BackendEvent {
     host?: {
       address: string;
     };
+    attendances?: [{
+      id: number;
+      user_address: string;
+    }];
   };
+  attendees?: [{
+    id: number;
+    user_address: string;
+  }];
 }
 
 interface Pagination {
@@ -47,6 +55,10 @@ export interface UIEvent {
   price: number;    // (Sementara hardcode atau ambil dari logic lain)
   quota: number;
   isRegistered: boolean;
+  attendees?: [{
+    id: number;
+    user_address: string;
+  }];
 }
 
 // --- 3. Fetcher Function ---
@@ -67,7 +79,7 @@ export function useEventList(page: number = 1) {
     queryKey: ['events-list', page],
     queryFn: () => fetchEvents(page),
     staleTime: 1000 * 60 * 2, // Cache selama 2 menit
-    
+
     // --- TRANSFORMASI DATA (PENTING) ---
     // Mengubah format Backend -> Format UI agar komponen tidak error
     select: (response) => {
@@ -82,8 +94,9 @@ export function useEventList(page: number = 1) {
         price: 0, // (Backend belum kirim harga tiket, asumsi gratis/0 untuk MVP)
         quota: ev.quota,
         isRegistered: false,
+        attendees: ev.edges?.attendances,
       }));
-      
+
       return transformedData;
     },
   });

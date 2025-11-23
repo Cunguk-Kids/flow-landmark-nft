@@ -14,6 +14,10 @@ interface GetEventDetailResponse {
     location: string;
     start_date: string;
     quota: number;
+    attendees?: [{
+      id: number;
+      user_address: string;
+    }]
     edges?: {
       host?: {
         address: string;
@@ -33,7 +37,7 @@ const fetchEventById = async (id: string, userAddress: string) => {
     const response = await axios.get<GetEventDetailResponse>(
       `${import.meta.env.VITE_BASE_URL}/events/${id}?viewer=${userAddress}`
     );
-    
+
     const ev = response.data.data;
 
     // Transform ke UI Model
@@ -47,7 +51,7 @@ const fetchEventById = async (id: string, userAddress: string) => {
       organizer: ev.edges?.host?.address || "Unknown",
       attendees: ev.edges?.attendances,
       isRegistered: ev.is_registered,
-      price: 0, 
+      price: 0,
       quota: ev.quota
     } as UIEvent;
 
