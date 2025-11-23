@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import axios from "axios";
+import api from "@/lib/axios";
 import { toast } from 'sonner';
 
 interface ToggleLikeParams {
@@ -18,8 +18,8 @@ export function useToggleLike() {
 
   return useMutation({
     mutationFn: async ({ momentId, userAddress }: ToggleLikeParams) => {
-      const response = await axios.post(
-        `${import.meta.env.VITE_BASE_URL}/moments/${momentId}/like`,
+      const response = await api.post(
+        `/moments/${momentId}/like`,
         null,
         { params: { user: userAddress } }
       );
@@ -42,8 +42,8 @@ export function useAddComment() {
 
   return useMutation({
     mutationFn: async ({ momentId, userAddress, content }: AddCommentParams) => {
-      const response = await axios.post(
-        `${import.meta.env.VITE_BASE_URL}/moments/${momentId}/comments`,
+      const response = await api.post(
+        `/moments/${momentId}/comments`,
         { userAddress: userAddress, content }
       );
       return response.data;
@@ -86,8 +86,8 @@ export function useGetComments(momentId: number) {
   return useQuery({
     queryKey: ["comments", momentId],
     queryFn: async () => {
-      const response = await axios.get<GetCommentsResponse>(
-        `${import.meta.env.VITE_BASE_URL}/moments/${momentId}/comments`
+      const response = await api.get<GetCommentsResponse>(
+        `/moments/${momentId}/comments`
       );
       return response.data;
     },

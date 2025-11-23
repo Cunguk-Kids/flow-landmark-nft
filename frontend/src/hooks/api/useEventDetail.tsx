@@ -1,6 +1,7 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
+import api from '@/lib/axios';
 import axios from 'axios';
 import { type UIEvent } from './useEventList';
 
@@ -14,6 +15,7 @@ interface GetEventDetailResponse {
     location: string;
     start_date: string;
     quota: number;
+    is_registered: boolean;
     attendees?: [{
       id: number;
       user_address: string;
@@ -34,8 +36,8 @@ interface GetEventDetailResponse {
 const fetchEventById = async (id: string, userAddress: string) => {
   try {
     // PANGGIL ENDPOINT SPESIFIK
-    const response = await axios.get<GetEventDetailResponse>(
-      `${import.meta.env.VITE_BASE_URL}/events/${id}?viewer=${userAddress}`
+    const response = await api.get<GetEventDetailResponse>(
+      `/events/${id}?viewer=${userAddress}`
     );
 
     const ev = response.data.data;

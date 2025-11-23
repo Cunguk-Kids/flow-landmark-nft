@@ -3,6 +3,7 @@
 import { useFlowMutate, useFlowTransactionStatus } from '@onflow/react-sdk';
 import { useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
+import { CONTRACT_ADDRESS } from '@/config/contracts';
 
 // Copy script Cadence di atas ke sini
 const EQUIP_TX = `
@@ -36,8 +37,8 @@ transaction(
       self.frameNFT <- withdrawRef.withdraw(withdrawID: nftAccessoryId) as! @NFTAccessory.NFT
 
       assert(
-        self.frameNFT.getType().identifier == "A.1bb6b1e0a5170088.NFTAccessory.NFT",
-        message: "The NFT that was withdrawn to transfer is not the type that was requested <A.1bb6b1e0a5170088.NFTAccessory.NFT>."
+        self.frameNFT.getType().identifier == "A.${CONTRACT_ADDRESS}.NFTAccessory.NFT",
+        message: "The NFT that was withdrawn to transfer is not the type that was requested <A.${CONTRACT_ADDRESS}.NFTAccessory.NFT>."
       )
     }
 

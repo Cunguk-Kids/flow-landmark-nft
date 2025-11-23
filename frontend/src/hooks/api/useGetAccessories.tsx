@@ -1,7 +1,7 @@
 'use client';
 
 import { useQuery, keepPreviousData } from '@tanstack/react-query';
-import axios from 'axios';
+import api from '@/lib/axios';
 
 // --- 1. Definisi Tipe Data (DTO) ---
 export interface Accessory {
@@ -10,7 +10,7 @@ export interface Accessory {
   name: string;
   description: string;
   thumbnail: string;   // URL IPFS/Gambar
-  
+
   // Jika ada relasi lain dari backend
   edges?: {
     owner?: {
@@ -18,12 +18,12 @@ export interface Accessory {
     };
     // Info listing jika sedang dijual
     listing?: {
-        id: number;
-        price: number;
+      id: number;
+      price: number;
     };
     equipped_on_moment?: {
-        id: number;
-        name: string;
+      id: number;
+      name: string;
     } | null;
   };
 }
@@ -53,7 +53,7 @@ const fetchAccessories = async (address: string | null, page: number, pageSize: 
     params.owner_address = address;
   }
 
-  const response = await axios.get<GetAccessoriesResponse>(`${import.meta.env.VITE_BASE_URL}/accessories`, {
+  const response = await api.get<GetAccessoriesResponse>(`/accessories`, {
     params,
   });
 
@@ -65,14 +65,14 @@ export function useGetAccessories(address: string | null | undefined, page: numb
   return useQuery({
     // Query Key: Unik berdasarkan address dan halaman
     queryKey: ['accessories', address, page, pageSize],
-    
+
     queryFn: () => fetchAccessories(address || null, page, pageSize),
-    
+
     // Konfigurasi
     // enabled: true, // Selalu jalan (bisa untuk public explore atau private inventory)
     staleTime: 1000 * 60 * 1, // 1 Menit
-    
+
     // UX: Pertahankan data lama saat fetching halaman baru (mencegah flickering)
-    placeholderData: keepPreviousData, 
+    placeholderData: keepPreviousData,
   });
 }

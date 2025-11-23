@@ -156,6 +156,13 @@
 				"type": "file",
 				"location": "puki1.pkey"
 			}
+		},
+		"puki2": {
+			"address": "93103de44735c104",
+			"key": {
+				"type": "file",
+				"location": "puki2.pkey"
+			}
 		}
 	},
 	"deployments": {
@@ -180,7 +187,7 @@
 			]
 		},
 		"testnet": {
-			"puki1": [
+			"puki2": [
 				"AccessoryPack",
 				"EventManager",
 				"EventPass",

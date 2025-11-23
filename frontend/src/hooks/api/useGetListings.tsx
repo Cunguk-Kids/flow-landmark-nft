@@ -1,7 +1,7 @@
 'use client';
 
 import { useQuery, keepPreviousData } from '@tanstack/react-query';
-import axios from 'axios';
+import api from '@/lib/axios';
 
 // --- Tipe Data (DTO) ---
 export interface ListingData {
@@ -40,7 +40,7 @@ interface GetListingsResponse {
 
 // --- Fetcher ---
 const fetchListings = async (page: number, pageSize: number) => {
-  const response = await axios.get<GetListingsResponse>(`${import.meta.env.VITE_BASE_URL}/listings`, {
+  const response = await api.get<GetListingsResponse>(`/listings`, {
     params: {
       page,
       pageSize,

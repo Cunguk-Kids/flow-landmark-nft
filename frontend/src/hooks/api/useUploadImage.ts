@@ -1,7 +1,5 @@
 import { useMutation } from '@tanstack/react-query';
-import axios from 'axios';
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+import api from '@/lib/axios';
 
 interface UploadResponse {
   url: string;
@@ -14,8 +12,8 @@ export const useUploadImage = () => {
       const formData = new FormData();
       formData.append('thumbnail', file);
 
-      const response = await axios.post<UploadResponse>(
-        `${API_BASE_URL}/upload`,
+      const response = await api.post<UploadResponse>(
+        `/upload`,
         formData,
         {
           headers: {

@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { useFlowCurrentUser } from '@onflow/react-sdk';
 import { useBuyItem } from '@/hooks/transactions/useBuyItem';
 import { useCancelListing } from '@/hooks/transactions/useCancelListing';
+import { CONTRACT_ADDRESS } from '@/config/contracts';
 
 interface ListingCardProps {
   listing: ListingData;
@@ -18,8 +19,9 @@ export default function ListingCard({ listing }: ListingCardProps) {
   const nft = listing.edges?.nft_accessory || listing.edges?.nft_moment;
   const seller = listing.edges?.seller;
 
+
   const isOwner = user?.loggedIn && seller?.address && (user.addr === seller.address);
-  const nftTypeID = listing.edges?.nft_accessory ? "A.1bb6b1e0a5170088.NFTAccessory.NFT" : "A.1bb6b1e0a5170088.NFTMoment.NFT";
+  const nftTypeID = listing.edges?.nft_accessory ? `A.${CONTRACT_ADDRESS}.NFTAccessory.NFT` : `A.${CONTRACT_ADDRESS}.NFTMoment.NFT`;
   const handleBuy = () => {
     buy({
       listingResourceID: listing.listing_id,

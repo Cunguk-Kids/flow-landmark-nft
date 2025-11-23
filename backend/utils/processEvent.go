@@ -1,6 +1,8 @@
 package utils
 
 import ( // Dibutuhkan jika Anda akan melakukan operasi DB
+
+	"backend/config"
 	"backend/ent"
 	"backend/ent/attendance"
 	"backend/ent/event"
@@ -86,7 +88,7 @@ func HandleCapabilityIssued(ctx context.Context, ev flow.Event, client *ent.Clie
 	Fields := ev.Value.FieldsMappedByName()
 	cadenceTypeString := Fields["type"].String()
 
-	if !strings.Contains(cadenceTypeString, "&A.1bb6b1e0a5170088.UserProfile.Profile") {
+	if !strings.Contains(cadenceTypeString, fmt.Sprintf("&A.%s.UserProfile.Profile", config.ContractAddress)) {
 		return
 	}
 
@@ -910,7 +912,7 @@ func NFTDeposited(ctx context.Context, ev flow.Event, client *ent.Client) {
 
 	// Filter: Hanya proses NFT dari kontrak kita (puki1 / 1bb6b1e0a5170088)
 	// Identifier biasanya format: A.{address}.{ContractName}.{ResourceName}
-	if !strings.Contains(nftType, "1bb6b1e0a5170088") {
+	if !strings.Contains(nftType, config.ContractAddress) {
 		return
 	}
 

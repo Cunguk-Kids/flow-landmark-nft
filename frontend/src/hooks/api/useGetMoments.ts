@@ -1,5 +1,5 @@
 import { useInfiniteQuery } from "@tanstack/react-query";
-import axios from "axios";
+import api from "@/lib/axios";
 
 export interface Moment {
   id: number;
@@ -43,8 +43,8 @@ interface GetMomentsResponse {
 }
 
 const fetchMoments = async ({ pageParam = 1, viewer }: { pageParam?: number; viewer?: string }) => {
-  const response = await axios.get<GetMomentsResponse>(
-    `${import.meta.env.VITE_BASE_URL}/moments`,
+  const response = await api.get<GetMomentsResponse>(
+    `/moments`,
     {
       params: {
         page: pageParam,

@@ -1,7 +1,7 @@
 'use client';
 
 import { useQuery, keepPreviousData } from '@tanstack/react-query';
-import axios from 'axios';
+import api from '@/lib/axios';
 
 // --- Interface Data ---
 export interface NFTMoment {
@@ -30,11 +30,11 @@ export function useGetMomentsPaginated(address: string | null | undefined, page:
   return useQuery({
     // Query Key sekarang menyertakan 'page' agar otomatis refetch saat page berubah
     queryKey: ['moments', address, page],
-    
+
     queryFn: async () => {
       if (!address) return { data: [], pagination: { totalPages: 0, currentPage: 1, totalItems: 0, pageSize: 12 } };
 
-      const response = await axios.get<GetMomentsResponse>(`${import.meta.env.VITE_BASE_URL}/moments`, {
+      const response = await api.get<GetMomentsResponse>(`/moments`, {
         params: {
           owner_address: address,
           page: page,
@@ -47,8 +47,8 @@ export function useGetMomentsPaginated(address: string | null | undefined, page:
     // Logic standar
     enabled: !!address,
     staleTime: 1000 * 60 * 1, // 1 menit
-    
+
     // UX Magic: Pertahankan data halaman sebelumnya saat loading halaman baru
-    placeholderData: keepPreviousData, 
+    placeholderData: keepPreviousData,
   });
 }

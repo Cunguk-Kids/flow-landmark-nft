@@ -1,7 +1,7 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
-import axios from 'axios';
+import api from '@/lib/axios';
 import { useDebounce } from '@/hooks/useDebounce';
 
 // Tipe Data User (DTO dari Backend)
@@ -27,8 +27,8 @@ const fetchUsers = async (query: string) => {
   // Jika query kosong, ambil list default (/users)
   // Jika query ada, ambil search (/users/search)
   const endpoint = query.trim() === '' ? '/users' : '/users/search';
-  
-  const response = await axios.get<UsersResponse>(`${import.meta.env.VITE_BASE_URL}${endpoint}`, {
+
+  const response = await api.get<UsersResponse>(`${endpoint}`, {
     params: {
       q: query || undefined, // Kirim 'q' hanya jika ada
       page: 1,
@@ -45,12 +45,12 @@ export function useUserSearch(searchTerm: string) {
   return useQuery({
     // Query Key berubah saat debounced value berubah
     queryKey: ['user-search', debouncedSearch],
-    
+
     queryFn: () => fetchUsers(debouncedSearch),
-    
+
     // Selalu aktif (karena kita mau load awal juga)
     // staleTime pendek agar terasa responsif
-    staleTime: 1000 * 60, 
+    staleTime: 1000 * 60,
     placeholderData: (previousData) => previousData, // UX: Jangan kedip jadi loading saat ngetik, tahan data lama
   });
 }

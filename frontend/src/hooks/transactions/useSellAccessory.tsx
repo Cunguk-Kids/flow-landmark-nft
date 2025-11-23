@@ -3,6 +3,7 @@
 import { useFlowMutate, useFlowTransactionStatus, useFlowCurrentUser } from '@onflow/react-sdk';
 import * as t from "@onflow/types";
 import { useEffect } from 'react';
+import { CONTRACT_ADDRESS } from '@/config/contracts';
 
 // --- CADENCE TRANSACTION (Copy-Paste dari pertanyaan Anda) ---
 const SELL_ACCESSORY_TX = `
@@ -161,7 +162,7 @@ transaction(
 // Ganti alamat ini sesuai network (Testnet/Mainnet/Emulator)
 // Emulator: A.1bb6b1e0a5170088.NFTAccessory.NFT
 // Emulator: A.0ae53cb6e3f42a79.FlowToken.Vault
-const NFT_TYPE_ID = "A.1bb6b1e0a5170088.NFTAccessory.NFT";
+const NFT_TYPE_ID = `A.${CONTRACT_ADDRESS}.NFTAccessory.NFT`;
 const FT_TYPE_ID = "A.7e60df042a9c0868.FlowToken.Vault";
 
 export function useSellAccessory() {

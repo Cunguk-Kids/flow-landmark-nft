@@ -1,7 +1,7 @@
 'use client';
 
 import { useQuery, keepPreviousData } from '@tanstack/react-query';
-import axios from 'axios';
+import api from '@/lib/axios';
 
 export interface EventPassData {
   id: number;
@@ -32,11 +32,11 @@ interface GetEventPassesResponse {
 export function useGetEventPasses(address: string | null | undefined, page: number = 1) {
   return useQuery({
     queryKey: ['event-passes', address, page],
-    
+
     queryFn: async () => {
       if (!address) return { data: [], pagination: { totalItems: 0, totalPages: 0, currentPage: 1, pageSize: 10 } };
 
-      const response = await axios.get<GetEventPassesResponse>(`${import.meta.env.VITE_BASE_URL}/event-passes`, {
+      const response = await api.get<GetEventPassesResponse>(`/event-passes`, {
         params: {
           owner_address: address,
           page: page,
@@ -47,6 +47,6 @@ export function useGetEventPasses(address: string | null | undefined, page: numb
     },
 
     enabled: !!address,
-    placeholderData: keepPreviousData, 
+    placeholderData: keepPreviousData,
   });
 }

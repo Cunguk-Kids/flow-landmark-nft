@@ -1,7 +1,7 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
-import axios from 'axios';
+import api from '@/lib/axios';
 import { type MomentData } from '@/components/MomentCard';
 
 // Response wrapper sesuai standar API kita
@@ -12,7 +12,7 @@ interface SingleMomentResponse {
 const fetchMomentById = async (nftId: number) => {
   // Kita gunakan endpoint moments dengan filter nft_id
   // Pastikan Backend Go Anda mendukung ?nft_id=... atau buat endpoint /moments/:id
-  const response = await axios.get<SingleMomentResponse>(`${import.meta.env.VITE_BASE_URL}/moments`, {
+  const response = await api.get<SingleMomentResponse>(`/moments`, {
     params: {
       nft_id: nftId, // Filter spesifik
       page: 1,

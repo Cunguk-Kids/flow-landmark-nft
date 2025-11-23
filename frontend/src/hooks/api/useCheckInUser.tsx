@@ -1,7 +1,7 @@
 'use client';
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import axios from 'axios';
+import api from '@/lib/axios';
 import { useFlowCurrentUser } from '@onflow/react-sdk';
 
 // Payload yang dikirim ke Backend
@@ -25,7 +25,7 @@ export function useCheckInUser() {
 
   return useMutation({
     mutationFn: async (eventID: string | number) => {
-      
+
       // Validasi User Login
       if (!user?.addr) {
         throw new Error("Harap hubungkan dompet (wallet) Anda terlebih dahulu.");
@@ -37,32 +37,32 @@ export function useCheckInUser() {
       };
 
       // Panggil API Backend Go
-      const response = await axios.post<CheckInResponse>(
-        `${import.meta.env.VITE_BASE_URL}/event/check-in`,
+      const response = await api.post<CheckInResponse>(
+        `/event/check-in`,
         payload
       );
 
       return response.data;
     },
-    
+
     onSuccess: (_, eventID) => {
       // Refresh data detail event agar status 'isRegistered' / 'attendees' terupdate
       queryClient.invalidateQueries({ queryKey: ['event-detail', String(eventID)] });
-      
+
       // Refresh data profil user (karena user mungkin dapat EventPass baru)
       if (user?.addr) {
         queryClient.invalidateQueries({ queryKey: ['user-profile', user.addr] });
       }
-      
+
       console.log("Check-in Berhasil!");
     },
-    
+
     onError: (error: any) => {
       // Tangkap pesan error dari backend (APIResponse)
       const message = error.response?.data?.error || error.message || "Gagal melakukan check-in.";
       console.error("Check-in Gagal:", message);
       // Anda bisa melempar error ini lagi agar UI bisa menangkapnya
-      throw new Error(message); 
+      throw new Error(message);
     }
   });
 }

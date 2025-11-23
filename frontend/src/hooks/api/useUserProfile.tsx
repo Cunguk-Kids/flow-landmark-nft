@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
-import axios from 'axios';
+import api from '@/lib/axios';
+import axios from 'axios'; // Keep axios for isAxiosError check
 
 // --- 1. Definisi Tipe Data (DTO) ---
 // Sesuaikan ini dengan struktur JSON dari Backend Go Anda
@@ -30,8 +31,7 @@ export interface UserProfile {
 const fetchUserProfile = async (address: string): Promise<UserProfile | null | undefined> => {
   try {
     // Panggil API Backend Go
-    const url = `${import.meta.env.VITE_BASE_URL}/users/${address}`;
-    const { data } = await axios.get(url);
+    const { data } = await api.get(`/users/${address}`);
 
     // Backend kita mengembalikan struktur: { data: UserProfile, ... }
     return data.data;

@@ -1,7 +1,7 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
-import axios from 'axios';
+import api from '@/lib/axios';
 
 // --- 1. Tipe Data dari Backend (Raw Response) ---
 // Sesuaikan dengan JSON yang dikirim oleh Backend Go
@@ -63,7 +63,7 @@ export interface UIEvent {
 
 // --- 3. Fetcher Function ---
 const fetchEvents = async (page = 1) => {
-  const response = await axios.get<GetEventsResponse>(`${import.meta.env.VITE_BASE_URL}/events`, {
+  const response = await api.get<GetEventsResponse>(`/events`, {
     params: {
       page: page,
       pageSize: 20, // Ambil 20 event per halaman
