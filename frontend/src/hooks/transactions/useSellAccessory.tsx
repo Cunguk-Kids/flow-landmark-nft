@@ -159,10 +159,10 @@ transaction(
 
 // --- CONFIG ---
 // Ganti alamat ini sesuai network (Testnet/Mainnet/Emulator)
-// Emulator: A.f8d6e0586b0a20c7.NFTAccessory.NFT
+// Emulator: A.1bb6b1e0a5170088.NFTAccessory.NFT
 // Emulator: A.0ae53cb6e3f42a79.FlowToken.Vault
-const NFT_TYPE_ID = "A.f8d6e0586b0a20c7.NFTAccessory.NFT"; 
-const FT_TYPE_ID = "A.0ae53cb6e3f42a79.FlowToken.Vault";
+const NFT_TYPE_ID = "A.1bb6b1e0a5170088.NFTAccessory.NFT";
+const FT_TYPE_ID = "A.7e60df042a9c0868.FlowToken.Vault";
 
 export function useSellAccessory() {
   const { mutate, data: txId, isPending: isMutating, error: txError } = useFlowMutate();
@@ -174,8 +174,8 @@ export function useSellAccessory() {
 
   const sell = (nftId: number, price: number) => {
     // Konversi Harga ke String UFix64 (harus ada desimal .0)
-    const priceStr = price.toFixed(8); 
-    
+    const priceStr = price.toFixed(8);
+
     // Expiry (Misal: 30 Hari dari sekarang)
     // Unix timestamp in seconds
     const expiry = Math.floor(Date.now() / 1000) + (30 * 24 * 60 * 60);

@@ -86,7 +86,7 @@ func HandleCapabilityIssued(ctx context.Context, ev flow.Event, client *ent.Clie
 	Fields := ev.Value.FieldsMappedByName()
 	cadenceTypeString := Fields["type"].String()
 
-	if !strings.Contains(cadenceTypeString, "&A.f8d6e0586b0a20c7.UserProfile.Profile") {
+	if !strings.Contains(cadenceTypeString, "&A.1bb6b1e0a5170088.UserProfile.Profile") {
 		return
 	}
 
@@ -101,7 +101,7 @@ func HandleCapabilityIssued(ctx context.Context, ev flow.Event, client *ent.Clie
 		log.Println("error taking address cadence")
 	}
 
-	// Dapatkan alamat sebagai string (misal: "0xf8d6e0586b0a20c7")
+	// Dapatkan alamat sebagai string (misal: "0x1bb6b1e0a5170088")
 	userAddress := ownerAddressCadence.String()
 
 	// 6. Pola "Get-or-Create" (Sangat Penting)
@@ -341,6 +341,7 @@ func EventCreated(ctx context.Context, ev flow.Event, client *ent.Client) {
 	if err != nil {
 		if ent.IsNotFound(err) {
 			log.Println("Please create user profile")
+			return
 		} else {
 			// Error DB lain
 			log.Printf("Error saat query host user %s: %v", hostAddress, err)
@@ -907,6 +908,12 @@ func NFTDeposited(ctx context.Context, ev flow.Event, client *ent.Client) {
 	}
 	nftType := nftTypeField.String()
 
+	// Filter: Hanya proses NFT dari kontrak kita (puki1 / 1bb6b1e0a5170088)
+	// Identifier biasanya format: A.{address}.{ContractName}.{ResourceName}
+	if !strings.Contains(nftType, "1bb6b1e0a5170088") {
+		return
+	}
+
 	// --- 2. Konversi Tipe Go ---
 	nftID := uint64(nftIDCadence)
 	newOwnerAddress := recipientAddressCadence.String()
@@ -917,6 +924,7 @@ func NFTDeposited(ctx context.Context, ev flow.Event, client *ent.Client) {
 	if err != nil {
 		if ent.IsNotFound(err) {
 			log.Printf("Pemilik baru %s tidak ditemukan")
+			return
 		} else {
 			log.Printf("Error query user %s: %v", newOwnerAddress, err)
 			return

@@ -19,7 +19,7 @@ export default function ListingCard({ listing }: ListingCardProps) {
   const seller = listing.edges?.seller;
 
   const isOwner = user?.loggedIn && seller?.address && (user.addr === seller.address);
-  const nftTypeID = listing.edges?.nft_accessory ? "A.f8d6e0586b0a20c7.NFTAccessory.NFT" : "A.f8d6e0586b0a20c7.NFTMoment.NFT";
+  const nftTypeID = listing.edges?.nft_accessory ? "A.1bb6b1e0a5170088.NFTAccessory.NFT" : "A.1bb6b1e0a5170088.NFTMoment.NFT";
   const handleBuy = () => {
     buy({
       listingResourceID: listing.listing_id,
