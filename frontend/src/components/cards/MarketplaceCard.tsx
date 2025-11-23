@@ -2,6 +2,8 @@
 
 import { useNavigate } from '@tanstack/react-router';
 import { ShoppingBag, TrendingUp, ArrowUpRight, Activity } from 'lucide-react';
+import { useTransition } from '@/contexts/TransitionContext';
+import { useRef } from 'react';
 
 interface MarketplaceCardProps {
   className?: string;
@@ -9,10 +11,33 @@ interface MarketplaceCardProps {
 
 export default function MarketplaceCard({ className = "" }: MarketplaceCardProps) {
   const navigate = useNavigate();
+  const { triggerTransition } = useTransition();
+  const cardRef = useRef<HTMLDivElement>(null);
+
+  const handleClick = () => {
+    if (cardRef.current) {
+      const rect = cardRef.current.getBoundingClientRect();
+      const computedStyle = window.getComputedStyle(cardRef.current);
+      const borderRadius = parseFloat(computedStyle.borderRadius);
+
+      triggerTransition({
+        x: rect.left,
+        y: rect.top,
+        width: rect.width,
+        height: rect.height,
+        borderRadius: borderRadius,
+      });
+    }
+
+    setTimeout(() => {
+      navigate({ to: '/marketplace' });
+    }, 800);
+  };
 
   return (
     <div
-      onClick={() => navigate({ to: '/marketplace' })}
+      ref={cardRef}
+      onClick={handleClick}
       className={`
         md:col-span-4 md:row-span-2 
         card-brutalist bg-[#0F172A] /* RPN Dark */

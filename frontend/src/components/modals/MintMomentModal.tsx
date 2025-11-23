@@ -12,6 +12,7 @@ import { Loader2, Ticket, Upload, Image as ImageIcon, ArrowRight, Check, Gift, S
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from "@/components/ui/label"; // Tambahkan Label
+import { toast } from 'sonner';
 
 interface MintMomentModalProps {
   isOpen: boolean;
@@ -81,11 +82,25 @@ export default function MintMomentModal({ isOpen, onClose }: MintMomentModalProp
   };
 
   const handleSubmit = () => {
-    if (!user?.addr || !name || !imageFile) return;
+    if (!user?.addr || !name || !imageFile) {
+      toast.error('Missing information', {
+        description: 'Please fill in all required fields.'
+      });
+      return;
+    }
 
     const onSuccess = () => {
+      toast.success('Moment minted successfully!', {
+        description: 'Your moment has been created on the blockchain.'
+      });
       refetchProfile(); // Update status free mint
       onClose();
+    };
+
+    const onError = (error: any) => {
+      toast.error('Failed to mint moment', {
+        description: error?.message || 'Something went wrong. Please try again.'
+      });
     };
 
     if (mode === 'FREE') {
@@ -94,7 +109,7 @@ export default function MintMomentModal({ isOpen, onClose }: MintMomentModalProp
         name,
         description,
         thumbnail: imageFile,
-      }, { onSuccess });
+      }, { onSuccess, onError });
     } else if (mode === 'PASS' && selectedPassId) {
       mintMomentWithPass({
         recipient: user.addr,
@@ -102,7 +117,7 @@ export default function MintMomentModal({ isOpen, onClose }: MintMomentModalProp
         name,
         description,
         thumbnail: imageFile,
-      }, { onSuccess });
+      }, { onSuccess, onError });
     }
   };
 

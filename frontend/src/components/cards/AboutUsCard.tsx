@@ -1,8 +1,9 @@
 'use client';
 
-import React from 'react';
 import { useNavigate } from '@tanstack/react-router';
 import { ArrowRight } from 'lucide-react';
+import { useTransition } from '@/contexts/TransitionContext';
+import { useRef } from 'react';
 
 interface AboutUsCardProps {
   className?: string;
@@ -10,10 +11,33 @@ interface AboutUsCardProps {
 
 export default function AboutUsCard({ className = "" }: AboutUsCardProps) {
   const navigate = useNavigate();
+  const { triggerTransition } = useTransition();
+  const cardRef = useRef<HTMLDivElement>(null);
+
+  const handleClick = () => {
+    if (cardRef.current) {
+      const rect = cardRef.current.getBoundingClientRect();
+      const computedStyle = window.getComputedStyle(cardRef.current);
+      const borderRadius = parseFloat(computedStyle.borderRadius);
+
+      triggerTransition({
+        x: rect.left,
+        y: rect.top,
+        width: rect.width,
+        height: rect.height,
+        borderRadius: borderRadius,
+      });
+    }
+
+    setTimeout(() => {
+      navigate({ to: '/about' });
+    }, 800);
+  };
 
   return (
-    <div 
-      onClick={() => navigate({ to: '/about' })}
+    <div
+      ref={cardRef}
+      onClick={handleClick}
       className={`
         col-span-1 row-span-2 md:col-span-2 md:row-span-2 
         card-brutalist bg-white p-6 relative overflow-hidden flex flex-col justify-between group cursor-pointer
@@ -25,10 +49,10 @@ export default function AboutUsCard({ className = "" }: AboutUsCardProps) {
         ${className}
       `}
     >
-      
+
       {/* Dekorasi Garis Miring */}
       <div className="absolute -right-4 -top-4 w-24 h-24 bg-rpn-blue/10 rotate-45 group-hover:bg-rpn-blue/20 transition-colors duration-500"></div>
-      
+
       {/* Konten Atas */}
       <div className="relative z-10">
         <div className="flex items-center gap-2 mb-2">
@@ -37,7 +61,7 @@ export default function AboutUsCard({ className = "" }: AboutUsCardProps) {
             RPN Ecosystem
           </span>
         </div>
-        
+
         {/* Typography Efektif */}
         <h2 className="text-3xl md:text-4xl font-black text-rpn-dark leading-[0.9] tracking-tighter uppercase mb-2 drop-shadow-sm">
           We Build <br />
@@ -51,13 +75,13 @@ export default function AboutUsCard({ className = "" }: AboutUsCardProps) {
         <p className="text-xs text-gray-500 font-medium max-w-[120px] leading-tight group-hover:text-rpn-dark transition-colors">
           Learn how we tokenize memories.
         </p>
-        
+
         {/* Tombol Bulat (Visual Only) */}
         <div className="w-8 h-8 rounded-full border-2 border-black flex items-center justify-center text-black group-hover:bg-black group-hover:text-white transition-all duration-300 group-hover:rotate-[-45deg]">
           <ArrowRight size={16} />
         </div>
       </div>
-      
+
     </div>
   );
 }

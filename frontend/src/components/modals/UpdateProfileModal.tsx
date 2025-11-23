@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useUpdateProfile, type UpdateProfileDTO } from '@/hooks/transactions/useUpdateProfile';
 import { Loader2, Save, Link as LinkIcon, Edit2, Upload } from 'lucide-react';
 import { useUploadImage } from '@/hooks/api/useUploadImage';
+import { toast } from 'sonner';
 
 // Tipe data profil dari API
 interface UserProfileData {
@@ -70,10 +71,21 @@ export default function UpdateProfileModal({ currentProfile, onSuccess }: Update
   // Efek: Tutup modal saat sukses
   useEffect(() => {
     if (isSealed) {
+      toast.success('Profile updated successfully!', {
+        description: 'Your profile changes have been saved on the blockchain.'
+      });
       setIsOpen(false);
       onSuccess()
     }
-  }, [isSealed]);
+  }, [isSealed, onSuccess]);
+
+  useEffect(() => {
+    if (error) {
+      toast.error('Failed to update profile', {
+        description: error.message
+      });
+    }
+  }, [error]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -87,9 +99,12 @@ export default function UpdateProfileModal({ currentProfile, onSuccess }: Update
       try {
         const result = await uploadImage.mutateAsync(pfpFile);
         finalPfpUrl = result.url;
+        toast.success('Avatar uploaded to IPFS');
       } catch (err) {
         console.error("PFP upload failed:", err);
-        alert("Failed to upload profile picture.");
+        toast.error('Upload failed', {
+          description: 'Failed to upload profile picture.'
+        });
         return;
       } finally {
         setIsUploadingPfp(false);
@@ -102,9 +117,12 @@ export default function UpdateProfileModal({ currentProfile, onSuccess }: Update
       try {
         const result = await uploadImage.mutateAsync(bgFile);
         finalBgUrl = result.url;
+        toast.success('Banner uploaded to IPFS');
       } catch (err) {
         console.error("Banner upload failed:", err);
-        alert("Failed to upload banner image.");
+        toast.error('Upload failed', {
+          description: 'Failed to upload banner image.'
+        });
         return;
       } finally {
         setIsUploadingBanner(false);

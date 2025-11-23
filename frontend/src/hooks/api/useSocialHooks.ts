@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
+import { toast } from 'sonner';
 
 interface ToggleLikeParams {
   momentId: number; // Internal ID
@@ -28,6 +29,11 @@ export function useToggleLike() {
       // Invalidate or Optimistic Update (Simpler to invalidate for now, or we can manually update cache)
       queryClient.invalidateQueries({ queryKey: ["moments-feed"] });
     },
+    onError: (error: any) => {
+      toast.error('Failed to like moment', {
+        description: error.response?.data?.error || error.message
+      });
+    }
   });
 }
 
@@ -43,9 +49,15 @@ export function useAddComment() {
       return response.data;
     },
     onSuccess: (_, variables) => {
+      toast.success('Comment posted!');
       queryClient.invalidateQueries({ queryKey: ["moments-feed"] });
       queryClient.invalidateQueries({ queryKey: ["comments", variables.momentId] });
     },
+    onError: (error: any) => {
+      toast.error('Failed to post comment', {
+        description: error.response?.data?.error || error.message
+      });
+    }
   });
 }
 

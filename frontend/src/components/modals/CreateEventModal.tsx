@@ -11,6 +11,7 @@ import { useCreateEvent, type CreateEventDTO } from '@/hooks/transactions/useCre
 import { Loader2, CalendarPlus, MapPin, Globe } from 'lucide-react';
 import LocationPicker from '../map/LocationPicker';
 import { useUploadImage } from '@/hooks/api/useUploadImage';
+import { toast } from 'sonner';
 
 interface CreateEventModalProps {
   isOpen: boolean;
@@ -39,17 +40,30 @@ export default function CreateEventModal({ isOpen, onClose, onSuccess }: CreateE
 
   useEffect(() => {
     if (isSealed) {
+      toast.success('Event created successfully!', {
+        description: 'Your event has been published on the blockchain.'
+      });
       onSuccess();
       onClose();
     }
   }, [isSealed, onSuccess, onClose]);
+
+  useEffect(() => {
+    if (error) {
+      toast.error('Failed to create event', {
+        description: error.message
+      });
+    }
+  }, [error]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     // 1. Upload thumbnail first
     if (!thumbnailFile) {
-      alert("Please select a thumbnail image");
+      toast.error('Thumbnail required', {
+        description: 'Please select a thumbnail image for your event.'
+      });
       return;
     }
 
@@ -58,9 +72,12 @@ export default function CreateEventModal({ isOpen, onClose, onSuccess }: CreateE
     try {
       const uploadResult = await uploadImage.mutateAsync(thumbnailFile);
       thumbnailUrl = uploadResult.url;
+      toast.success('Image uploaded to IPFS');
     } catch (err) {
       console.error("Upload failed:", err);
-      alert("Failed to upload thumbnail. Please try again.");
+      toast.error('Upload failed', {
+        description: 'Failed to upload thumbnail. Please try again.'
+      });
       return;
     } finally {
       setIsUploading(false);

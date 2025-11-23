@@ -1,8 +1,32 @@
 import { TrendingUp, Images, ArrowRight } from 'lucide-react';
 import { useNavigate } from '@tanstack/react-router';
+import { useTransition } from '@/contexts/TransitionContext';
+import { useRef } from 'react';
 
 export default function ExploreMomentsCard() {
   const navigate = useNavigate();
+  const { triggerTransition } = useTransition();
+  const cardRef = useRef<HTMLDivElement>(null);
+
+  const handleExploreClick = () => {
+    if (cardRef.current) {
+      const rect = cardRef.current.getBoundingClientRect();
+      const computedStyle = window.getComputedStyle(cardRef.current);
+      const borderRadius = parseFloat(computedStyle.borderRadius);
+
+      triggerTransition({
+        x: rect.left,
+        y: rect.top,
+        width: rect.width,
+        height: rect.height,
+        borderRadius: borderRadius,
+      });
+    }
+
+    setTimeout(() => {
+      navigate({ to: '/moments' });
+    }, 800);
+  };
 
   // Fetch moments (using a dummy address or global if API supported it, 
   // but for now we'll use a known address or just show loading/empty state as placeholder)
@@ -45,7 +69,8 @@ export default function ExploreMomentsCard() {
 
       {/* 2. Explore Button (Bottom Row - 2x1) */}
       <div
-        onClick={() => navigate({ to: '/moments' })}
+        ref={cardRef}
+        onClick={handleExploreClick}
         className="col-span-2 relative overflow-hidden group"
       >
         <div className="absolute inset-0 bg-rpn-dark/5 group-hover:bg-rpn-dark/10 transition-colors rounded-xl" />
