@@ -115,6 +115,15 @@ func (h *Handler) getMoments(c echo.Context) error {
 			nftmoment.HasOwnerWith(user.AddressEQ(ownerAddress)),
 		)
 	}
+
+	// Filter by NFT ID
+	nftIDStr := c.QueryParam("nft_id")
+	if nftIDStr != "" {
+		nftID, err := strconv.ParseUint(nftIDStr, 10, 64)
+		if err == nil {
+			query = query.Where(nftmoment.NftIDEQ(nftID))
+		}
+	}
 	// ---
 
 	// 4. Hitung total item (setelah filter diterapkan)

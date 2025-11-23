@@ -12,7 +12,8 @@ export interface UserProfile {
   bg_image?: string; // URL gambar background
   short_description?: string;
   socials?: Record<string, string>; // Map string ke string
-  highlightedMomentID?: number;
+  highlighted_moment_id?: number;
+  highlighted_eventPass_ids?: number[];
   is_free_minted?: boolean;
 
   // Relasi (Edges) dari 'ent'
@@ -48,7 +49,7 @@ const fetchUserProfile = async (address: string): Promise<UserProfile | null | u
 };
 
 // --- 3. Hook Utama ---
-export function useUserProfile(address: string | null | undefined) {
+export function useUserProfile(address: string | null | undefined, options?: { staleTime?: number; refetchOnMount?: boolean }) {
   return useQuery({
     // Kunci Unik untuk Cache (berdasarkan alamat)
     queryKey: ['user-profile', address],
@@ -64,9 +65,9 @@ export function useUserProfile(address: string | null | undefined) {
     retry: false,
 
     // 3. staleTime: Anggap data 'segar' selama 1 menit (kurangi request ke server)
-    staleTime: 1000 * 60 * 1,
+    staleTime: options?.staleTime ?? 1000 * 60 * 1,
 
     // 4. refetchOnWindowFocus: false. Jangan refresh otomatis saat ganti tab browser
-    refetchOnWindowFocus: false,
+    refetchOnWindowFocus: options?.refetchOnMount ?? false,
   });
 }

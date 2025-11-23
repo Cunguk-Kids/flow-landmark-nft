@@ -19,15 +19,15 @@ const fetchMomentById = async (nftId: number) => {
       pageSize: 1,
     },
   });
-  
+
   return response.data.data[0] || null;
 };
 
-export function useGetMomentById(nftId: number | undefined | null) {
+export function useGetMomentById(nftId: number | undefined | null, options?: { staleTime?: number }) {
   return useQuery({
     queryKey: ['moment-detail', nftId],
     queryFn: () => fetchMomentById(nftId!),
     enabled: !!nftId, // Hanya jalan jika ID ada
-    staleTime: 1000 * 60 * 5, // Cache 5 menit
+    staleTime: options?.staleTime ?? 1000 * 60 * 5, // Cache 5 menit
   });
 }
