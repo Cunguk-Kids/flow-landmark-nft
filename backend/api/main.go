@@ -62,6 +62,9 @@ func main() {
 	e.POST("/moments/:id/comments", h.createComment)
 	e.GET("/moments/:id/comments", h.getComments)
 
+	// Upload Route
+	e.POST("/upload", h.uploadImage)
+
 	log.Println("Server API dimulai di http://localhost:8000")
 	e.Logger.Fatal(e.Start(":8000"))
 }

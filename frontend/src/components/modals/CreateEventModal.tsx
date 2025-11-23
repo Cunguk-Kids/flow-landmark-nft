@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useCreateEvent, type CreateEventDTO } from '@/hooks/transactions/useCreateEvent';
 import { Loader2, CalendarPlus, MapPin, Globe } from 'lucide-react';
 import LocationPicker from '../map/LocationPicker';
+import { useUploadImage } from '@/hooks/api/useUploadImage';
 
 interface CreateEventModalProps {
   isOpen: boolean;
@@ -19,11 +20,11 @@ interface CreateEventModalProps {
 
 export default function CreateEventModal({ isOpen, onClose, onSuccess }: CreateEventModalProps) {
   const { createEvent, isPending, isSealed, error } = useCreateEvent();
+  const uploadImage = useUploadImage();
 
   // State Form
   const [name, setName] = useState('');
   const [desc, setDesc] = useState('');
-  const [thumbnail, setThumbnail] = useState('');
   const [type, setType] = useState<'online' | 'offline'>('online');
   const [location, setLocation] = useState('');
   const [lat, setLat] = useState<number>(0);
@@ -32,52 +33,41 @@ export default function CreateEventModal({ isOpen, onClose, onSuccess }: CreateE
   const [start, setStart] = useState('');
   const [end, setEnd] = useState('');
 
-  const [isMapClick, setIsMapClick] = useState(false);
+  const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
+  const [thumbnailPreview, setThumbnailPreview] = useState<string>('');
 
   useEffect(() => {
     if (isSealed) {
       onSuccess();
       onClose();
-      // Reset Form (Optional)
     }
-  }, [isSealed]);
+  }, [isSealed, onSuccess, onClose]);
 
-  // Debounce Search Location
-  useEffect(() => {
-    if (type === 'offline' && location && !isMapClick) {
-      const timer = setTimeout(async () => {
-        try {
-          const res = await fetch(
-            `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(location)}&format=json&limit=1`,
-            {
-              headers: {
-                'User-Agent': 'FlowLandmarkNFT/1.0 (https://github.com/harkon666/flow-landmark-nft)',
-                'Referer': window.location.origin
-              }
-            }
-          );
-          const data = await res.json();
-          if (data && data.length > 0) {
-            setLat(parseFloat(data[0].lat));
-            setLong(parseFloat(data[0].lon));
-          }
-        } catch (err) {
-          console.error("Geocoding failed", err);
-        }
-      }, 1000); // 1s debounce
-
-      return () => clearTimeout(timer);
-    }
-  }, [location, type, isMapClick]);
-
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    // 1. Upload thumbnail first
+    if (!thumbnailFile) {
+      alert("Please select a thumbnail image");
+      return;
+    }
+
+    let thumbnailUrl = '';
+    try {
+      const uploadResult = await uploadImage.mutateAsync(thumbnailFile);
+      thumbnailUrl = uploadResult.url;
+    } catch (err) {
+      console.error("Upload failed:", err);
+      alert("Failed to upload thumbnail. Please try again.");
+      return;
+    }
+
+    // 2. Create event payload
     const payload: CreateEventDTO = {
       eventName: name,
       description: desc,
-      thumbnailURL: thumbnail,
-      eventPassImg: thumbnail, // Sementara pakai gambar yang sama
+      thumbnailURL: thumbnailUrl,
+      eventPassImg: thumbnailUrl, // Sementara pakai gambar yang sama
       eventType: type,
       location: location,
       lat: lat,
@@ -109,8 +99,30 @@ export default function CreateEventModal({ isOpen, onClose, onSuccess }: CreateE
           </div>
 
           <div className="space-y-1">
-            <Label className="text-xs font-bold uppercase font-pixel text-rpn-blue">Thumbnail URL</Label>
-            <Input value={thumbnail} onChange={e => setThumbnail(e.target.value)} className="bg-rpn-card border-rpn-blue/30 text-white rounded-lg" placeholder="ipfs://..." required />
+            <Label className="text-xs font-bold uppercase font-pixel text-rpn-blue">Thumbnail Image</Label>
+            <Input
+              type="file"
+              accept="image/*"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) {
+                  setThumbnailFile(file);
+                  // Create preview
+                  const reader = new FileReader();
+                  reader.onloadend = () => {
+                    setThumbnailPreview(reader.result as string);
+                  };
+                  reader.readAsDataURL(file);
+                }
+              }}
+              className="bg-rpn-card border-rpn-blue/30 text-white rounded-lg file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-rpn-blue file:text-rpn-dark hover:file:bg-white hover:file:text-rpn-blue cursor-pointer"
+              required
+            />
+            {thumbnailPreview && (
+              <div className="mt-2 relative w-full h-40 rounded-lg overflow-hidden border-2 border-rpn-blue/30">
+                <img src={thumbnailPreview} alt="Preview" className="w-full h-full object-cover" />
+              </div>
+            )}
           </div>
 
           <div className="space-y-1">
@@ -142,7 +154,7 @@ export default function CreateEventModal({ isOpen, onClose, onSuccess }: CreateE
                   value={location}
                   onChange={e => {
                     setLocation(e.target.value);
-                    setIsMapClick(false); // User typing, enable search
+                    // setIsMapClick(false); // User typing, enable search
                   }}
                   className="bg-rpn-card border-rpn-blue/30 text-white rounded-lg"
                   placeholder={type === 'online' ? "Discord / Google Meet" : "e.g. Monas, GBK"}
@@ -163,32 +175,30 @@ export default function CreateEventModal({ isOpen, onClose, onSuccess }: CreateE
                 <LocationPicker
                   initialLat={lat}
                   initialLng={long}
-                  onLocationSelect={async (newLat, newLng) => {
+                  onLocationSelect={(newLat, newLng) => {
                     setLat(newLat);
                     setLong(newLng);
-                    setIsMapClick(true); // Flag to prevent search loop
 
-                    // Reverse Geocoding
-                    try {
-                      const res = await fetch(
-                        `https://nominatim.openstreetmap.org/reverse?lat=${newLat}&lon=${newLng}&format=json`,
-                        {
-                          headers: {
-                            'User-Agent': 'FlowLandmarkNFT/1.0 (https://github.com/harkon666/flow-landmark-nft)',
-                            'Referer': window.location.origin
-                          }
-                        }
-                      );
-                      const data = await res.json();
-                      if (data && data.display_name) {
-                        // Ambil nama tempat yang lebih pendek jika ada
-                        const placeName = data.address?.amenity || data.address?.building || data.address?.road || data.display_name.split(',')[0];
-                        const city = data.address?.city || data.address?.town || data.address?.village || "";
-                        setLocation(`${placeName}${city ? `, ${city}` : ''}`);
-                      }
-                    } catch (err) {
-                      console.error("Reverse geocoding failed", err);
-                    }
+                    // DISABLED: Reverse Geocoding (Nominatim API)
+                    // try {
+                    //   const res = await fetch(
+                    //     `https://nominatim.openstreetmap.org/reverse?lat=${newLat}&lon=${newLng}&format=json`,
+                    //     {
+                    //       headers: {
+                    //         'User-Agent': 'FlowLandmarkNFT/1.0 (https://github.com/harkon666/flow-landmark-nft)',
+                    //         'Referer': window.location.origin
+                    //       }
+                    //     }
+                    //   );
+                    //   const data = await res.json();
+                    //   if (data && data.display_name) {
+                    //     const placeName = data.address?.amenity || data.address?.building || data.address?.road || data.display_name.split(',')[0];
+                    //     const city = data.address?.city || data.address?.town || data.address?.village || "";
+                    //     setLocation(`${placeName}${city ? `, ${city}` : ''}`);
+                    //   }
+                    // } catch (err) {
+                    //   console.error("Reverse geocoding failed", err);
+                    // }
                   }}
                 />
               </div>

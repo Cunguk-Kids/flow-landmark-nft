@@ -7,7 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useUpdateProfile, type UpdateProfileDTO } from '@/hooks/transactions/useUpdateProfile';
-import { Loader2, Save, Link as LinkIcon, Edit2 } from 'lucide-react';
+import { Loader2, Save, Link as LinkIcon, Edit2, Upload } from 'lucide-react';
+import { useUploadImage } from '@/hooks/api/useUploadImage';
 
 // Tipe data profil dari API
 interface UserProfileData {
@@ -26,6 +27,7 @@ interface UpdateProfileModalProps {
 
 export default function UpdateProfileModal({ currentProfile, onSuccess }: UpdateProfileModalProps) {
   const { updateProfile, isPending, isSealed, error } = useUpdateProfile();
+  const uploadImage = useUploadImage();
 
   // --- STATE FORMULIR ---
   const [isOpen, setIsOpen] = useState(false);
@@ -34,10 +36,20 @@ export default function UpdateProfileModal({ currentProfile, onSuccess }: Update
   const [bio, setBio] = useState('');
   const [twitter, setTwitter] = useState('');
   const [website, setWebsite] = useState('');
-  
+
   // State URL gambar
   const [pfpUrl, setPfpUrl] = useState('');
   const [bgUrl, setBgUrl] = useState('');
+
+  // State untuk file upload
+  const [pfpFile, setPfpFile] = useState<File | null>(null);
+  const [bgFile, setBgFile] = useState<File | null>(null);
+  const [pfpPreview, setPfpPreview] = useState<string>('');
+  const [bgPreview, setBgPreview] = useState<string>('');
+
+  // Upload loading states
+  const [isUploadingPfp, setIsUploadingPfp] = useState(false);
+  const [isUploadingBanner, setIsUploadingBanner] = useState(false);
 
   // Efek: Isi formulir saat modal dibuka
   useEffect(() => {
@@ -47,7 +59,7 @@ export default function UpdateProfileModal({ currentProfile, onSuccess }: Update
       setBio(currentProfile.bio || '');
       setPfpUrl(currentProfile.pfp || '');
       setBgUrl(currentProfile.bg_image || '');
-      
+
       if (currentProfile.socials) {
         setTwitter(currentProfile.socials['twitter'] || '');
         setWebsite(currentProfile.socials['website'] || '');
@@ -63,9 +75,42 @@ export default function UpdateProfileModal({ currentProfile, onSuccess }: Update
     }
   }, [isSealed]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
+    let finalPfpUrl = pfpUrl;
+    let finalBgUrl = bgUrl;
+
+    // Upload profile picture if file selected
+    if (pfpFile) {
+      setIsUploadingPfp(true);
+      try {
+        const result = await uploadImage.mutateAsync(pfpFile);
+        finalPfpUrl = result.url;
+      } catch (err) {
+        console.error("PFP upload failed:", err);
+        alert("Failed to upload profile picture.");
+        return;
+      } finally {
+        setIsUploadingPfp(false);
+      }
+    }
+
+    // Upload banner if file selected
+    if (bgFile) {
+      setIsUploadingBanner(true);
+      try {
+        const result = await uploadImage.mutateAsync(bgFile);
+        finalBgUrl = result.url;
+      } catch (err) {
+        console.error("Banner upload failed:", err);
+        alert("Failed to upload banner image.");
+        return;
+      } finally {
+        setIsUploadingBanner(false);
+      }
+    }
+
     const socialsMap: Record<string, string> = {};
     if (twitter) socialsMap['twitter'] = twitter;
     if (website) socialsMap['website'] = website;
@@ -74,8 +119,8 @@ export default function UpdateProfileModal({ currentProfile, onSuccess }: Update
       nickname,
       shortDescription: shortDesc,
       bio,
-      pfp: pfpUrl,
-      bgImage: bgUrl,
+      pfp: finalPfpUrl,
+      bgImage: finalBgUrl,
       socials: socialsMap,
       momentID: currentProfile?.highlighted_moment_id || null,
       highlightedEventPassIds: currentProfile?.highlighted_eventPass_ids || null
@@ -87,9 +132,9 @@ export default function UpdateProfileModal({ currentProfile, onSuccess }: Update
   return (
     <>
       {/* TOMBOL PEMICU */}
-      <button 
-          onClick={() => setIsOpen(true)}
-          className="
+      <button
+        onClick={() => setIsOpen(true)}
+        className="
             bg-white text-rpn-dark 
             border-2 border-rpn-blue
             px-6 py-3 rounded-xl font-bold font-sans uppercase
@@ -100,14 +145,14 @@ export default function UpdateProfileModal({ currentProfile, onSuccess }: Update
             transition-all flex items-center gap-2 mb-2 cursor-pointer
           "
       >
-          <Edit2 size={18} className="text-rpn-blue" />
-          EDIT PROFILE
+        <Edit2 size={18} className="text-rpn-blue" />
+        EDIT PROFILE
       </button>
 
       {/* MODAL */}
       <Dialog open={isOpen} onOpenChange={setIsOpen} modal={!isPending}>
         <DialogContent className="bg-rpn-dark border-2 border-rpn-blue text-rpn-text sm:max-w-[500px] rounded-xl shadow-[8px_8px_0px_0px_rgba(41,171,226,0.3)]">
-          
+
           <DialogHeader>
             <DialogTitle className="text-2xl font-black text-rpn-blue uppercase tracking-tighter font-pixel drop-shadow-sm">
               Edit Profile
@@ -118,13 +163,13 @@ export default function UpdateProfileModal({ currentProfile, onSuccess }: Update
           </DialogHeader>
 
           <form onSubmit={handleSubmit} className="space-y-4 mt-4">
-            
+
             {/* Baris 1: Nickname */}
             <div className="space-y-1">
               <Label htmlFor="nickname" className="text-rpn-blue text-xs font-bold uppercase font-pixel">Nickname</Label>
-              <Input 
-                id="nickname" 
-                value={nickname} 
+              <Input
+                id="nickname"
+                value={nickname}
                 onChange={(e) => setNickname(e.target.value)}
                 className="bg-rpn-card border-rpn-blue/30 text-rpn-text focus:border-rpn-blue rounded-lg"
                 placeholder="CryptoKing"
@@ -134,9 +179,9 @@ export default function UpdateProfileModal({ currentProfile, onSuccess }: Update
             {/* Baris 2: Short Description (Tagline) */}
             <div className="space-y-1">
               <Label htmlFor="shortDesc" className="text-rpn-blue text-xs font-bold uppercase font-pixel">Tagline</Label>
-              <Input 
-                id="shortDesc" 
-                value={shortDesc} 
+              <Input
+                id="shortDesc"
+                value={shortDesc}
                 onChange={(e) => setShortDesc(e.target.value)}
                 className="bg-rpn-card border-rpn-blue/30 text-rpn-text focus:border-rpn-blue rounded-lg"
                 placeholder="Blockchain Enthusiast"
@@ -147,61 +192,108 @@ export default function UpdateProfileModal({ currentProfile, onSuccess }: Update
             {/* Baris 3: Bio */}
             <div className="space-y-1">
               <Label htmlFor="bio" className="text-rpn-blue text-xs font-bold uppercase font-pixel">Bio Logs</Label>
-              <Textarea 
-                id="bio" 
-                value={bio} 
+              <Textarea
+                id="bio"
+                value={bio}
                 onChange={(e) => setBio(e.target.value)}
                 className="bg-rpn-card border-rpn-blue/30 text-rpn-text focus:border-rpn-blue rounded-lg min-h-[80px]"
                 placeholder="Tell us about yourself..."
               />
             </div>
 
-            {/* Baris 4: Gambar (URL Input) */}
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-1">
-                  <Label htmlFor="pfp" className="text-rpn-blue text-xs font-bold uppercase font-pixel">Avatar URL</Label>
-                  <Input id="pfp" value={pfpUrl} onChange={e => setPfpUrl(e.target.value)} className="bg-rpn-card border-rpn-blue/30 text-rpn-text rounded-lg" placeholder="ipfs://..." />
-              </div>
-              <div className="space-y-1">
-                  <Label htmlFor="bg" className="text-rpn-blue text-xs font-bold uppercase font-pixel">Banner URL</Label>
-                  <Input id="bg" value={bgUrl} onChange={e => setBgUrl(e.target.value)} className="bg-rpn-card border-rpn-blue/30 text-rpn-text rounded-lg" placeholder="ipfs://..." />
+            {/* Baris 4: Profile Picture Upload */}
+            <div className="space-y-3 border-t border-rpn-blue/20 pt-4">
+              <Label className="text-rpn-blue text-xs font-bold uppercase font-pixel flex items-center gap-2">
+                <Upload size={12} /> Profile Images
+              </Label>
+
+              <div className="grid grid-cols-2 gap-4">
+                {/* Avatar */}
+                <div className="space-y-1">
+                  <Label htmlFor="pfp" className="text-rpn-text text-[10px] font-bold uppercase">Avatar</Label>
+                  <Input
+                    id="pfp"
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        setPfpFile(file);
+                        const reader = new FileReader();
+                        reader.onloadend = () => setPfpPreview(reader.result as string);
+                        reader.readAsDataURL(file);
+                      }
+                    }}
+                    className="bg-rpn-card border-rpn-blue/30 text-white rounded-lg file:mr-2 file:py-1 file:px-3 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-rpn-blue file:text-rpn-dark hover:file:bg-white hover:file:text-rpn-blue cursor-pointer text-xs"
+                  />
+                  {(pfpPreview || pfpUrl) && (
+                    <div className="mt-1 relative w-full h-24 rounded overflow-hidden border border-rpn-blue/30">
+                      <img src={pfpPreview || pfpUrl} alt="Avatar Preview" className="w-full h-full object-cover" />
+                    </div>
+                  )}
+                </div>
+
+                {/* Banner */}
+                <div className="space-y-1">
+                  <Label htmlFor="bg" className="text-rpn-text text-[10px] font-bold uppercase">Banner</Label>
+                  <Input
+                    id="bg"
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        setBgFile(file);
+                        const reader = new FileReader();
+                        reader.onloadend = () => setBgPreview(reader.result as string);
+                        reader.readAsDataURL(file);
+                      }
+                    }}
+                    className="bg-rpn-card border-rpn-blue/30 text-white rounded-lg file:mr-2 file:py-1 file:px-3 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-rpn-blue file:text-rpn-dark hover:file:bg-white hover:file:text-rpn-blue cursor-pointer text-xs"
+                  />
+                  {(bgPreview || bgUrl) && (
+                    <div className="mt-1 relative w-full h-24 rounded overflow-hidden border border-rpn-blue/30">
+                      <img src={bgPreview || bgUrl} alt="Banner Preview" className="w-full h-full object-cover" />
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
 
             {/* Baris 5: Socials */}
             <div className="space-y-2 border-t border-rpn-blue/20 pt-4 mt-4">
               <Label className="text-rpn-text text-xs font-bold uppercase flex items-center gap-2 font-pixel">
-                  <LinkIcon size={12} className="text-rpn-blue"/> Social Links
+                <LinkIcon size={12} className="text-rpn-blue" /> Social Links
               </Label>
               <div className="grid grid-cols-2 gap-4">
-                  <Input 
-                      placeholder="Twitter Handle (@...)" 
-                      value={twitter} 
-                      onChange={e => setTwitter(e.target.value)}
-                      className="bg-rpn-card border-rpn-blue/30 text-rpn-text rounded-lg text-xs"
-                  />
-                  <Input 
-                      placeholder="Website URL" 
-                      value={website} 
-                      onChange={e => setWebsite(e.target.value)}
-                      className="bg-rpn-card border-rpn-blue/30 text-rpn-text rounded-lg text-xs"
-                  />
+                <Input
+                  placeholder="Twitter Handle (@...)"
+                  value={twitter}
+                  onChange={e => setTwitter(e.target.value)}
+                  className="bg-rpn-card border-rpn-blue/30 text-rpn-text rounded-lg text-xs"
+                />
+                <Input
+                  placeholder="Website URL"
+                  value={website}
+                  onChange={e => setWebsite(e.target.value)}
+                  className="bg-rpn-card border-rpn-blue/30 text-rpn-text rounded-lg text-xs"
+                />
               </div>
             </div>
 
             {/* Error Message */}
             {error && (
               <p className="text-error text-xs font-bold bg-error/10 p-2 border border-error rounded-lg font-mono">
-                  Error: {error.message}
+                Error: {error.message}
               </p>
             )}
 
             {/* Submit Button */}
             <div className="pt-4 flex justify-end">
-              <Button 
-                  type="submit" 
-                  disabled={isPending}
-                  className="
+              <Button
+                type="submit"
+                disabled={isPending || isUploadingPfp || isUploadingBanner}
+                className="
                     bg-rpn-blue text-white hover:bg-white hover:text-rpn-blue 
                     font-black font-sans uppercase rounded-lg
                     shadow-[4px_4px_0px_0px_#fff] 
@@ -211,17 +303,27 @@ export default function UpdateProfileModal({ currentProfile, onSuccess }: Update
                     transition-all px-6
                   "
               >
-                  {isPending ? (
-                    <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        SAVING...
-                    </>
-                  ) : (
-                    <>
-                        <Save className="mr-2 h-4 w-4" />
-                        SAVE CHANGES
-                    </>
-                  )}
+                {isUploadingPfp ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    UPLOADING AVATAR...
+                  </>
+                ) : isUploadingBanner ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    UPLOADING BANNER...
+                  </>
+                ) : isPending ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    SAVING...
+                  </>
+                ) : (
+                  <>
+                    <Save className="mr-2 h-4 w-4" />
+                    SAVE CHANGES
+                  </>
+                )}
               </Button>
             </div>
 

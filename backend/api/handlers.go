@@ -350,6 +350,29 @@ func (h *Handler) handleUGCUpload(c echo.Context) (string, error) {
 	return thumbnailUrl, nil
 }
 
+// @Summary     Upload Image
+// @Description Generic endpoint untuk upload gambar ke IPFS (Pinata). Bisa digunakan untuk event thumbnail, profile picture, dll.
+// @Tags        Upload
+// @Accept      multipart/form-data
+// @Produce     json
+// @Param       file formData file true "File gambar (JPG/PNG/WEBP)"
+// @Success     200 {object} map[string]string "Upload sukses, returns URL"
+// @Failure     400 {object} APIResponse "File tidak valid"
+// @Failure     500 {object} APIResponse "Upload gagal"
+// @Router      /upload [post]
+func (h *Handler) uploadImage(c echo.Context) error {
+	// Panggil helper untuk upload
+	imageUrl, err := h.handleUGCUpload(c)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+	}
+
+	return c.JSON(http.StatusOK, map[string]string{
+		"url":     imageUrl,
+		"message": "Image uploaded successfully",
+	})
+}
+
 // @Summary     Mint NFT Moment (Gratis)
 // @Description Minting 'NFTMoment' (UGC) gratis. Endpoint ini menerima 'multipart/form-data'.
 // @Tags        Moments
