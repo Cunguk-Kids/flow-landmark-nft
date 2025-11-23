@@ -35,6 +35,7 @@ export default function CreateEventModal({ isOpen, onClose, onSuccess }: CreateE
 
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
   const [thumbnailPreview, setThumbnailPreview] = useState<string>('');
+  const [isUploading, setIsUploading] = useState(false);
 
   useEffect(() => {
     if (isSealed) {
@@ -53,6 +54,7 @@ export default function CreateEventModal({ isOpen, onClose, onSuccess }: CreateE
     }
 
     let thumbnailUrl = '';
+    setIsUploading(true);
     try {
       const uploadResult = await uploadImage.mutateAsync(thumbnailFile);
       thumbnailUrl = uploadResult.url;
@@ -60,6 +62,8 @@ export default function CreateEventModal({ isOpen, onClose, onSuccess }: CreateE
       console.error("Upload failed:", err);
       alert("Failed to upload thumbnail. Please try again.");
       return;
+    } finally {
+      setIsUploading(false);
     }
 
     // 2. Create event payload
@@ -230,10 +234,12 @@ export default function CreateEventModal({ isOpen, onClose, onSuccess }: CreateE
           <div className="pt-4 flex justify-end border-t border-rpn-blue/20">
             <Button
               type="submit"
-              disabled={isPending}
+              disabled={isPending || isUploading}
               className="bg-rpn-blue text-white hover:bg-white hover:text-rpn-blue font-black font-sans uppercase rounded-lg shadow-[4px_4px_0px_0px_#fff] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[2px_2px_0px_0px_#fff] transition-all px-6"
             >
-              {isPending ? (
+              {isUploading ? (
+                <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> UPLOADING IMAGE...</>
+              ) : isPending ? (
                 <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> CREATING...</>
               ) : (
                 "PUBLISH EVENT"

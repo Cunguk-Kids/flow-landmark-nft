@@ -197,7 +197,7 @@ func (h *Handler) getMoments(c echo.Context) error {
 	}
 
 	// Mapping ke MomentResponse
-	var data []MomentResponse
+	data := make([]MomentResponse, 0) // Initialize as empty array instead of nil
 	for _, m := range moments {
 		lCount, _ := m.QueryLikes().Count(ctx)
 		cCount, _ := m.QueryComments().Count(ctx)
