@@ -30,6 +30,8 @@ const (
 	FieldHighlightedMomentID = "highlighted_moment_id"
 	// FieldSocials holds the string denoting the socials field in the database.
 	FieldSocials = "socials"
+	// FieldIsFreeMinted holds the string denoting the is_free_minted field in the database.
+	FieldIsFreeMinted = "is_free_minted"
 	// EdgeEventPasses holds the string denoting the event_passes edge name in mutations.
 	EdgeEventPasses = "event_passes"
 	// EdgeHostedEvents holds the string denoting the hosted_events edge name in mutations.
@@ -42,6 +44,10 @@ const (
 	EdgeAttendances = "attendances"
 	// EdgeListings holds the string denoting the listings edge name in mutations.
 	EdgeListings = "listings"
+	// EdgeLikes holds the string denoting the likes edge name in mutations.
+	EdgeLikes = "likes"
+	// EdgeComments holds the string denoting the comments edge name in mutations.
+	EdgeComments = "comments"
 	// Table holds the table name of the user in the database.
 	Table = "users"
 	// EventPassesTable is the table that holds the event_passes relation/edge.
@@ -86,6 +92,20 @@ const (
 	ListingsInverseTable = "listings"
 	// ListingsColumn is the table column denoting the listings relation/edge.
 	ListingsColumn = "user_listings"
+	// LikesTable is the table that holds the likes relation/edge.
+	LikesTable = "likes"
+	// LikesInverseTable is the table name for the Like entity.
+	// It exists in this package in order to avoid circular dependency with the "like" package.
+	LikesInverseTable = "likes"
+	// LikesColumn is the table column denoting the likes relation/edge.
+	LikesColumn = "user_likes"
+	// CommentsTable is the table that holds the comments relation/edge.
+	CommentsTable = "comments"
+	// CommentsInverseTable is the table name for the Comment entity.
+	// It exists in this package in order to avoid circular dependency with the "comment" package.
+	CommentsInverseTable = "comments"
+	// CommentsColumn is the table column denoting the comments relation/edge.
+	CommentsColumn = "user_comments"
 )
 
 // Columns holds all SQL columns for user fields.
@@ -100,6 +120,7 @@ var Columns = []string{
 	FieldHighlightedEventPassIds,
 	FieldHighlightedMomentID,
 	FieldSocials,
+	FieldIsFreeMinted,
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -111,6 +132,11 @@ func ValidColumn(column string) bool {
 	}
 	return false
 }
+
+var (
+	// DefaultIsFreeMinted holds the default value on creation for the "is_free_minted" field.
+	DefaultIsFreeMinted bool
+)
 
 // OrderOption defines the ordering options for the User queries.
 type OrderOption func(*sql.Selector)
@@ -153,6 +179,11 @@ func ByBgImage(opts ...sql.OrderTermOption) OrderOption {
 // ByHighlightedMomentID orders the results by the highlighted_moment_id field.
 func ByHighlightedMomentID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldHighlightedMomentID, opts...).ToFunc()
+}
+
+// ByIsFreeMinted orders the results by the is_free_minted field.
+func ByIsFreeMinted(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldIsFreeMinted, opts...).ToFunc()
 }
 
 // ByEventPassesCount orders the results by event_passes count.
@@ -238,6 +269,34 @@ func ByListings(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newListingsStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
+
+// ByLikesCount orders the results by likes count.
+func ByLikesCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newLikesStep(), opts...)
+	}
+}
+
+// ByLikes orders the results by likes terms.
+func ByLikes(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newLikesStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByCommentsCount orders the results by comments count.
+func ByCommentsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newCommentsStep(), opts...)
+	}
+}
+
+// ByComments orders the results by comments terms.
+func ByComments(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newCommentsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newEventPassesStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
@@ -278,5 +337,19 @@ func newListingsStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(ListingsInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, ListingsTable, ListingsColumn),
+	)
+}
+func newLikesStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(LikesInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, LikesTable, LikesColumn),
+	)
+}
+func newCommentsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(CommentsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, CommentsTable, CommentsColumn),
 	)
 }

@@ -26,6 +26,10 @@ type NFTMoment struct {
 	Description string `json:"description,omitempty"`
 	// Thumbnail holds the value of the "thumbnail" field.
 	Thumbnail string `json:"thumbnail,omitempty"`
+	// LikeCount holds the value of the "like_count" field.
+	LikeCount int `json:"like_count,omitempty"`
+	// CommentCount holds the value of the "comment_count" field.
+	CommentCount int `json:"comment_count,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the NFTMomentQuery when eager-loading is set.
 	Edges             NFTMomentEdges `json:"edges"`
@@ -42,9 +46,13 @@ type NFTMomentEdges struct {
 	EquippedAccessories []*NFTAccessory `json:"equipped_accessories,omitempty"`
 	// MintedWithPass holds the value of the minted_with_pass edge.
 	MintedWithPass *EventPass `json:"minted_with_pass,omitempty"`
+	// Likes holds the value of the likes edge.
+	Likes []*Like `json:"likes,omitempty"`
+	// Comments holds the value of the comments edge.
+	Comments []*Comment `json:"comments,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [3]bool
+	loadedTypes [5]bool
 }
 
 // OwnerOrErr returns the Owner value or an error if the edge
@@ -78,12 +86,30 @@ func (e NFTMomentEdges) MintedWithPassOrErr() (*EventPass, error) {
 	return nil, &NotLoadedError{edge: "minted_with_pass"}
 }
 
+// LikesOrErr returns the Likes value or an error if the edge
+// was not loaded in eager-loading.
+func (e NFTMomentEdges) LikesOrErr() ([]*Like, error) {
+	if e.loadedTypes[3] {
+		return e.Likes, nil
+	}
+	return nil, &NotLoadedError{edge: "likes"}
+}
+
+// CommentsOrErr returns the Comments value or an error if the edge
+// was not loaded in eager-loading.
+func (e NFTMomentEdges) CommentsOrErr() ([]*Comment, error) {
+	if e.loadedTypes[4] {
+		return e.Comments, nil
+	}
+	return nil, &NotLoadedError{edge: "comments"}
+}
+
 // scanValues returns the types for scanning values from sql.Rows.
 func (*NFTMoment) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case nftmoment.FieldID, nftmoment.FieldNftID:
+		case nftmoment.FieldID, nftmoment.FieldNftID, nftmoment.FieldLikeCount, nftmoment.FieldCommentCount:
 			values[i] = new(sql.NullInt64)
 		case nftmoment.FieldName, nftmoment.FieldDescription, nftmoment.FieldThumbnail:
 			values[i] = new(sql.NullString)
@@ -136,6 +162,18 @@ func (_m *NFTMoment) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				_m.Thumbnail = value.String
 			}
+		case nftmoment.FieldLikeCount:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field like_count", values[i])
+			} else if value.Valid {
+				_m.LikeCount = int(value.Int64)
+			}
+		case nftmoment.FieldCommentCount:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field comment_count", values[i])
+			} else if value.Valid {
+				_m.CommentCount = int(value.Int64)
+			}
 		case nftmoment.ForeignKeys[0]:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for edge-field event_pass_moment", value)
@@ -178,6 +216,16 @@ func (_m *NFTMoment) QueryMintedWithPass() *EventPassQuery {
 	return NewNFTMomentClient(_m.config).QueryMintedWithPass(_m)
 }
 
+// QueryLikes queries the "likes" edge of the NFTMoment entity.
+func (_m *NFTMoment) QueryLikes() *LikeQuery {
+	return NewNFTMomentClient(_m.config).QueryLikes(_m)
+}
+
+// QueryComments queries the "comments" edge of the NFTMoment entity.
+func (_m *NFTMoment) QueryComments() *CommentQuery {
+	return NewNFTMomentClient(_m.config).QueryComments(_m)
+}
+
 // Update returns a builder for updating this NFTMoment.
 // Note that you need to call NFTMoment.Unwrap() before calling this method if this NFTMoment
 // was returned from a transaction, and the transaction was committed or rolled back.
@@ -212,6 +260,12 @@ func (_m *NFTMoment) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("thumbnail=")
 	builder.WriteString(_m.Thumbnail)
+	builder.WriteString(", ")
+	builder.WriteString("like_count=")
+	builder.WriteString(fmt.Sprintf("%v", _m.LikeCount))
+	builder.WriteString(", ")
+	builder.WriteString("comment_count=")
+	builder.WriteString(fmt.Sprintf("%v", _m.CommentCount))
 	builder.WriteByte(')')
 	return builder.String()
 }

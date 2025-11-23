@@ -4,8 +4,10 @@ package ent
 
 import (
 	"backend/ent/attendance"
+	"backend/ent/comment"
 	"backend/ent/event"
 	"backend/ent/eventpass"
+	"backend/ent/like"
 	"backend/ent/listing"
 	"backend/ent/nftaccessory"
 	"backend/ent/nftmoment"
@@ -31,8 +33,10 @@ const (
 
 	// Node types.
 	TypeAttendance   = "Attendance"
+	TypeComment      = "Comment"
 	TypeEvent        = "Event"
 	TypeEventPass    = "EventPass"
+	TypeLike         = "Like"
 	TypeListing      = "Listing"
 	TypeNFTAccessory = "NFTAccessory"
 	TypeNFTMoment    = "NFTMoment"
@@ -543,6 +547,566 @@ func (m *AttendanceMutation) ResetEdge(name string) error {
 		return nil
 	}
 	return fmt.Errorf("unknown Attendance edge %s", name)
+}
+
+// CommentMutation represents an operation that mutates the Comment nodes in the graph.
+type CommentMutation struct {
+	config
+	op            Op
+	typ           string
+	id            *int
+	content       *string
+	created_at    *time.Time
+	updated_at    *time.Time
+	clearedFields map[string]struct{}
+	user          *int
+	cleareduser   bool
+	moment        *int
+	clearedmoment bool
+	done          bool
+	oldValue      func(context.Context) (*Comment, error)
+	predicates    []predicate.Comment
+}
+
+var _ ent.Mutation = (*CommentMutation)(nil)
+
+// commentOption allows management of the mutation configuration using functional options.
+type commentOption func(*CommentMutation)
+
+// newCommentMutation creates new mutation for the Comment entity.
+func newCommentMutation(c config, op Op, opts ...commentOption) *CommentMutation {
+	m := &CommentMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeComment,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withCommentID sets the ID field of the mutation.
+func withCommentID(id int) commentOption {
+	return func(m *CommentMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *Comment
+		)
+		m.oldValue = func(ctx context.Context) (*Comment, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().Comment.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withComment sets the old Comment of the mutation.
+func withComment(node *Comment) commentOption {
+	return func(m *CommentMutation) {
+		m.oldValue = func(context.Context) (*Comment, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m CommentMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m CommentMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *CommentMutation) ID() (id int, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *CommentMutation) IDs(ctx context.Context) ([]int, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []int{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().Comment.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetContent sets the "content" field.
+func (m *CommentMutation) SetContent(s string) {
+	m.content = &s
+}
+
+// Content returns the value of the "content" field in the mutation.
+func (m *CommentMutation) Content() (r string, exists bool) {
+	v := m.content
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldContent returns the old "content" field's value of the Comment entity.
+// If the Comment object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *CommentMutation) OldContent(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldContent is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldContent requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldContent: %w", err)
+	}
+	return oldValue.Content, nil
+}
+
+// ResetContent resets all changes to the "content" field.
+func (m *CommentMutation) ResetContent() {
+	m.content = nil
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *CommentMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *CommentMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the Comment entity.
+// If the Comment object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *CommentMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *CommentMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (m *CommentMutation) SetUpdatedAt(t time.Time) {
+	m.updated_at = &t
+}
+
+// UpdatedAt returns the value of the "updated_at" field in the mutation.
+func (m *CommentMutation) UpdatedAt() (r time.Time, exists bool) {
+	v := m.updated_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedAt returns the old "updated_at" field's value of the Comment entity.
+// If the Comment object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *CommentMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedAt: %w", err)
+	}
+	return oldValue.UpdatedAt, nil
+}
+
+// ResetUpdatedAt resets all changes to the "updated_at" field.
+func (m *CommentMutation) ResetUpdatedAt() {
+	m.updated_at = nil
+}
+
+// SetUserID sets the "user" edge to the User entity by id.
+func (m *CommentMutation) SetUserID(id int) {
+	m.user = &id
+}
+
+// ClearUser clears the "user" edge to the User entity.
+func (m *CommentMutation) ClearUser() {
+	m.cleareduser = true
+}
+
+// UserCleared reports if the "user" edge to the User entity was cleared.
+func (m *CommentMutation) UserCleared() bool {
+	return m.cleareduser
+}
+
+// UserID returns the "user" edge ID in the mutation.
+func (m *CommentMutation) UserID() (id int, exists bool) {
+	if m.user != nil {
+		return *m.user, true
+	}
+	return
+}
+
+// UserIDs returns the "user" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// UserID instead. It exists only for internal usage by the builders.
+func (m *CommentMutation) UserIDs() (ids []int) {
+	if id := m.user; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetUser resets all changes to the "user" edge.
+func (m *CommentMutation) ResetUser() {
+	m.user = nil
+	m.cleareduser = false
+}
+
+// SetMomentID sets the "moment" edge to the NFTMoment entity by id.
+func (m *CommentMutation) SetMomentID(id int) {
+	m.moment = &id
+}
+
+// ClearMoment clears the "moment" edge to the NFTMoment entity.
+func (m *CommentMutation) ClearMoment() {
+	m.clearedmoment = true
+}
+
+// MomentCleared reports if the "moment" edge to the NFTMoment entity was cleared.
+func (m *CommentMutation) MomentCleared() bool {
+	return m.clearedmoment
+}
+
+// MomentID returns the "moment" edge ID in the mutation.
+func (m *CommentMutation) MomentID() (id int, exists bool) {
+	if m.moment != nil {
+		return *m.moment, true
+	}
+	return
+}
+
+// MomentIDs returns the "moment" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// MomentID instead. It exists only for internal usage by the builders.
+func (m *CommentMutation) MomentIDs() (ids []int) {
+	if id := m.moment; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetMoment resets all changes to the "moment" edge.
+func (m *CommentMutation) ResetMoment() {
+	m.moment = nil
+	m.clearedmoment = false
+}
+
+// Where appends a list predicates to the CommentMutation builder.
+func (m *CommentMutation) Where(ps ...predicate.Comment) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the CommentMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *CommentMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.Comment, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *CommentMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *CommentMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (Comment).
+func (m *CommentMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *CommentMutation) Fields() []string {
+	fields := make([]string, 0, 3)
+	if m.content != nil {
+		fields = append(fields, comment.FieldContent)
+	}
+	if m.created_at != nil {
+		fields = append(fields, comment.FieldCreatedAt)
+	}
+	if m.updated_at != nil {
+		fields = append(fields, comment.FieldUpdatedAt)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *CommentMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case comment.FieldContent:
+		return m.Content()
+	case comment.FieldCreatedAt:
+		return m.CreatedAt()
+	case comment.FieldUpdatedAt:
+		return m.UpdatedAt()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *CommentMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case comment.FieldContent:
+		return m.OldContent(ctx)
+	case comment.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	case comment.FieldUpdatedAt:
+		return m.OldUpdatedAt(ctx)
+	}
+	return nil, fmt.Errorf("unknown Comment field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *CommentMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case comment.FieldContent:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetContent(v)
+		return nil
+	case comment.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	case comment.FieldUpdatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedAt(v)
+		return nil
+	}
+	return fmt.Errorf("unknown Comment field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *CommentMutation) AddedFields() []string {
+	return nil
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *CommentMutation) AddedField(name string) (ent.Value, bool) {
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *CommentMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	}
+	return fmt.Errorf("unknown Comment numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *CommentMutation) ClearedFields() []string {
+	return nil
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *CommentMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *CommentMutation) ClearField(name string) error {
+	return fmt.Errorf("unknown Comment nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *CommentMutation) ResetField(name string) error {
+	switch name {
+	case comment.FieldContent:
+		m.ResetContent()
+		return nil
+	case comment.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	case comment.FieldUpdatedAt:
+		m.ResetUpdatedAt()
+		return nil
+	}
+	return fmt.Errorf("unknown Comment field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *CommentMutation) AddedEdges() []string {
+	edges := make([]string, 0, 2)
+	if m.user != nil {
+		edges = append(edges, comment.EdgeUser)
+	}
+	if m.moment != nil {
+		edges = append(edges, comment.EdgeMoment)
+	}
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *CommentMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case comment.EdgeUser:
+		if id := m.user; id != nil {
+			return []ent.Value{*id}
+		}
+	case comment.EdgeMoment:
+		if id := m.moment; id != nil {
+			return []ent.Value{*id}
+		}
+	}
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *CommentMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 2)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *CommentMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *CommentMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 2)
+	if m.cleareduser {
+		edges = append(edges, comment.EdgeUser)
+	}
+	if m.clearedmoment {
+		edges = append(edges, comment.EdgeMoment)
+	}
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *CommentMutation) EdgeCleared(name string) bool {
+	switch name {
+	case comment.EdgeUser:
+		return m.cleareduser
+	case comment.EdgeMoment:
+		return m.clearedmoment
+	}
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *CommentMutation) ClearEdge(name string) error {
+	switch name {
+	case comment.EdgeUser:
+		m.ClearUser()
+		return nil
+	case comment.EdgeMoment:
+		m.ClearMoment()
+		return nil
+	}
+	return fmt.Errorf("unknown Comment unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *CommentMutation) ResetEdge(name string) error {
+	switch name {
+	case comment.EdgeUser:
+		m.ResetUser()
+		return nil
+	case comment.EdgeMoment:
+		m.ResetMoment()
+		return nil
+	}
+	return fmt.Errorf("unknown Comment edge %s", name)
 }
 
 // EventMutation represents an operation that mutates the Event nodes in the graph.
@@ -2664,6 +3228,458 @@ func (m *EventPassMutation) ResetEdge(name string) error {
 	return fmt.Errorf("unknown EventPass edge %s", name)
 }
 
+// LikeMutation represents an operation that mutates the Like nodes in the graph.
+type LikeMutation struct {
+	config
+	op            Op
+	typ           string
+	id            *int
+	created_at    *time.Time
+	clearedFields map[string]struct{}
+	user          *int
+	cleareduser   bool
+	moment        *int
+	clearedmoment bool
+	done          bool
+	oldValue      func(context.Context) (*Like, error)
+	predicates    []predicate.Like
+}
+
+var _ ent.Mutation = (*LikeMutation)(nil)
+
+// likeOption allows management of the mutation configuration using functional options.
+type likeOption func(*LikeMutation)
+
+// newLikeMutation creates new mutation for the Like entity.
+func newLikeMutation(c config, op Op, opts ...likeOption) *LikeMutation {
+	m := &LikeMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeLike,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withLikeID sets the ID field of the mutation.
+func withLikeID(id int) likeOption {
+	return func(m *LikeMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *Like
+		)
+		m.oldValue = func(ctx context.Context) (*Like, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().Like.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withLike sets the old Like of the mutation.
+func withLike(node *Like) likeOption {
+	return func(m *LikeMutation) {
+		m.oldValue = func(context.Context) (*Like, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m LikeMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m LikeMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *LikeMutation) ID() (id int, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *LikeMutation) IDs(ctx context.Context) ([]int, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []int{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().Like.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *LikeMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *LikeMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the Like entity.
+// If the Like object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *LikeMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *LikeMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// SetUserID sets the "user" edge to the User entity by id.
+func (m *LikeMutation) SetUserID(id int) {
+	m.user = &id
+}
+
+// ClearUser clears the "user" edge to the User entity.
+func (m *LikeMutation) ClearUser() {
+	m.cleareduser = true
+}
+
+// UserCleared reports if the "user" edge to the User entity was cleared.
+func (m *LikeMutation) UserCleared() bool {
+	return m.cleareduser
+}
+
+// UserID returns the "user" edge ID in the mutation.
+func (m *LikeMutation) UserID() (id int, exists bool) {
+	if m.user != nil {
+		return *m.user, true
+	}
+	return
+}
+
+// UserIDs returns the "user" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// UserID instead. It exists only for internal usage by the builders.
+func (m *LikeMutation) UserIDs() (ids []int) {
+	if id := m.user; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetUser resets all changes to the "user" edge.
+func (m *LikeMutation) ResetUser() {
+	m.user = nil
+	m.cleareduser = false
+}
+
+// SetMomentID sets the "moment" edge to the NFTMoment entity by id.
+func (m *LikeMutation) SetMomentID(id int) {
+	m.moment = &id
+}
+
+// ClearMoment clears the "moment" edge to the NFTMoment entity.
+func (m *LikeMutation) ClearMoment() {
+	m.clearedmoment = true
+}
+
+// MomentCleared reports if the "moment" edge to the NFTMoment entity was cleared.
+func (m *LikeMutation) MomentCleared() bool {
+	return m.clearedmoment
+}
+
+// MomentID returns the "moment" edge ID in the mutation.
+func (m *LikeMutation) MomentID() (id int, exists bool) {
+	if m.moment != nil {
+		return *m.moment, true
+	}
+	return
+}
+
+// MomentIDs returns the "moment" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// MomentID instead. It exists only for internal usage by the builders.
+func (m *LikeMutation) MomentIDs() (ids []int) {
+	if id := m.moment; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetMoment resets all changes to the "moment" edge.
+func (m *LikeMutation) ResetMoment() {
+	m.moment = nil
+	m.clearedmoment = false
+}
+
+// Where appends a list predicates to the LikeMutation builder.
+func (m *LikeMutation) Where(ps ...predicate.Like) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the LikeMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *LikeMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.Like, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *LikeMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *LikeMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (Like).
+func (m *LikeMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *LikeMutation) Fields() []string {
+	fields := make([]string, 0, 1)
+	if m.created_at != nil {
+		fields = append(fields, like.FieldCreatedAt)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *LikeMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case like.FieldCreatedAt:
+		return m.CreatedAt()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *LikeMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case like.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	}
+	return nil, fmt.Errorf("unknown Like field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *LikeMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case like.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	}
+	return fmt.Errorf("unknown Like field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *LikeMutation) AddedFields() []string {
+	return nil
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *LikeMutation) AddedField(name string) (ent.Value, bool) {
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *LikeMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	}
+	return fmt.Errorf("unknown Like numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *LikeMutation) ClearedFields() []string {
+	return nil
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *LikeMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *LikeMutation) ClearField(name string) error {
+	return fmt.Errorf("unknown Like nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *LikeMutation) ResetField(name string) error {
+	switch name {
+	case like.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	}
+	return fmt.Errorf("unknown Like field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *LikeMutation) AddedEdges() []string {
+	edges := make([]string, 0, 2)
+	if m.user != nil {
+		edges = append(edges, like.EdgeUser)
+	}
+	if m.moment != nil {
+		edges = append(edges, like.EdgeMoment)
+	}
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *LikeMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case like.EdgeUser:
+		if id := m.user; id != nil {
+			return []ent.Value{*id}
+		}
+	case like.EdgeMoment:
+		if id := m.moment; id != nil {
+			return []ent.Value{*id}
+		}
+	}
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *LikeMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 2)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *LikeMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *LikeMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 2)
+	if m.cleareduser {
+		edges = append(edges, like.EdgeUser)
+	}
+	if m.clearedmoment {
+		edges = append(edges, like.EdgeMoment)
+	}
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *LikeMutation) EdgeCleared(name string) bool {
+	switch name {
+	case like.EdgeUser:
+		return m.cleareduser
+	case like.EdgeMoment:
+		return m.clearedmoment
+	}
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *LikeMutation) ClearEdge(name string) error {
+	switch name {
+	case like.EdgeUser:
+		m.ClearUser()
+		return nil
+	case like.EdgeMoment:
+		m.ClearMoment()
+		return nil
+	}
+	return fmt.Errorf("unknown Like unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *LikeMutation) ResetEdge(name string) error {
+	switch name {
+	case like.EdgeUser:
+		m.ResetUser()
+		return nil
+	case like.EdgeMoment:
+		m.ResetMoment()
+		return nil
+	}
+	return fmt.Errorf("unknown Like edge %s", name)
+}
+
 // ListingMutation represents an operation that mutates the Listing nodes in the graph.
 type ListingMutation struct {
 	config
@@ -2675,6 +3691,7 @@ type ListingMutation struct {
 	price                *float64
 	addprice             *float64
 	payment_vault_type   *string
+	nft_type_id          *string
 	custom_id            *string
 	expiry               *time.Time
 	clearedFields        map[string]struct{}
@@ -2933,6 +3950,42 @@ func (m *ListingMutation) ResetPaymentVaultType() {
 	m.payment_vault_type = nil
 }
 
+// SetNftTypeID sets the "nft_type_id" field.
+func (m *ListingMutation) SetNftTypeID(s string) {
+	m.nft_type_id = &s
+}
+
+// NftTypeID returns the value of the "nft_type_id" field in the mutation.
+func (m *ListingMutation) NftTypeID() (r string, exists bool) {
+	v := m.nft_type_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldNftTypeID returns the old "nft_type_id" field's value of the Listing entity.
+// If the Listing object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ListingMutation) OldNftTypeID(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldNftTypeID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldNftTypeID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldNftTypeID: %w", err)
+	}
+	return oldValue.NftTypeID, nil
+}
+
+// ResetNftTypeID resets all changes to the "nft_type_id" field.
+func (m *ListingMutation) ResetNftTypeID() {
+	m.nft_type_id = nil
+}
+
 // SetCustomID sets the "custom_id" field.
 func (m *ListingMutation) SetCustomID(s string) {
 	m.custom_id = &s
@@ -3130,7 +4183,7 @@ func (m *ListingMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *ListingMutation) Fields() []string {
-	fields := make([]string, 0, 5)
+	fields := make([]string, 0, 6)
 	if m.listing_id != nil {
 		fields = append(fields, listing.FieldListingID)
 	}
@@ -3139,6 +4192,9 @@ func (m *ListingMutation) Fields() []string {
 	}
 	if m.payment_vault_type != nil {
 		fields = append(fields, listing.FieldPaymentVaultType)
+	}
+	if m.nft_type_id != nil {
+		fields = append(fields, listing.FieldNftTypeID)
 	}
 	if m.custom_id != nil {
 		fields = append(fields, listing.FieldCustomID)
@@ -3160,6 +4216,8 @@ func (m *ListingMutation) Field(name string) (ent.Value, bool) {
 		return m.Price()
 	case listing.FieldPaymentVaultType:
 		return m.PaymentVaultType()
+	case listing.FieldNftTypeID:
+		return m.NftTypeID()
 	case listing.FieldCustomID:
 		return m.CustomID()
 	case listing.FieldExpiry:
@@ -3179,6 +4237,8 @@ func (m *ListingMutation) OldField(ctx context.Context, name string) (ent.Value,
 		return m.OldPrice(ctx)
 	case listing.FieldPaymentVaultType:
 		return m.OldPaymentVaultType(ctx)
+	case listing.FieldNftTypeID:
+		return m.OldNftTypeID(ctx)
 	case listing.FieldCustomID:
 		return m.OldCustomID(ctx)
 	case listing.FieldExpiry:
@@ -3212,6 +4272,13 @@ func (m *ListingMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetPaymentVaultType(v)
+		return nil
+	case listing.FieldNftTypeID:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetNftTypeID(v)
 		return nil
 	case listing.FieldCustomID:
 		v, ok := value.(string)
@@ -3320,6 +4387,9 @@ func (m *ListingMutation) ResetField(name string) error {
 		return nil
 	case listing.FieldPaymentVaultType:
 		m.ResetPaymentVaultType()
+		return nil
+	case listing.FieldNftTypeID:
+		m.ResetNftTypeID()
 		return nil
 	case listing.FieldCustomID:
 		m.ResetCustomID()
@@ -4197,6 +5267,10 @@ type NFTMomentMutation struct {
 	name                        *string
 	description                 *string
 	thumbnail                   *string
+	like_count                  *int
+	addlike_count               *int
+	comment_count               *int
+	addcomment_count            *int
 	clearedFields               map[string]struct{}
 	owner                       *int
 	clearedowner                bool
@@ -4205,6 +5279,12 @@ type NFTMomentMutation struct {
 	clearedequipped_accessories bool
 	minted_with_pass            *int
 	clearedminted_with_pass     bool
+	likes                       map[int]struct{}
+	removedlikes                map[int]struct{}
+	clearedlikes                bool
+	comments                    map[int]struct{}
+	removedcomments             map[int]struct{}
+	clearedcomments             bool
 	done                        bool
 	oldValue                    func(context.Context) (*NFTMoment, error)
 	predicates                  []predicate.NFTMoment
@@ -4472,6 +5552,118 @@ func (m *NFTMomentMutation) ResetThumbnail() {
 	m.thumbnail = nil
 }
 
+// SetLikeCount sets the "like_count" field.
+func (m *NFTMomentMutation) SetLikeCount(i int) {
+	m.like_count = &i
+	m.addlike_count = nil
+}
+
+// LikeCount returns the value of the "like_count" field in the mutation.
+func (m *NFTMomentMutation) LikeCount() (r int, exists bool) {
+	v := m.like_count
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldLikeCount returns the old "like_count" field's value of the NFTMoment entity.
+// If the NFTMoment object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *NFTMomentMutation) OldLikeCount(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldLikeCount is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldLikeCount requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldLikeCount: %w", err)
+	}
+	return oldValue.LikeCount, nil
+}
+
+// AddLikeCount adds i to the "like_count" field.
+func (m *NFTMomentMutation) AddLikeCount(i int) {
+	if m.addlike_count != nil {
+		*m.addlike_count += i
+	} else {
+		m.addlike_count = &i
+	}
+}
+
+// AddedLikeCount returns the value that was added to the "like_count" field in this mutation.
+func (m *NFTMomentMutation) AddedLikeCount() (r int, exists bool) {
+	v := m.addlike_count
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetLikeCount resets all changes to the "like_count" field.
+func (m *NFTMomentMutation) ResetLikeCount() {
+	m.like_count = nil
+	m.addlike_count = nil
+}
+
+// SetCommentCount sets the "comment_count" field.
+func (m *NFTMomentMutation) SetCommentCount(i int) {
+	m.comment_count = &i
+	m.addcomment_count = nil
+}
+
+// CommentCount returns the value of the "comment_count" field in the mutation.
+func (m *NFTMomentMutation) CommentCount() (r int, exists bool) {
+	v := m.comment_count
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCommentCount returns the old "comment_count" field's value of the NFTMoment entity.
+// If the NFTMoment object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *NFTMomentMutation) OldCommentCount(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCommentCount is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCommentCount requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCommentCount: %w", err)
+	}
+	return oldValue.CommentCount, nil
+}
+
+// AddCommentCount adds i to the "comment_count" field.
+func (m *NFTMomentMutation) AddCommentCount(i int) {
+	if m.addcomment_count != nil {
+		*m.addcomment_count += i
+	} else {
+		m.addcomment_count = &i
+	}
+}
+
+// AddedCommentCount returns the value that was added to the "comment_count" field in this mutation.
+func (m *NFTMomentMutation) AddedCommentCount() (r int, exists bool) {
+	v := m.addcomment_count
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetCommentCount resets all changes to the "comment_count" field.
+func (m *NFTMomentMutation) ResetCommentCount() {
+	m.comment_count = nil
+	m.addcomment_count = nil
+}
+
 // SetOwnerID sets the "owner" edge to the User entity by id.
 func (m *NFTMomentMutation) SetOwnerID(id int) {
 	m.owner = &id
@@ -4604,6 +5796,114 @@ func (m *NFTMomentMutation) ResetMintedWithPass() {
 	m.clearedminted_with_pass = false
 }
 
+// AddLikeIDs adds the "likes" edge to the Like entity by ids.
+func (m *NFTMomentMutation) AddLikeIDs(ids ...int) {
+	if m.likes == nil {
+		m.likes = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.likes[ids[i]] = struct{}{}
+	}
+}
+
+// ClearLikes clears the "likes" edge to the Like entity.
+func (m *NFTMomentMutation) ClearLikes() {
+	m.clearedlikes = true
+}
+
+// LikesCleared reports if the "likes" edge to the Like entity was cleared.
+func (m *NFTMomentMutation) LikesCleared() bool {
+	return m.clearedlikes
+}
+
+// RemoveLikeIDs removes the "likes" edge to the Like entity by IDs.
+func (m *NFTMomentMutation) RemoveLikeIDs(ids ...int) {
+	if m.removedlikes == nil {
+		m.removedlikes = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.likes, ids[i])
+		m.removedlikes[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedLikes returns the removed IDs of the "likes" edge to the Like entity.
+func (m *NFTMomentMutation) RemovedLikesIDs() (ids []int) {
+	for id := range m.removedlikes {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// LikesIDs returns the "likes" edge IDs in the mutation.
+func (m *NFTMomentMutation) LikesIDs() (ids []int) {
+	for id := range m.likes {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetLikes resets all changes to the "likes" edge.
+func (m *NFTMomentMutation) ResetLikes() {
+	m.likes = nil
+	m.clearedlikes = false
+	m.removedlikes = nil
+}
+
+// AddCommentIDs adds the "comments" edge to the Comment entity by ids.
+func (m *NFTMomentMutation) AddCommentIDs(ids ...int) {
+	if m.comments == nil {
+		m.comments = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.comments[ids[i]] = struct{}{}
+	}
+}
+
+// ClearComments clears the "comments" edge to the Comment entity.
+func (m *NFTMomentMutation) ClearComments() {
+	m.clearedcomments = true
+}
+
+// CommentsCleared reports if the "comments" edge to the Comment entity was cleared.
+func (m *NFTMomentMutation) CommentsCleared() bool {
+	return m.clearedcomments
+}
+
+// RemoveCommentIDs removes the "comments" edge to the Comment entity by IDs.
+func (m *NFTMomentMutation) RemoveCommentIDs(ids ...int) {
+	if m.removedcomments == nil {
+		m.removedcomments = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.comments, ids[i])
+		m.removedcomments[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedComments returns the removed IDs of the "comments" edge to the Comment entity.
+func (m *NFTMomentMutation) RemovedCommentsIDs() (ids []int) {
+	for id := range m.removedcomments {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// CommentsIDs returns the "comments" edge IDs in the mutation.
+func (m *NFTMomentMutation) CommentsIDs() (ids []int) {
+	for id := range m.comments {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetComments resets all changes to the "comments" edge.
+func (m *NFTMomentMutation) ResetComments() {
+	m.comments = nil
+	m.clearedcomments = false
+	m.removedcomments = nil
+}
+
 // Where appends a list predicates to the NFTMomentMutation builder.
 func (m *NFTMomentMutation) Where(ps ...predicate.NFTMoment) {
 	m.predicates = append(m.predicates, ps...)
@@ -4638,7 +5938,7 @@ func (m *NFTMomentMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *NFTMomentMutation) Fields() []string {
-	fields := make([]string, 0, 4)
+	fields := make([]string, 0, 6)
 	if m.nft_id != nil {
 		fields = append(fields, nftmoment.FieldNftID)
 	}
@@ -4650,6 +5950,12 @@ func (m *NFTMomentMutation) Fields() []string {
 	}
 	if m.thumbnail != nil {
 		fields = append(fields, nftmoment.FieldThumbnail)
+	}
+	if m.like_count != nil {
+		fields = append(fields, nftmoment.FieldLikeCount)
+	}
+	if m.comment_count != nil {
+		fields = append(fields, nftmoment.FieldCommentCount)
 	}
 	return fields
 }
@@ -4667,6 +5973,10 @@ func (m *NFTMomentMutation) Field(name string) (ent.Value, bool) {
 		return m.Description()
 	case nftmoment.FieldThumbnail:
 		return m.Thumbnail()
+	case nftmoment.FieldLikeCount:
+		return m.LikeCount()
+	case nftmoment.FieldCommentCount:
+		return m.CommentCount()
 	}
 	return nil, false
 }
@@ -4684,6 +5994,10 @@ func (m *NFTMomentMutation) OldField(ctx context.Context, name string) (ent.Valu
 		return m.OldDescription(ctx)
 	case nftmoment.FieldThumbnail:
 		return m.OldThumbnail(ctx)
+	case nftmoment.FieldLikeCount:
+		return m.OldLikeCount(ctx)
+	case nftmoment.FieldCommentCount:
+		return m.OldCommentCount(ctx)
 	}
 	return nil, fmt.Errorf("unknown NFTMoment field %s", name)
 }
@@ -4721,6 +6035,20 @@ func (m *NFTMomentMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetThumbnail(v)
 		return nil
+	case nftmoment.FieldLikeCount:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetLikeCount(v)
+		return nil
+	case nftmoment.FieldCommentCount:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCommentCount(v)
+		return nil
 	}
 	return fmt.Errorf("unknown NFTMoment field %s", name)
 }
@@ -4732,6 +6060,12 @@ func (m *NFTMomentMutation) AddedFields() []string {
 	if m.addnft_id != nil {
 		fields = append(fields, nftmoment.FieldNftID)
 	}
+	if m.addlike_count != nil {
+		fields = append(fields, nftmoment.FieldLikeCount)
+	}
+	if m.addcomment_count != nil {
+		fields = append(fields, nftmoment.FieldCommentCount)
+	}
 	return fields
 }
 
@@ -4742,6 +6076,10 @@ func (m *NFTMomentMutation) AddedField(name string) (ent.Value, bool) {
 	switch name {
 	case nftmoment.FieldNftID:
 		return m.AddedNftID()
+	case nftmoment.FieldLikeCount:
+		return m.AddedLikeCount()
+	case nftmoment.FieldCommentCount:
+		return m.AddedCommentCount()
 	}
 	return nil, false
 }
@@ -4757,6 +6095,20 @@ func (m *NFTMomentMutation) AddField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.AddNftID(v)
+		return nil
+	case nftmoment.FieldLikeCount:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddLikeCount(v)
+		return nil
+	case nftmoment.FieldCommentCount:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddCommentCount(v)
 		return nil
 	}
 	return fmt.Errorf("unknown NFTMoment numeric field %s", name)
@@ -4797,13 +6149,19 @@ func (m *NFTMomentMutation) ResetField(name string) error {
 	case nftmoment.FieldThumbnail:
 		m.ResetThumbnail()
 		return nil
+	case nftmoment.FieldLikeCount:
+		m.ResetLikeCount()
+		return nil
+	case nftmoment.FieldCommentCount:
+		m.ResetCommentCount()
+		return nil
 	}
 	return fmt.Errorf("unknown NFTMoment field %s", name)
 }
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *NFTMomentMutation) AddedEdges() []string {
-	edges := make([]string, 0, 3)
+	edges := make([]string, 0, 5)
 	if m.owner != nil {
 		edges = append(edges, nftmoment.EdgeOwner)
 	}
@@ -4812,6 +6170,12 @@ func (m *NFTMomentMutation) AddedEdges() []string {
 	}
 	if m.minted_with_pass != nil {
 		edges = append(edges, nftmoment.EdgeMintedWithPass)
+	}
+	if m.likes != nil {
+		edges = append(edges, nftmoment.EdgeLikes)
+	}
+	if m.comments != nil {
+		edges = append(edges, nftmoment.EdgeComments)
 	}
 	return edges
 }
@@ -4834,15 +6198,33 @@ func (m *NFTMomentMutation) AddedIDs(name string) []ent.Value {
 		if id := m.minted_with_pass; id != nil {
 			return []ent.Value{*id}
 		}
+	case nftmoment.EdgeLikes:
+		ids := make([]ent.Value, 0, len(m.likes))
+		for id := range m.likes {
+			ids = append(ids, id)
+		}
+		return ids
+	case nftmoment.EdgeComments:
+		ids := make([]ent.Value, 0, len(m.comments))
+		for id := range m.comments {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *NFTMomentMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 3)
+	edges := make([]string, 0, 5)
 	if m.removedequipped_accessories != nil {
 		edges = append(edges, nftmoment.EdgeEquippedAccessories)
+	}
+	if m.removedlikes != nil {
+		edges = append(edges, nftmoment.EdgeLikes)
+	}
+	if m.removedcomments != nil {
+		edges = append(edges, nftmoment.EdgeComments)
 	}
 	return edges
 }
@@ -4857,13 +6239,25 @@ func (m *NFTMomentMutation) RemovedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case nftmoment.EdgeLikes:
+		ids := make([]ent.Value, 0, len(m.removedlikes))
+		for id := range m.removedlikes {
+			ids = append(ids, id)
+		}
+		return ids
+	case nftmoment.EdgeComments:
+		ids := make([]ent.Value, 0, len(m.removedcomments))
+		for id := range m.removedcomments {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *NFTMomentMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 3)
+	edges := make([]string, 0, 5)
 	if m.clearedowner {
 		edges = append(edges, nftmoment.EdgeOwner)
 	}
@@ -4872,6 +6266,12 @@ func (m *NFTMomentMutation) ClearedEdges() []string {
 	}
 	if m.clearedminted_with_pass {
 		edges = append(edges, nftmoment.EdgeMintedWithPass)
+	}
+	if m.clearedlikes {
+		edges = append(edges, nftmoment.EdgeLikes)
+	}
+	if m.clearedcomments {
+		edges = append(edges, nftmoment.EdgeComments)
 	}
 	return edges
 }
@@ -4886,6 +6286,10 @@ func (m *NFTMomentMutation) EdgeCleared(name string) bool {
 		return m.clearedequipped_accessories
 	case nftmoment.EdgeMintedWithPass:
 		return m.clearedminted_with_pass
+	case nftmoment.EdgeLikes:
+		return m.clearedlikes
+	case nftmoment.EdgeComments:
+		return m.clearedcomments
 	}
 	return false
 }
@@ -4917,6 +6321,12 @@ func (m *NFTMomentMutation) ResetEdge(name string) error {
 	case nftmoment.EdgeMintedWithPass:
 		m.ResetMintedWithPass()
 		return nil
+	case nftmoment.EdgeLikes:
+		m.ResetLikes()
+		return nil
+	case nftmoment.EdgeComments:
+		m.ResetComments()
+		return nil
 	}
 	return fmt.Errorf("unknown NFTMoment edge %s", name)
 }
@@ -4938,6 +6348,7 @@ type UserMutation struct {
 	highlighted_moment_id           *uint64
 	addhighlighted_moment_id        *int64
 	socials                         *map[string]string
+	is_free_minted                  *bool
 	clearedFields                   map[string]struct{}
 	event_passes                    map[int]struct{}
 	removedevent_passes             map[int]struct{}
@@ -4957,6 +6368,12 @@ type UserMutation struct {
 	listings                        map[int]struct{}
 	removedlistings                 map[int]struct{}
 	clearedlistings                 bool
+	likes                           map[int]struct{}
+	removedlikes                    map[int]struct{}
+	clearedlikes                    bool
+	comments                        map[int]struct{}
+	removedcomments                 map[int]struct{}
+	clearedcomments                 bool
 	done                            bool
 	oldValue                        func(context.Context) (*User, error)
 	predicates                      []predicate.User
@@ -5525,6 +6942,42 @@ func (m *UserMutation) ResetSocials() {
 	delete(m.clearedFields, user.FieldSocials)
 }
 
+// SetIsFreeMinted sets the "is_free_minted" field.
+func (m *UserMutation) SetIsFreeMinted(b bool) {
+	m.is_free_minted = &b
+}
+
+// IsFreeMinted returns the value of the "is_free_minted" field in the mutation.
+func (m *UserMutation) IsFreeMinted() (r bool, exists bool) {
+	v := m.is_free_minted
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldIsFreeMinted returns the old "is_free_minted" field's value of the User entity.
+// If the User object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UserMutation) OldIsFreeMinted(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldIsFreeMinted is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldIsFreeMinted requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldIsFreeMinted: %w", err)
+	}
+	return oldValue.IsFreeMinted, nil
+}
+
+// ResetIsFreeMinted resets all changes to the "is_free_minted" field.
+func (m *UserMutation) ResetIsFreeMinted() {
+	m.is_free_minted = nil
+}
+
 // AddEventPassIDs adds the "event_passes" edge to the EventPass entity by ids.
 func (m *UserMutation) AddEventPassIDs(ids ...int) {
 	if m.event_passes == nil {
@@ -5849,6 +7302,114 @@ func (m *UserMutation) ResetListings() {
 	m.removedlistings = nil
 }
 
+// AddLikeIDs adds the "likes" edge to the Like entity by ids.
+func (m *UserMutation) AddLikeIDs(ids ...int) {
+	if m.likes == nil {
+		m.likes = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.likes[ids[i]] = struct{}{}
+	}
+}
+
+// ClearLikes clears the "likes" edge to the Like entity.
+func (m *UserMutation) ClearLikes() {
+	m.clearedlikes = true
+}
+
+// LikesCleared reports if the "likes" edge to the Like entity was cleared.
+func (m *UserMutation) LikesCleared() bool {
+	return m.clearedlikes
+}
+
+// RemoveLikeIDs removes the "likes" edge to the Like entity by IDs.
+func (m *UserMutation) RemoveLikeIDs(ids ...int) {
+	if m.removedlikes == nil {
+		m.removedlikes = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.likes, ids[i])
+		m.removedlikes[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedLikes returns the removed IDs of the "likes" edge to the Like entity.
+func (m *UserMutation) RemovedLikesIDs() (ids []int) {
+	for id := range m.removedlikes {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// LikesIDs returns the "likes" edge IDs in the mutation.
+func (m *UserMutation) LikesIDs() (ids []int) {
+	for id := range m.likes {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetLikes resets all changes to the "likes" edge.
+func (m *UserMutation) ResetLikes() {
+	m.likes = nil
+	m.clearedlikes = false
+	m.removedlikes = nil
+}
+
+// AddCommentIDs adds the "comments" edge to the Comment entity by ids.
+func (m *UserMutation) AddCommentIDs(ids ...int) {
+	if m.comments == nil {
+		m.comments = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.comments[ids[i]] = struct{}{}
+	}
+}
+
+// ClearComments clears the "comments" edge to the Comment entity.
+func (m *UserMutation) ClearComments() {
+	m.clearedcomments = true
+}
+
+// CommentsCleared reports if the "comments" edge to the Comment entity was cleared.
+func (m *UserMutation) CommentsCleared() bool {
+	return m.clearedcomments
+}
+
+// RemoveCommentIDs removes the "comments" edge to the Comment entity by IDs.
+func (m *UserMutation) RemoveCommentIDs(ids ...int) {
+	if m.removedcomments == nil {
+		m.removedcomments = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.comments, ids[i])
+		m.removedcomments[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedComments returns the removed IDs of the "comments" edge to the Comment entity.
+func (m *UserMutation) RemovedCommentsIDs() (ids []int) {
+	for id := range m.removedcomments {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// CommentsIDs returns the "comments" edge IDs in the mutation.
+func (m *UserMutation) CommentsIDs() (ids []int) {
+	for id := range m.comments {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetComments resets all changes to the "comments" edge.
+func (m *UserMutation) ResetComments() {
+	m.comments = nil
+	m.clearedcomments = false
+	m.removedcomments = nil
+}
+
 // Where appends a list predicates to the UserMutation builder.
 func (m *UserMutation) Where(ps ...predicate.User) {
 	m.predicates = append(m.predicates, ps...)
@@ -5883,7 +7444,7 @@ func (m *UserMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *UserMutation) Fields() []string {
-	fields := make([]string, 0, 9)
+	fields := make([]string, 0, 10)
 	if m.address != nil {
 		fields = append(fields, user.FieldAddress)
 	}
@@ -5911,6 +7472,9 @@ func (m *UserMutation) Fields() []string {
 	if m.socials != nil {
 		fields = append(fields, user.FieldSocials)
 	}
+	if m.is_free_minted != nil {
+		fields = append(fields, user.FieldIsFreeMinted)
+	}
 	return fields
 }
 
@@ -5937,6 +7501,8 @@ func (m *UserMutation) Field(name string) (ent.Value, bool) {
 		return m.HighlightedMomentID()
 	case user.FieldSocials:
 		return m.Socials()
+	case user.FieldIsFreeMinted:
+		return m.IsFreeMinted()
 	}
 	return nil, false
 }
@@ -5964,6 +7530,8 @@ func (m *UserMutation) OldField(ctx context.Context, name string) (ent.Value, er
 		return m.OldHighlightedMomentID(ctx)
 	case user.FieldSocials:
 		return m.OldSocials(ctx)
+	case user.FieldIsFreeMinted:
+		return m.OldIsFreeMinted(ctx)
 	}
 	return nil, fmt.Errorf("unknown User field %s", name)
 }
@@ -6035,6 +7603,13 @@ func (m *UserMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetSocials(v)
+		return nil
+	case user.FieldIsFreeMinted:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetIsFreeMinted(v)
 		return nil
 	}
 	return fmt.Errorf("unknown User field %s", name)
@@ -6178,13 +7753,16 @@ func (m *UserMutation) ResetField(name string) error {
 	case user.FieldSocials:
 		m.ResetSocials()
 		return nil
+	case user.FieldIsFreeMinted:
+		m.ResetIsFreeMinted()
+		return nil
 	}
 	return fmt.Errorf("unknown User field %s", name)
 }
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *UserMutation) AddedEdges() []string {
-	edges := make([]string, 0, 6)
+	edges := make([]string, 0, 8)
 	if m.event_passes != nil {
 		edges = append(edges, user.EdgeEventPasses)
 	}
@@ -6202,6 +7780,12 @@ func (m *UserMutation) AddedEdges() []string {
 	}
 	if m.listings != nil {
 		edges = append(edges, user.EdgeListings)
+	}
+	if m.likes != nil {
+		edges = append(edges, user.EdgeLikes)
+	}
+	if m.comments != nil {
+		edges = append(edges, user.EdgeComments)
 	}
 	return edges
 }
@@ -6246,13 +7830,25 @@ func (m *UserMutation) AddedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case user.EdgeLikes:
+		ids := make([]ent.Value, 0, len(m.likes))
+		for id := range m.likes {
+			ids = append(ids, id)
+		}
+		return ids
+	case user.EdgeComments:
+		ids := make([]ent.Value, 0, len(m.comments))
+		for id := range m.comments {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *UserMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 6)
+	edges := make([]string, 0, 8)
 	if m.removedevent_passes != nil {
 		edges = append(edges, user.EdgeEventPasses)
 	}
@@ -6270,6 +7866,12 @@ func (m *UserMutation) RemovedEdges() []string {
 	}
 	if m.removedlistings != nil {
 		edges = append(edges, user.EdgeListings)
+	}
+	if m.removedlikes != nil {
+		edges = append(edges, user.EdgeLikes)
+	}
+	if m.removedcomments != nil {
+		edges = append(edges, user.EdgeComments)
 	}
 	return edges
 }
@@ -6314,13 +7916,25 @@ func (m *UserMutation) RemovedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case user.EdgeLikes:
+		ids := make([]ent.Value, 0, len(m.removedlikes))
+		for id := range m.removedlikes {
+			ids = append(ids, id)
+		}
+		return ids
+	case user.EdgeComments:
+		ids := make([]ent.Value, 0, len(m.removedcomments))
+		for id := range m.removedcomments {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *UserMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 6)
+	edges := make([]string, 0, 8)
 	if m.clearedevent_passes {
 		edges = append(edges, user.EdgeEventPasses)
 	}
@@ -6338,6 +7952,12 @@ func (m *UserMutation) ClearedEdges() []string {
 	}
 	if m.clearedlistings {
 		edges = append(edges, user.EdgeListings)
+	}
+	if m.clearedlikes {
+		edges = append(edges, user.EdgeLikes)
+	}
+	if m.clearedcomments {
+		edges = append(edges, user.EdgeComments)
 	}
 	return edges
 }
@@ -6358,6 +7978,10 @@ func (m *UserMutation) EdgeCleared(name string) bool {
 		return m.clearedattendances
 	case user.EdgeListings:
 		return m.clearedlistings
+	case user.EdgeLikes:
+		return m.clearedlikes
+	case user.EdgeComments:
+		return m.clearedcomments
 	}
 	return false
 }
@@ -6391,6 +8015,12 @@ func (m *UserMutation) ResetEdge(name string) error {
 		return nil
 	case user.EdgeListings:
 		m.ResetListings()
+		return nil
+	case user.EdgeLikes:
+		m.ResetLikes()
+		return nil
+	case user.EdgeComments:
+		m.ResetComments()
 		return nil
 	}
 	return fmt.Errorf("unknown User edge %s", name)

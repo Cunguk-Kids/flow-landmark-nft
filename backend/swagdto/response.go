@@ -26,21 +26,23 @@ type HostResponse struct {
 
 // EventEdges bersih (HANYA 'host')
 type EventEdges struct {
-	Host *HostResponse `json:"host,omitempty"`
+	Attendances []*AttendanceResponse `json:"attendances,omitempty"`
+	Host        *HostResponse         `json:"host,omitempty"`
 }
 
 // EventResponse bersih (sesuai JSON Anda)
 type EventResponse struct {
-	ID          int        `json:"id"`
-	EventID     uint64     `json:"event_id"`
-	Name        string     `json:"name"`
-	Description string     `json:"description"`
-	Thumbnail   string     `json:"thumbnail"`
-	Location    string     `json:"location"`
-	StartDate   time.Time  `json:"start_date"`
-	EndDate     time.Time  `json:"end_date"`
-	Quota       uint64     `json:"quota"`
-	Edges       EventEdges `json:"edges"` // <-- Menggunakan struct 'edges' bersih
+	ID           int        `json:"id"`
+	EventID      uint64     `json:"event_id"`
+	Name         string     `json:"name"`
+	Description  string     `json:"description"`
+	Thumbnail    string     `json:"thumbnail"`
+	Location     string     `json:"location"`
+	StartDate    time.Time  `json:"start_date"`
+	EndDate      time.Time  `json:"end_date"`
+	Quota        uint64     `json:"quota"`
+	IsRegistered bool       `json:"is_registered"`
+	Edges        EventEdges `json:"edges"` // <-- Menggunakan struct 'edges' bersih
 }
 
 // GetEventsResponse bersih (pembungkus utama)
@@ -130,14 +132,19 @@ type GetAccessoriesResponse struct {
 }
 
 type DTOEventPass struct {
-	ID         int               `json:"id"`
-	PassID     uint64            `json:"pass_id"`
-	IsRedeemed bool              `json:"is_redeemed"`
-	Edges      DTOEventPassEdges `json:"edges"`
+	ID          int               `json:"id"`
+	PassID      uint64            `json:"pass_id"`
+	Name        string            `json:"name"`
+	Description string            `json:"description"`
+	Thumbnail   string            `json:"thumbnail"`
+	EventType   uint8             `json:"event_type"`
+	IsRedeemed  bool              `json:"is_redeemed"`
+	Edges       DTOEventPassEdges `json:"edges"`
 }
 type DTOEventPassEdges struct {
-	Owner *DTOUser       `json:"owner,omitempty"`
-	Event *EventResponse `json:"event,omitempty"`
+	Owner  *DTOUser        `json:"owner,omitempty"`
+	Event  *EventResponse  `json:"event,omitempty"`
+	Moment *MomentResponse `json:"moment,omitempty"`
 }
 
 // DTOListing (Struct bersih untuk 'Listing')
@@ -176,7 +183,8 @@ type DTOUserProfile struct {
 	HighlightedEventPassIds []uint64            `json:"highlighted_eventPass_ids,omitempty"`
 	HighlightedMomentID     uint64              `json:"highlighted_moment_id,omitempty"`
 	Socials                 map[string]string   `json:"socials,omitempty"`
-	Edges                   DTOUserProfileEdges `json:"edges"` // <-- Menggunakan struct 'edges' bersih
+	Edges                   DTOUserProfileEdges `json:"edges"`
+	IsFreeMinted            bool                `json:"is_free_minted"`
 }
 
 type GetUserProfileResponse struct {
@@ -205,4 +213,27 @@ type MintResponse struct {
 	Recipient string `json:"recipient" example:"0x1bb6b1e0a5170088"`
 	Name      string `json:"name"      example:"Momen Keren"`
 	Thumbnail string `json:"thumbnail" example:"ipfs://bafy..."`
+}
+
+type AttendanceResponse struct {
+	ID               int    `json:"id"`
+	CheckedIn        bool   `json:"checked_in"`
+	RegistrationTime string `json:"registration_time"`
+	UserAddress      string `json:"user_address,omitempty"`
+}
+
+// GetEventPassesResponse (Wrapper untuk List)
+type GetEventPassesResponse struct {
+	Data       []*DTOEventPass `json:"data"`
+	Pagination *Pagination     `json:"pagination"`
+}
+
+// GetEventPassDetailResponse (Wrapper untuk Single Detail)
+type GetEventPassDetailResponse struct {
+	Data *DTOEventPass `json:"data"`
+}
+
+type GetUsersResponse struct {
+	Data       []*DTOUserProfile `json:"data"`
+	Pagination *Pagination       `json:"pagination"`
 }

@@ -13,29 +13,30 @@ import (
 
 	grpcOpts "google.golang.org/grpc"
 
+	"backend/config"
 	"backend/utils"
 
 	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
-const (
-	ContractAddress = "1b7f070ebf7d0431" // Alamat tempat kontrak di-deploy
-)
+// Removed local const ContractAddress in favor of config.ContractAddress
 
 var (
 	FlowCapabilityControllerIssued = "flow.StorageCapabilityControllerIssued"
-	NFTMomentMinted                = "A.1bb6b1e0a5170088.NFTMoment.Minted"
-	NFTAccessoryMinted             = "A.1bb6b1e0a5170088.AccessoryPack.AccessoryDistributed"
-	NFTMomentEquipAccessory        = "A.1bb6b1e0a5170088.NFTMoment.AccessoryEquipped"
-	NFTMomentUnequipAccessory      = "A.1bb6b1e0a5170088.NFTMoment.AccessoryUnequipped"
-	EventCreated                   = "A.1bb6b1e0a5170088.EventManager.EventCreated"
-	ProfileUpdated                 = "A.1bb6b1e0a5170088.UserProfile.ProfileUpdated"
-	UserRegisteredEvent            = "A.1bb6b1e0a5170088.EventManager.UserRegistered"
-	UserCheckedInEvent             = "A.1bb6b1e0a5170088.EventManager.UserCheckedIn"
-	EventPassMinted                = "A.1bb6b1e0a5170088.EventPass.Minted"
+	NFTMomentMinted                = fmt.Sprintf("A.%s.NFTMoment.Minted", config.ContractAddress)
+	NFTAccessoryMinted             = fmt.Sprintf("A.%s.AccessoryPack.AccessoryDistributed", config.ContractAddress)
+	NFTMomentEquipAccessory        = fmt.Sprintf("A.%s.NFTMoment.AccessoryEquipped", config.ContractAddress)
+	NFTMomentUnequipAccessory      = fmt.Sprintf("A.%s.NFTMoment.AccessoryUnequipped", config.ContractAddress)
+	EventCreated                   = fmt.Sprintf("A.%s.EventManager.EventCreated", config.ContractAddress)
+	ProfileUpdated                 = fmt.Sprintf("A.%s.UserProfile.ProfileUpdated", config.ContractAddress)
+	UserRegisteredEvent            = fmt.Sprintf("A.%s.EventManager.UserRegistered", config.ContractAddress)
+	UserCheckedInEvent             = fmt.Sprintf("A.%s.EventManager.UserCheckedIn", config.ContractAddress)
+	EventPassMinted                = fmt.Sprintf("A.%s.EventPass.Minted", config.ContractAddress)
 	ListingAvailable               = "A.2d55b98eb200daef.NFTStorefrontV2.ListingAvailable"
 	ListingCompleted               = "A.2d55b98eb200daef.NFTStorefrontV2.ListingCompleted"
+	ListingDestroyed               = "A.2d55b98eb200daef.NFTStorefrontV2.Listing.ResourceDestroyed"
 	NFTDeposited                   = "A.631e88ae7f1d7c20.NonFungibleToken.Deposited"
+	NFTMomentMintedWithEventPass   = fmt.Sprintf("A.%s.NFTMoment.MintedWithEventPass", config.ContractAddress)
 )
 
 func main() {
@@ -69,12 +70,13 @@ func main() {
 
 	dataCh, errCh, initErr := grpcClient.SubscribeEventsByBlockHeight(
 		ctx,
-		290706056,
+		291752429,
 		flow.EventFilter{
 			EventTypes: []string{
 				NFTMomentMinted, NFTAccessoryMinted, NFTMomentEquipAccessory, NFTMomentUnequipAccessory,
 				FlowCapabilityControllerIssued, EventCreated, UserRegisteredEvent, UserCheckedInEvent,
 				EventPassMinted, ProfileUpdated, ListingAvailable, NFTDeposited, ListingCompleted,
+				NFTMomentMintedWithEventPass, ListingDestroyed,
 			},
 		},
 	)
@@ -120,8 +122,12 @@ func main() {
 					utils.ListingAvailable(ctx, ev, client)
 				case ListingCompleted:
 					utils.ListingCompleted(ctx, ev, client)
+				case ListingDestroyed:
+					utils.ListingDestroyed(ctx, ev, client)
 				case NFTDeposited:
 					utils.NFTDeposited(ctx, ev, client)
+				case NFTMomentMintedWithEventPass:
+					utils.NFTMomentMintedWithEventPass(ctx, ev, client)
 				}
 			}
 		case err := <-errCh:

@@ -95,19 +95,19 @@ access(all) contract AccessoryPack {
           name = "Bingkai Emas"
           description = "emas banget"
           descriptionRarity = "Super Rare"
-          thumbnail = "ipfs://bafybeibknydg67jcaybwkpxvstlzkd5i4itzgxfqmdn2fs62dldkdt4d3u"
+          thumbnail = "https://white-lazy-marten-351.mypinata.cloud/ipfs/bafybeibknydg67jcaybwkpxvstlzkd5i4itzgxfqmdn2fs62dldkdt4d3u"
           equipmentType = "Bingkai"
       } else if randomNumber > 1 && randomNumber < 11 {
           name = "Bingkai Perak"
           description = "Perak banget"
           descriptionRarity = "Rare"
-          thumbnail = "ipfs://bafybeiajk2fbvg2ycxbbqugwbu52luav523rv43lwmkjr2mchbnlpbvkdy"
+          thumbnail = "https://white-lazy-marten-351.mypinata.cloud/ipfs/bafybeiajk2fbvg2ycxbbqugwbu52luav523rv43lwmkjr2mchbnlpbvkdy"
           equipmentType = "Bingkai"
       } else {
           name = "Bingkai Kayu"
           description = "Kayu banget"
           descriptionRarity = "Common"
-          thumbnail = "ipfs://bafybeifxyn7qqz72io7eegzarsv7omsxwxhdtwprzck4vd5ktfnwyf3oa4"
+          thumbnail = "https://white-lazy-marten-351.mypinata.cloud/ipfs/bafybeifxyn7qqz72io7eegzarsv7omsxwxhdtwprzck4vd5ktfnwyf3oa4"
           equipmentType = "Bingkai"
       }
 

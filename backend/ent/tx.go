@@ -14,10 +14,14 @@ type Tx struct {
 	config
 	// Attendance is the client for interacting with the Attendance builders.
 	Attendance *AttendanceClient
+	// Comment is the client for interacting with the Comment builders.
+	Comment *CommentClient
 	// Event is the client for interacting with the Event builders.
 	Event *EventClient
 	// EventPass is the client for interacting with the EventPass builders.
 	EventPass *EventPassClient
+	// Like is the client for interacting with the Like builders.
+	Like *LikeClient
 	// Listing is the client for interacting with the Listing builders.
 	Listing *ListingClient
 	// NFTAccessory is the client for interacting with the NFTAccessory builders.
@@ -158,8 +162,10 @@ func (tx *Tx) Client() *Client {
 
 func (tx *Tx) init() {
 	tx.Attendance = NewAttendanceClient(tx.config)
+	tx.Comment = NewCommentClient(tx.config)
 	tx.Event = NewEventClient(tx.config)
 	tx.EventPass = NewEventPassClient(tx.config)
+	tx.Like = NewLikeClient(tx.config)
 	tx.Listing = NewListingClient(tx.config)
 	tx.NFTAccessory = NewNFTAccessoryClient(tx.config)
 	tx.NFTMoment = NewNFTMomentClient(tx.config)

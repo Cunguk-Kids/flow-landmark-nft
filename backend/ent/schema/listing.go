@@ -24,6 +24,9 @@ func (Listing) Fields() []ent.Field {
 		// Tipe vault pembayaran (misal: "A.0ae...FlowToken.Vault")
 		field.String("payment_vault_type"),
 
+		// Tipe NFT (misal: "A.f8d...NFTAccessory.NFT")
+		field.String("nft_type_id"),
+
 		// ID kustom (opsional)
 		field.String("custom_id").
 			Optional().

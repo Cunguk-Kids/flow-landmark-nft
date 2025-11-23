@@ -28,8 +28,8 @@ transaction(
       self.frameNFT <- withdrawRef.withdraw(withdrawID: nftAccessoryId) as! @NFTAccessory.NFT
 
       assert(
-        self.frameNFT.getType().identifier == "A.1bb6b1e0a5170088.NFTAccessory.NFT",
-        message: "The NFT that was withdrawn to transfer is not the type that was requested <A.1bb6b1e0a5170088.NFTAccessory.NFT>."
+        self.frameNFT.getType().identifier == "A.93103de44735c104.NFTAccessory.NFT",
+        message: "The NFT that was withdrawn to transfer is not the type that was requested <A.93103de44735c104.NFTAccessory.NFT>."
       )
     }
 

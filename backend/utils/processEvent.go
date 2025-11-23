@@ -1,6 +1,8 @@
 package utils
 
 import ( // Dibutuhkan jika Anda akan melakukan operasi DB
+
+	"backend/config"
 	"backend/ent"
 	"backend/ent/attendance"
 	"backend/ent/event"
@@ -56,7 +58,7 @@ func convertCadenceDictToGoMap(dict cadence.Dictionary) map[string]string {
 		key, okK := pair.Key.(cadence.String)
 		value, okV := pair.Value.(cadence.String)
 		if okK && okV {
-			goMap[key.String()] = value.String()
+			goMap[string(key)] = string(value)
 		}
 	}
 	return goMap
@@ -86,7 +88,7 @@ func HandleCapabilityIssued(ctx context.Context, ev flow.Event, client *ent.Clie
 	Fields := ev.Value.FieldsMappedByName()
 	cadenceTypeString := Fields["type"].String()
 
-	if !strings.Contains(cadenceTypeString, "&A.1bb6b1e0a5170088.UserProfile.Profile") {
+	if !strings.Contains(cadenceTypeString, fmt.Sprintf("&A.%s.UserProfile.Profile", config.ContractAddress)) {
 		return
 	}
 
@@ -101,7 +103,7 @@ func HandleCapabilityIssued(ctx context.Context, ev flow.Event, client *ent.Clie
 		log.Println("error taking address cadence")
 	}
 
-	// Dapatkan alamat sebagai string (misal: "0xf8d6e0586b0a20c7")
+	// Dapatkan alamat sebagai string (misal: "0x1bb6b1e0a5170088")
 	userAddress := ownerAddressCadence.String()
 
 	// 6. Pola "Get-or-Create" (Sangat Penting)
@@ -149,9 +151,9 @@ func NFTMomentMinted(ctx context.Context, ev flow.Event, client *ent.Client) {
 		return
 	}
 	ownerAddress := ownerAddressCadence.String()
-	name := nameCadence.String()
-	description := descriptionCadence.String()
-	thumbnail := thumbnailCadence.String()
+	name := string(nameCadence)
+	description := string(descriptionCadence)
+	thumbnail := string(thumbnailCadence)
 
 	isUserFound, err := client.User.Query().
 		Where(
@@ -162,6 +164,15 @@ func NFTMomentMinted(ctx context.Context, ev flow.Event, client *ent.Client) {
 		log.Println("please setup moment collection")
 	} else {
 		log.Println("User found", isUserFound)
+
+		// Update status free mint user
+		_, errUpdate := isUserFound.Update().SetIsFreeMinted(true).Save(ctx)
+		if errUpdate != nil {
+			log.Printf("Gagal update status free mint user %s: %v", isUserFound.Address, errUpdate)
+		} else {
+			log.Printf("User %s marked as free minted.", isUserFound.Address)
+		}
+
 		nftMinted, err := client.NFTMoment.Create().
 			SetName(name).
 			SetDescription(description).
@@ -191,9 +202,9 @@ func NFTAccessoryMinted(ctx context.Context, ev flow.Event, client *ent.Client) 
 		return
 	}
 	ownerAddress := ownerAddressCadence.String()
-	name := nameCadence.String()
-	description := descriptionCadence.String()
-	thumbnail := thumbnailCadence.String()
+	name := string(nameCadence)
+	description := string(descriptionCadence)
+	thumbnail := string(thumbnailCadence)
 
 	isUserFound, err := client.User.Query().
 		Where(
@@ -215,7 +226,7 @@ func NFTAccessoryMinted(ctx context.Context, ev flow.Event, client *ent.Client) 
 			SetThumbnail(thumbnail).
 			SetNftID(uint64(idNftCadence)).
 			SetOwnerID(isUserFound.ID).
-			SetEquipmentType(equipmentTypeCadence.String()).
+			SetEquipmentType(string(equipmentTypeCadence)).
 			Save(ctx)
 
 		if err != nil {
@@ -305,10 +316,10 @@ func EventCreated(ctx context.Context, ev flow.Event, client *ent.Client) {
 	hostAddress := hostAddressCadence.String()
 	eventID := uint64(eventIDCadence)
 	// String
-	eventName := eventNameCadence.String()
-	description := descriptionCadence.String()
-	thumbnailURL := thumbnailURLCadence.String()
-	location := locationCadence.String()
+	eventName := string(eventNameCadence)
+	description := string(descriptionCadence)
+	thumbnailURL := string(thumbnailURLCadence)
+	location := string(locationCadence)
 	// Angka
 	eventType := uint8(eventTypeCadence)
 	quota := uint64(quotaCadence)
@@ -332,6 +343,7 @@ func EventCreated(ctx context.Context, ev flow.Event, client *ent.Client) {
 	if err != nil {
 		if ent.IsNotFound(err) {
 			log.Println("Please create user profile")
+			return
 		} else {
 			// Error DB lain
 			log.Printf("Error saat query host user %s: %v", hostAddress, err)
@@ -554,9 +566,9 @@ func EventPassMinted(ctx context.Context, ev flow.Event, client *ent.Client) {
 			// Buat 'EventPass' baru
 			newPass, createErr := client.EventPass.Create().
 				SetPassID(passID).
-				SetName(nameCadence.String()).
-				SetDescription(descriptionCadence.String()).
-				SetThumbnail(thumbnailCadence.String()).
+				SetName(string(nameCadence)).
+				SetDescription(string(descriptionCadence)).
+				SetThumbnail(string(thumbnailCadence)).
 				SetEventType(uint8(eventTypeCadence)).
 				SetIsUsed(false).      // Set default
 				SetOwner(ownerUser).   // <-- Tautkan ke User (Pemilik)
@@ -613,34 +625,34 @@ func ProfileUpdated(ctx context.Context, ev flow.Event, client *ent.Client) {
 
 	// bio (String)
 	if bioCadence, ok := Fields["bio"].(cadence.String); ok {
-		updater.SetBio(bioCadence.String())
+		updater.SetBio(string(bioCadence))
 	}
 
 	// nickname ((String)?)
 	if nicknameCadence, ok := Fields["nickname"].(cadence.Optional); ok {
 		if nicknameCadence.Value != nil {
-			updater.SetNickname(nicknameCadence.Value.(cadence.String).String())
+			updater.SetNickname(string(nicknameCadence.Value.(cadence.String)))
 		}
 	}
 
 	// pfp ((String)?)
 	if pfpCadence, ok := Fields["pfp"].(cadence.Optional); ok {
 		if pfpCadence.Value != nil {
-			updater.SetPfp(pfpCadence.Value.(cadence.String).String())
+			updater.SetPfp(string(pfpCadence.Value.(cadence.String)))
 		}
 	}
 
 	// shortDescription ((String)?)
 	if shortDescCadence, ok := Fields["shortDescription"].(cadence.Optional); ok {
 		if shortDescCadence.Value != nil {
-			updater.SetShortDescription(shortDescCadence.Value.(cadence.String).String())
+			updater.SetShortDescription(string(shortDescCadence.Value.(cadence.String)))
 		}
 	}
 
 	// bgImage ((String)?)
 	if bgImageCadence, ok := Fields["bgImage"].(cadence.Optional); ok {
 		if bgImageCadence.Value != nil {
-			updater.SetBgImage(bgImageCadence.Value.(cadence.String).String())
+			updater.SetBgImage(string(bgImageCadence.Value.(cadence.String)))
 		}
 	}
 
@@ -757,8 +769,8 @@ func ListingAvailable(ctx context.Context, ev flow.Event, client *ent.Client) {
 	// --- PERUBAHAN DI SINI: Validasi Tipe NFT menggunakan 'strings.Contains' ---
 	// (Ganti 'f8d...' dengan alamat Anda jika berbeda,
 	//  tapi sebaiknya cek nama unik kontraknya saja)
-	if !strings.Contains(nftType, ".NFTAccessory.") {
-		log.Printf("Tipe NFT %s bukan 'NFTAccessory', dilewati.", nftType)
+	if !strings.Contains(nftType, ".NFTAccessory.") && !strings.Contains(nftType, ".NFTMoment.") {
+		log.Printf("Tipe NFT %s bukan 'NFTAccessory' atau 'NFTMoment', dilewati.", nftType)
 		return
 	}
 	// --- AKHIR PERUBAHAN ---
@@ -776,6 +788,7 @@ func ListingAvailable(ctx context.Context, ev flow.Event, client *ent.Client) {
 		SetPrice(price).
 		SetExpiry(expiryTime).
 		SetPaymentVaultType(vaultType). // Simpan string tipe vault
+		SetNftTypeID(nftType).          // Simpan tipe NFT
 		SetSeller(sellerUser).
 		SetNftAccessory(nft).
 		Save(ctx)
@@ -788,7 +801,7 @@ func ListingAvailable(ctx context.Context, ev flow.Event, client *ent.Client) {
 }
 
 func ListingCompleted(ctx context.Context, ev flow.Event, client *ent.Client) {
-	log.Println("Memproses event ListingCompleted...")
+	log.Println("Memproses event Listing Completed...")
 
 	// --- 1. Parsing Event ---
 	var Fields = ev.Value.FieldsMappedByName()
@@ -800,27 +813,10 @@ func ListingCompleted(ctx context.Context, ev flow.Event, client *ent.Client) {
 		return
 	}
 
-	// Ambil 'purchased'
-	purchasedCadence, err := getCadenceField[cadence.Bool](Fields, "purchased")
-	if err != nil {
-		log.Println("Gagal parsing 'purchased':", err)
-		return
-	}
-
 	// --- 2. Konversi Tipe Go ---
 	listingID := uint64(listingIDCadence)
-	wasPurchased := bool(purchasedCadence)
-
+	log.Println(listingIDCadence.String())
 	// --- 3. Logika Bisnis ---
-
-	// 'ListingCompleted' juga di-emit saat 'unlist' (membatalkan penjualan)
-	// Kita hanya peduli jika 'purchased' adalah 'true'
-	if !wasPurchased {
-		log.Printf("Listing ID %d di-unlist (tidak dibeli), mengabaikan penghapusan.", listingID)
-		// (Anda mungkin ingin 'handler' terpisah untuk 'unlist'
-		//  jika Anda perlu memperbarui 'isListed' flag)
-		return
-	}
 
 	// 4. Temukan 'Listing' di DB
 	// (Ini menggunakan 'ListingIDEQ' dari skema 'Listing' Anda)
@@ -830,19 +826,59 @@ func ListingCompleted(ctx context.Context, ev flow.Event, client *ent.Client) {
 
 	if err != nil {
 		if ent.IsNotFound(err) {
-			log.Printf("Listing ID %d sudah dihapus, dilewati.", listingID)
+			log.Printf("Listing ID %d tidak ditemukan di DB, tidak ada yang perlu dihapus.", listingID)
 		} else {
-			log.Printf("Error query 'Listing' %d: %v", listingID, err)
+			log.Printf("Error saat query Listing %d: %v", listingID, err)
 		}
 		return
 	}
 
-	// 5. HAPUS 'Listing' dari database
+	// 5. Hapus Listing
 	err = client.Listing.DeleteOne(listingRecord).Exec(ctx)
 	if err != nil {
-		log.Printf("Gagal menghapus 'Listing' ID %d: %v", listingID, err)
+		log.Printf("Gagal menghapus Listing ID %d: %v", listingID, err)
 	} else {
-		log.Printf("Berhasil menghapus 'Listing' ID %d (terjual).", listingID)
+		log.Printf("Listing ID %d berhasil dihapus (Completed/Purchased).", listingID)
+	}
+}
+
+func ListingDestroyed(ctx context.Context, ev flow.Event, client *ent.Client) {
+	log.Println("Memproses event ListingDestroyed...")
+
+	// --- 1. Parsing Event ---
+	var Fields = ev.Value.FieldsMappedByName()
+
+	listingIDCadence, err := getCadenceField[cadence.UInt64](Fields, "listingResourceID")
+	if err != nil {
+		log.Println("Gagal parsing 'listingResourceID':", err)
+		return
+	}
+
+	// --- 2. Konversi Tipe Go ---
+	listingID := uint64(listingIDCadence)
+
+	// --- 3. Hapus Listing dari DB ---
+	// Kita cari dulu untuk memastikan ada, lalu hapus.
+	// Atau bisa langsung DeleteFunc dengan Where, tapi DeleteOne lebih aman jika kita ingin log.
+
+	listingRecord, err := client.Listing.Query().
+		Where(listing.ListingIDEQ(listingID)).
+		Only(ctx)
+
+	if err != nil {
+		if ent.IsNotFound(err) {
+			log.Printf("Listing ID %d tidak ditemukan di DB, mungkin sudah dihapus sebelumnya.", listingID)
+		} else {
+			log.Printf("Error saat query Listing %d untuk dihapus: %v", listingID, err)
+		}
+		return
+	}
+
+	err = client.Listing.DeleteOne(listingRecord).Exec(ctx)
+	if err != nil {
+		log.Printf("Gagal menghapus Listing ID %d (Destroyed): %v", listingID, err)
+	} else {
+		log.Printf("Listing ID %d berhasil dihapus karena ResourceDestroyed.", listingID)
 	}
 }
 
@@ -874,6 +910,12 @@ func NFTDeposited(ctx context.Context, ev flow.Event, client *ent.Client) {
 	}
 	nftType := nftTypeField.String()
 
+	// Filter: Hanya proses NFT dari kontrak kita (puki1 / 1bb6b1e0a5170088)
+	// Identifier biasanya format: A.{address}.{ContractName}.{ResourceName}
+	if !strings.Contains(nftType, config.ContractAddress) {
+		return
+	}
+
 	// --- 2. Konversi Tipe Go ---
 	nftID := uint64(nftIDCadence)
 	newOwnerAddress := recipientAddressCadence.String()
@@ -884,6 +926,7 @@ func NFTDeposited(ctx context.Context, ev flow.Event, client *ent.Client) {
 	if err != nil {
 		if ent.IsNotFound(err) {
 			log.Printf("Pemilik baru %s tidak ditemukan")
+			return
 		} else {
 			log.Printf("Error query user %s: %v", newOwnerAddress, err)
 			return
@@ -935,4 +978,73 @@ func NFTDeposited(ctx context.Context, ev flow.Event, client *ent.Client) {
 		}
 	}
 	// (Abaikan jika bukan tipe NFT yang kita pedulikan)
+}
+
+func NFTMomentMintedWithEventPass(ctx context.Context, ev flow.Event, client *ent.Client) {
+	var Fields = ev.Value.FieldsMappedByName()
+	ownerAddressCadence, err := getCadenceField[cadence.Address](Fields, "recipient")
+	idNftCadence, _ := getCadenceField[cadence.UInt64](Fields, "id")
+	nameCadence, _ := getCadenceField[cadence.String](Fields, "name")
+	descriptionCadence, _ := getCadenceField[cadence.String](Fields, "description")
+	thumbnailCadence, _ := getCadenceField[cadence.String](Fields, "thumbnail")
+	eventPassIDCadence, _ := getCadenceField[cadence.UInt64](Fields, "eventPassID")
+
+	if err != nil {
+		log.Println("Gagal parsing recipient:", err)
+		return
+	}
+	ownerAddress := ownerAddressCadence.String()
+	name := string(nameCadence)
+	description := string(descriptionCadence)
+	thumbnail := string(thumbnailCadence)
+	eventPassID := uint64(eventPassIDCadence)
+
+	// 1. Cari User
+	isUserFound, err := client.User.Query().
+		Where(
+			user.AddressEQ(ownerAddress),
+		).
+		Only(ctx)
+
+	if err != nil {
+		log.Println("User not found, please setup moment collection")
+		return
+	}
+
+	// 2. Cari Event Pass yang digunakan
+	usedPass, err := client.EventPass.Query().
+		Where(eventpass.PassIDEQ(eventPassID)).
+		Only(ctx)
+
+	if err != nil {
+		log.Printf("Event Pass ID %d tidak ditemukan di DB: %v", eventPassID, err)
+		// Lanjut minting moment meski pass tidak ketemu (edge case), atau return?
+		// Idealnya kita tetap mint moment, tapi log error pass.
+	} else {
+		// 3. Update Status Event Pass -> is_used = true
+		_, err = usedPass.Update().
+			SetIsUsed(true).
+			Save(ctx)
+		if err != nil {
+			log.Printf("Gagal update status Event Pass ID %d: %v", eventPassID, err)
+		} else {
+			log.Printf("Event Pass ID %d berhasil ditandai sebagai terpakai.", eventPassID)
+		}
+	}
+
+	// 4. Mint Moment
+	nftMinted, err := client.NFTMoment.Create().
+		SetName(name).
+		SetDescription(description).
+		SetThumbnail(thumbnail).
+		SetNftID(uint64(idNftCadence)).
+		SetOwnerID(isUserFound.ID).
+		SetMintedWithPass(usedPass). // Link ke Pass (Opsional, jika ada relasi di schema)
+		Save(ctx)
+
+	if err != nil {
+		log.Println("error when create insert NFT Moment:", err)
+	} else {
+		log.Println("NFT Moment minted with Pass:", nftMinted)
+	}
 }

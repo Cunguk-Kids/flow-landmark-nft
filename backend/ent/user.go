@@ -35,6 +35,8 @@ type User struct {
 	HighlightedMomentID uint64 `json:"highlighted_moment_id,omitempty"`
 	// Socials holds the value of the "socials" field.
 	Socials map[string]string `json:"socials,omitempty"`
+	// IsFreeMinted holds the value of the "is_free_minted" field.
+	IsFreeMinted bool `json:"is_free_minted,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the UserQuery when eager-loading is set.
 	Edges        UserEdges `json:"edges"`
@@ -55,9 +57,13 @@ type UserEdges struct {
 	Attendances []*Attendance `json:"attendances,omitempty"`
 	// Listings holds the value of the listings edge.
 	Listings []*Listing `json:"listings,omitempty"`
+	// Likes holds the value of the likes edge.
+	Likes []*Like `json:"likes,omitempty"`
+	// Comments holds the value of the comments edge.
+	Comments []*Comment `json:"comments,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [6]bool
+	loadedTypes [8]bool
 }
 
 // EventPassesOrErr returns the EventPasses value or an error if the edge
@@ -114,6 +120,24 @@ func (e UserEdges) ListingsOrErr() ([]*Listing, error) {
 	return nil, &NotLoadedError{edge: "listings"}
 }
 
+// LikesOrErr returns the Likes value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) LikesOrErr() ([]*Like, error) {
+	if e.loadedTypes[6] {
+		return e.Likes, nil
+	}
+	return nil, &NotLoadedError{edge: "likes"}
+}
+
+// CommentsOrErr returns the Comments value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) CommentsOrErr() ([]*Comment, error) {
+	if e.loadedTypes[7] {
+		return e.Comments, nil
+	}
+	return nil, &NotLoadedError{edge: "comments"}
+}
+
 // scanValues returns the types for scanning values from sql.Rows.
 func (*User) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
@@ -121,6 +145,8 @@ func (*User) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case user.FieldHighlightedEventPassIds, user.FieldSocials:
 			values[i] = new([]byte)
+		case user.FieldIsFreeMinted:
+			values[i] = new(sql.NullBool)
 		case user.FieldID, user.FieldHighlightedMomentID:
 			values[i] = new(sql.NullInt64)
 		case user.FieldAddress, user.FieldNickname, user.FieldBio, user.FieldPfp, user.FieldShortDescription, user.FieldBgImage:
@@ -204,6 +230,12 @@ func (_m *User) assignValues(columns []string, values []any) error {
 					return fmt.Errorf("unmarshal field socials: %w", err)
 				}
 			}
+		case user.FieldIsFreeMinted:
+			if value, ok := values[i].(*sql.NullBool); !ok {
+				return fmt.Errorf("unexpected type %T for field is_free_minted", values[i])
+			} else if value.Valid {
+				_m.IsFreeMinted = value.Bool
+			}
 		default:
 			_m.selectValues.Set(columns[i], values[i])
 		}
@@ -245,6 +277,16 @@ func (_m *User) QueryAttendances() *AttendanceQuery {
 // QueryListings queries the "listings" edge of the User entity.
 func (_m *User) QueryListings() *ListingQuery {
 	return NewUserClient(_m.config).QueryListings(_m)
+}
+
+// QueryLikes queries the "likes" edge of the User entity.
+func (_m *User) QueryLikes() *LikeQuery {
+	return NewUserClient(_m.config).QueryLikes(_m)
+}
+
+// QueryComments queries the "comments" edge of the User entity.
+func (_m *User) QueryComments() *CommentQuery {
+	return NewUserClient(_m.config).QueryComments(_m)
 }
 
 // Update returns a builder for updating this User.
@@ -296,6 +338,9 @@ func (_m *User) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("socials=")
 	builder.WriteString(fmt.Sprintf("%v", _m.Socials))
+	builder.WriteString(", ")
+	builder.WriteString("is_free_minted=")
+	builder.WriteString(fmt.Sprintf("%v", _m.IsFreeMinted))
 	builder.WriteByte(')')
 	return builder.String()
 }

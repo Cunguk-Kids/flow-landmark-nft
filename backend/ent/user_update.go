@@ -4,8 +4,10 @@ package ent
 
 import (
 	"backend/ent/attendance"
+	"backend/ent/comment"
 	"backend/ent/event"
 	"backend/ent/eventpass"
+	"backend/ent/like"
 	"backend/ent/listing"
 	"backend/ent/nftaccessory"
 	"backend/ent/nftmoment"
@@ -205,6 +207,20 @@ func (_u *UserUpdate) ClearSocials() *UserUpdate {
 	return _u
 }
 
+// SetIsFreeMinted sets the "is_free_minted" field.
+func (_u *UserUpdate) SetIsFreeMinted(v bool) *UserUpdate {
+	_u.mutation.SetIsFreeMinted(v)
+	return _u
+}
+
+// SetNillableIsFreeMinted sets the "is_free_minted" field if the given value is not nil.
+func (_u *UserUpdate) SetNillableIsFreeMinted(v *bool) *UserUpdate {
+	if v != nil {
+		_u.SetIsFreeMinted(*v)
+	}
+	return _u
+}
+
 // AddEventPassIDs adds the "event_passes" edge to the EventPass entity by IDs.
 func (_u *UserUpdate) AddEventPassIDs(ids ...int) *UserUpdate {
 	_u.mutation.AddEventPassIDs(ids...)
@@ -293,6 +309,36 @@ func (_u *UserUpdate) AddListings(v ...*Listing) *UserUpdate {
 		ids[i] = v[i].ID
 	}
 	return _u.AddListingIDs(ids...)
+}
+
+// AddLikeIDs adds the "likes" edge to the Like entity by IDs.
+func (_u *UserUpdate) AddLikeIDs(ids ...int) *UserUpdate {
+	_u.mutation.AddLikeIDs(ids...)
+	return _u
+}
+
+// AddLikes adds the "likes" edges to the Like entity.
+func (_u *UserUpdate) AddLikes(v ...*Like) *UserUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddLikeIDs(ids...)
+}
+
+// AddCommentIDs adds the "comments" edge to the Comment entity by IDs.
+func (_u *UserUpdate) AddCommentIDs(ids ...int) *UserUpdate {
+	_u.mutation.AddCommentIDs(ids...)
+	return _u
+}
+
+// AddComments adds the "comments" edges to the Comment entity.
+func (_u *UserUpdate) AddComments(v ...*Comment) *UserUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddCommentIDs(ids...)
 }
 
 // Mutation returns the UserMutation object of the builder.
@@ -426,6 +472,48 @@ func (_u *UserUpdate) RemoveListings(v ...*Listing) *UserUpdate {
 	return _u.RemoveListingIDs(ids...)
 }
 
+// ClearLikes clears all "likes" edges to the Like entity.
+func (_u *UserUpdate) ClearLikes() *UserUpdate {
+	_u.mutation.ClearLikes()
+	return _u
+}
+
+// RemoveLikeIDs removes the "likes" edge to Like entities by IDs.
+func (_u *UserUpdate) RemoveLikeIDs(ids ...int) *UserUpdate {
+	_u.mutation.RemoveLikeIDs(ids...)
+	return _u
+}
+
+// RemoveLikes removes "likes" edges to Like entities.
+func (_u *UserUpdate) RemoveLikes(v ...*Like) *UserUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveLikeIDs(ids...)
+}
+
+// ClearComments clears all "comments" edges to the Comment entity.
+func (_u *UserUpdate) ClearComments() *UserUpdate {
+	_u.mutation.ClearComments()
+	return _u
+}
+
+// RemoveCommentIDs removes the "comments" edge to Comment entities by IDs.
+func (_u *UserUpdate) RemoveCommentIDs(ids ...int) *UserUpdate {
+	_u.mutation.RemoveCommentIDs(ids...)
+	return _u
+}
+
+// RemoveComments removes "comments" edges to Comment entities.
+func (_u *UserUpdate) RemoveComments(v ...*Comment) *UserUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveCommentIDs(ids...)
+}
+
 // Save executes the query and returns the number of nodes affected by the update operation.
 func (_u *UserUpdate) Save(ctx context.Context) (int, error) {
 	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
@@ -520,6 +608,9 @@ func (_u *UserUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	}
 	if _u.mutation.SocialsCleared() {
 		_spec.ClearField(user.FieldSocials, field.TypeJSON)
+	}
+	if value, ok := _u.mutation.IsFreeMinted(); ok {
+		_spec.SetField(user.FieldIsFreeMinted, field.TypeBool, value)
 	}
 	if _u.mutation.EventPassesCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -784,6 +875,96 @@ func (_u *UserUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(listing.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.LikesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.LikesTable,
+			Columns: []string{user.LikesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(like.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedLikesIDs(); len(nodes) > 0 && !_u.mutation.LikesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.LikesTable,
+			Columns: []string{user.LikesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(like.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.LikesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.LikesTable,
+			Columns: []string{user.LikesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(like.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.CommentsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.CommentsTable,
+			Columns: []string{user.CommentsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(comment.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedCommentsIDs(); len(nodes) > 0 && !_u.mutation.CommentsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.CommentsTable,
+			Columns: []string{user.CommentsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(comment.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.CommentsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.CommentsTable,
+			Columns: []string{user.CommentsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(comment.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -982,6 +1163,20 @@ func (_u *UserUpdateOne) ClearSocials() *UserUpdateOne {
 	return _u
 }
 
+// SetIsFreeMinted sets the "is_free_minted" field.
+func (_u *UserUpdateOne) SetIsFreeMinted(v bool) *UserUpdateOne {
+	_u.mutation.SetIsFreeMinted(v)
+	return _u
+}
+
+// SetNillableIsFreeMinted sets the "is_free_minted" field if the given value is not nil.
+func (_u *UserUpdateOne) SetNillableIsFreeMinted(v *bool) *UserUpdateOne {
+	if v != nil {
+		_u.SetIsFreeMinted(*v)
+	}
+	return _u
+}
+
 // AddEventPassIDs adds the "event_passes" edge to the EventPass entity by IDs.
 func (_u *UserUpdateOne) AddEventPassIDs(ids ...int) *UserUpdateOne {
 	_u.mutation.AddEventPassIDs(ids...)
@@ -1070,6 +1265,36 @@ func (_u *UserUpdateOne) AddListings(v ...*Listing) *UserUpdateOne {
 		ids[i] = v[i].ID
 	}
 	return _u.AddListingIDs(ids...)
+}
+
+// AddLikeIDs adds the "likes" edge to the Like entity by IDs.
+func (_u *UserUpdateOne) AddLikeIDs(ids ...int) *UserUpdateOne {
+	_u.mutation.AddLikeIDs(ids...)
+	return _u
+}
+
+// AddLikes adds the "likes" edges to the Like entity.
+func (_u *UserUpdateOne) AddLikes(v ...*Like) *UserUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddLikeIDs(ids...)
+}
+
+// AddCommentIDs adds the "comments" edge to the Comment entity by IDs.
+func (_u *UserUpdateOne) AddCommentIDs(ids ...int) *UserUpdateOne {
+	_u.mutation.AddCommentIDs(ids...)
+	return _u
+}
+
+// AddComments adds the "comments" edges to the Comment entity.
+func (_u *UserUpdateOne) AddComments(v ...*Comment) *UserUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddCommentIDs(ids...)
 }
 
 // Mutation returns the UserMutation object of the builder.
@@ -1203,6 +1428,48 @@ func (_u *UserUpdateOne) RemoveListings(v ...*Listing) *UserUpdateOne {
 	return _u.RemoveListingIDs(ids...)
 }
 
+// ClearLikes clears all "likes" edges to the Like entity.
+func (_u *UserUpdateOne) ClearLikes() *UserUpdateOne {
+	_u.mutation.ClearLikes()
+	return _u
+}
+
+// RemoveLikeIDs removes the "likes" edge to Like entities by IDs.
+func (_u *UserUpdateOne) RemoveLikeIDs(ids ...int) *UserUpdateOne {
+	_u.mutation.RemoveLikeIDs(ids...)
+	return _u
+}
+
+// RemoveLikes removes "likes" edges to Like entities.
+func (_u *UserUpdateOne) RemoveLikes(v ...*Like) *UserUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveLikeIDs(ids...)
+}
+
+// ClearComments clears all "comments" edges to the Comment entity.
+func (_u *UserUpdateOne) ClearComments() *UserUpdateOne {
+	_u.mutation.ClearComments()
+	return _u
+}
+
+// RemoveCommentIDs removes the "comments" edge to Comment entities by IDs.
+func (_u *UserUpdateOne) RemoveCommentIDs(ids ...int) *UserUpdateOne {
+	_u.mutation.RemoveCommentIDs(ids...)
+	return _u
+}
+
+// RemoveComments removes "comments" edges to Comment entities.
+func (_u *UserUpdateOne) RemoveComments(v ...*Comment) *UserUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveCommentIDs(ids...)
+}
+
 // Where appends a list predicates to the UserUpdate builder.
 func (_u *UserUpdateOne) Where(ps ...predicate.User) *UserUpdateOne {
 	_u.mutation.Where(ps...)
@@ -1327,6 +1594,9 @@ func (_u *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) {
 	}
 	if _u.mutation.SocialsCleared() {
 		_spec.ClearField(user.FieldSocials, field.TypeJSON)
+	}
+	if value, ok := _u.mutation.IsFreeMinted(); ok {
+		_spec.SetField(user.FieldIsFreeMinted, field.TypeBool, value)
 	}
 	if _u.mutation.EventPassesCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -1591,6 +1861,96 @@ func (_u *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(listing.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.LikesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.LikesTable,
+			Columns: []string{user.LikesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(like.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedLikesIDs(); len(nodes) > 0 && !_u.mutation.LikesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.LikesTable,
+			Columns: []string{user.LikesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(like.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.LikesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.LikesTable,
+			Columns: []string{user.LikesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(like.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.CommentsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.CommentsTable,
+			Columns: []string{user.CommentsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(comment.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedCommentsIDs(); len(nodes) > 0 && !_u.mutation.CommentsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.CommentsTable,
+			Columns: []string{user.CommentsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(comment.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.CommentsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.CommentsTable,
+			Columns: []string{user.CommentsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(comment.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
