@@ -5,12 +5,7 @@ import { useFlowCurrentUser } from "@onflow/react-sdk";
 import { useState } from "react";
 import CommentSection from "../social/CommentSection";
 import { cn } from "@/lib/utils";
-import {
-  HoverCard,
-  HoverCardContent,
-  HoverCardTrigger,
-} from "@/components/ui/hover-card";
-import CompactProfileCard from "@/components/CompactProfileCard";
+import ProfilePopup from "@/components/profile/ProfilePopup";
 
 interface MomentPostCardProps {
   moment: Moment;
@@ -43,44 +38,35 @@ export default function MomentPostCard({ moment }: MomentPostCardProps) {
       {/* --- HEADER: USER INFO --- */}
       <div className="p-4 flex items-center justify-between border-b border-rpn-blue/20 bg-rpn-dark/30 backdrop-blur-sm">
         <div className="flex items-center gap-3">
-          <HoverCard>
-            <HoverCardTrigger asChild>
-              <div className="flex items-center gap-3 cursor-pointer group">
-                {/* Avatar */}
-                <div className="w-10 h-10 rounded-lg bg-rpn-dark border-2 border-rpn-blue overflow-hidden group-hover:scale-105 transition-transform shadow-md">
-                  {owner.pfp ? (
-                    <img
-                      src={owner.pfp}
-                      alt={owner.nickname}
-                      className="w-full h-full object-cover"
-                      style={{ imageRendering: 'pixelated' }}
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-rpn-blue">
-                      <User size={20} />
-                    </div>
-                  )}
-                </div>
-
-                {/* Name & Address */}
-                <div>
-                  <h3 className="font-bold text-white text-sm leading-none group-hover:text-rpn-blue transition-colors font-pixel uppercase tracking-tight">
-                    {owner.nickname || "Anonymous"}
-                  </h3>
-                  <p className="text-[10px] text-rpn-muted font-mono mt-1 bg-rpn-dark px-1.5 py-0.5 rounded inline-block border border-white/5">
-                    {owner.address}
-                  </p>
-                </div>
+          <ProfilePopup address={owner.address} user={owner}>
+            <div className="flex items-center gap-3 cursor-pointer group">
+              {/* Avatar */}
+              <div className="w-14 h-14 rounded-lg bg-rpn-dark border-2 border-rpn-blue overflow-hidden group-hover:scale-105 transition-transform shadow-md">
+                {owner.pfp ? (
+                  <img
+                    src={owner.pfp}
+                    alt={owner.nickname}
+                    className="w-full h-full object-cover"
+                    style={{ imageRendering: 'pixelated' }}
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-rpn-blue">
+                    <User size={20} />
+                  </div>
+                )}
               </div>
-            </HoverCardTrigger>
 
-            <HoverCardContent className="w-80 p-0 border-none bg-transparent shadow-none z-50" sideOffset={10}>
-              <CompactProfileCard
-                address={owner.address}
-                user={owner}
-              />
-            </HoverCardContent>
-          </HoverCard>
+              {/* Name & Address */}
+              <div>
+                <h3 className="font-bold text-white text-sm leading-none group-hover:text-rpn-blue transition-colors font-pixel uppercase tracking-tight">
+                  {owner.nickname || "Anonymous"}
+                </h3>
+                <p className="text-[10px] text-rpn-muted font-mono mt-1 bg-rpn-dark px-1.5 py-0.5 rounded inline-block border border-white/5">
+                  {owner.address}
+                </p>
+              </div>
+            </div>
+          </ProfilePopup>
         </div>
 
         {/* Event Badge */}
@@ -106,7 +92,7 @@ export default function MomentPostCard({ moment }: MomentPostCardProps) {
         />
 
         {/* Layer 2: Accessories */}
-        {accessories.map((acc, idx) => (
+        {accessories.map((acc: any, idx: number) => (
           <img
             key={acc.id}
             src={acc.thumbnail}

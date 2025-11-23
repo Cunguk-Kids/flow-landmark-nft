@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useCreateEvent, type CreateEventDTO } from '@/hooks/transactions/useCreateEvent';
 import { Loader2, CalendarPlus, MapPin, Globe } from 'lucide-react';
+import LocationPicker from '../map/LocationPicker';
 
 interface CreateEventModalProps {
   isOpen: boolean;
@@ -25,9 +26,13 @@ export default function CreateEventModal({ isOpen, onClose, onSuccess }: CreateE
   const [thumbnail, setThumbnail] = useState('');
   const [type, setType] = useState<'online' | 'offline'>('online');
   const [location, setLocation] = useState('');
+  const [lat, setLat] = useState<number>(0);
+  const [long, setLong] = useState<number>(0);
   const [quota, setQuota] = useState('50');
   const [start, setStart] = useState('');
   const [end, setEnd] = useState('');
+
+  const [isMapClick, setIsMapClick] = useState(false);
 
   useEffect(() => {
     if (isSealed) {
@@ -35,11 +40,39 @@ export default function CreateEventModal({ isOpen, onClose, onSuccess }: CreateE
       onClose();
       // Reset Form (Optional)
     }
-  }, [isSealed, onSuccess, onClose]);
+  }, [isSealed]);
+
+  // Debounce Search Location
+  useEffect(() => {
+    if (type === 'offline' && location && !isMapClick) {
+      const timer = setTimeout(async () => {
+        try {
+          const res = await fetch(
+            `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(location)}&format=json&limit=1`,
+            {
+              headers: {
+                'User-Agent': 'FlowLandmarkNFT/1.0 (https://github.com/harkon666/flow-landmark-nft)',
+                'Referer': window.location.origin
+              }
+            }
+          );
+          const data = await res.json();
+          if (data && data.length > 0) {
+            setLat(parseFloat(data[0].lat));
+            setLong(parseFloat(data[0].lon));
+          }
+        } catch (err) {
+          console.error("Geocoding failed", err);
+        }
+      }, 1000); // 1s debounce
+
+      return () => clearTimeout(timer);
+    }
+  }, [location, type, isMapClick]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     const payload: CreateEventDTO = {
       eventName: name,
       description: desc,
@@ -47,8 +80,8 @@ export default function CreateEventModal({ isOpen, onClose, onSuccess }: CreateE
       eventPassImg: thumbnail, // Sementara pakai gambar yang sama
       eventType: type,
       location: location,
-      lat: 0.0, // Placeholder, nanti bisa pakai Map Picker
-      long: 0.0,
+      lat: lat,
+      long: long,
       startDate: new Date(start),
       endDate: new Date(end),
       quota: parseInt(quota)
@@ -68,7 +101,7 @@ export default function CreateEventModal({ isOpen, onClose, onSuccess }: CreateE
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4 mt-2">
-          
+
           {/* Basic Info */}
           <div className="space-y-1">
             <Label className="text-xs font-bold uppercase font-pixel text-rpn-blue">Event Name</Label>
@@ -86,61 +119,115 @@ export default function CreateEventModal({ isOpen, onClose, onSuccess }: CreateE
           </div>
 
           {/* Type & Location */}
-          <div className="grid grid-cols-2 gap-4">
-             <div className="space-y-1">
+          <div className="grid grid-cols-1 gap-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1">
                 <Label className="text-xs font-bold uppercase font-pixel text-rpn-blue">Type</Label>
                 <Select onValueChange={(v: 'online' | 'offline') => setType(v)} defaultValue="online">
-                    <SelectTrigger className="bg-rpn-card border-rpn-blue/30 text-white rounded-lg">
-                        <SelectValue placeholder="Select Type" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-rpn-card border-rpn-blue text-white">
-                        <SelectItem value="online">🌐 ONLINE</SelectItem>
-                        <SelectItem value="offline">📍 OFFLINE</SelectItem>
-                    </SelectContent>
+                  <SelectTrigger className="bg-rpn-card border-rpn-blue/30 text-white rounded-lg">
+                    <SelectValue placeholder="Select Type" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-rpn-card border-rpn-blue text-white">
+                    <SelectItem value="online">🌐 ONLINE</SelectItem>
+                    <SelectItem value="offline">📍 OFFLINE</SelectItem>
+                  </SelectContent>
                 </Select>
-             </div>
-             <div className="space-y-1">
+              </div>
+              <div className="space-y-1">
                 <Label className="text-xs font-bold uppercase font-pixel text-rpn-blue flex items-center gap-1">
-                    {type === 'online' ? <Globe size={12}/> : <MapPin size={12}/>} 
-                    {type === 'online' ? "Link / Platform" : "Address"}
+                  {type === 'online' ? <Globe size={12} /> : <MapPin size={12} />}
+                  {type === 'online' ? "Link / Platform" : "Address Name"}
                 </Label>
-                <Input value={location} onChange={e => setLocation(e.target.value)} className="bg-rpn-card border-rpn-blue/30 text-white rounded-lg" placeholder={type === 'online' ? "Discord / Google Meet" : "Jl. Sudirman No..."} required />
-             </div>
+                <Input
+                  value={location}
+                  onChange={e => {
+                    setLocation(e.target.value);
+                    setIsMapClick(false); // User typing, enable search
+                  }}
+                  className="bg-rpn-card border-rpn-blue/30 text-white rounded-lg"
+                  placeholder={type === 'online' ? "Discord / Google Meet" : "e.g. Monas, GBK"}
+                  required
+                />
+              </div>
+            </div>
+
+            {/* Map Picker (Only for Offline) */}
+            {type === 'offline' && (
+              <div className="space-y-1 animate-in fade-in slide-in-from-top-2">
+                <Label className="text-xs font-bold uppercase font-pixel text-rpn-blue flex items-center justify-between">
+                  <span>Pin Location</span>
+                  <span className="text-[10px] font-mono text-rpn-muted">
+                    {lat !== 0 ? `${lat.toFixed(4)}, ${long.toFixed(4)}` : "(Click map to set)"}
+                  </span>
+                </Label>
+                <LocationPicker
+                  initialLat={lat}
+                  initialLng={long}
+                  onLocationSelect={async (newLat, newLng) => {
+                    setLat(newLat);
+                    setLong(newLng);
+                    setIsMapClick(true); // Flag to prevent search loop
+
+                    // Reverse Geocoding
+                    try {
+                      const res = await fetch(
+                        `https://nominatim.openstreetmap.org/reverse?lat=${newLat}&lon=${newLng}&format=json`,
+                        {
+                          headers: {
+                            'User-Agent': 'FlowLandmarkNFT/1.0 (https://github.com/harkon666/flow-landmark-nft)',
+                            'Referer': window.location.origin
+                          }
+                        }
+                      );
+                      const data = await res.json();
+                      if (data && data.display_name) {
+                        // Ambil nama tempat yang lebih pendek jika ada
+                        const placeName = data.address?.amenity || data.address?.building || data.address?.road || data.display_name.split(',')[0];
+                        const city = data.address?.city || data.address?.town || data.address?.village || "";
+                        setLocation(`${placeName}${city ? `, ${city}` : ''}`);
+                      }
+                    } catch (err) {
+                      console.error("Reverse geocoding failed", err);
+                    }
+                  }}
+                />
+              </div>
+            )}
           </div>
 
           {/* Date & Quota */}
           <div className="grid grid-cols-3 gap-4">
-             <div className="space-y-1">
-                <Label className="text-xs font-bold uppercase font-pixel text-rpn-blue">Starts</Label>
-                <Input type="datetime-local" value={start} onChange={e => setStart(e.target.value)} className="bg-rpn-card border-rpn-blue/30 text-white rounded-lg text-xs" required />
-             </div>
-             <div className="space-y-1">
-                <Label className="text-xs font-bold uppercase font-pixel text-rpn-blue">Ends</Label>
-                <Input type="datetime-local" value={end} onChange={e => setEnd(e.target.value)} className="bg-rpn-card border-rpn-blue/30 text-white rounded-lg text-xs" required />
-             </div>
-             <div className="space-y-1">
-                <Label className="text-xs font-bold uppercase font-pixel text-rpn-blue">Quota</Label>
-                <Input type="number" value={quota} onChange={e => setQuota(e.target.value)} className="bg-rpn-card border-rpn-blue/30 text-white rounded-lg" min="1" required />
-             </div>
+            <div className="space-y-1">
+              <Label className="text-xs font-bold uppercase font-pixel text-rpn-blue">Starts</Label>
+              <Input type="datetime-local" value={start} onChange={e => setStart(e.target.value)} className="bg-rpn-card border-rpn-blue/30 text-white rounded-lg text-xs" required />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs font-bold uppercase font-pixel text-rpn-blue">Ends</Label>
+              <Input type="datetime-local" value={end} onChange={e => setEnd(e.target.value)} className="bg-rpn-card border-rpn-blue/30 text-white rounded-lg text-xs" required />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs font-bold uppercase font-pixel text-rpn-blue">Quota</Label>
+              <Input type="number" value={quota} onChange={e => setQuota(e.target.value)} className="bg-rpn-card border-rpn-blue/30 text-white rounded-lg" min="1" required />
+            </div>
           </div>
 
           {error && (
             <p className="text-red-500 text-xs font-bold bg-red-900/20 p-2 border border-red-500 rounded">
-                Error: {error.message}
+              Error: {error.message}
             </p>
           )}
 
           <div className="pt-4 flex justify-end border-t border-rpn-blue/20">
-            <Button 
-                type="submit" 
-                disabled={isPending}
-                className="bg-rpn-blue text-white hover:bg-white hover:text-rpn-blue font-black font-sans uppercase rounded-lg shadow-[4px_4px_0px_0px_#fff] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[2px_2px_0px_0px_#fff] transition-all px-6"
+            <Button
+              type="submit"
+              disabled={isPending}
+              className="bg-rpn-blue text-white hover:bg-white hover:text-rpn-blue font-black font-sans uppercase rounded-lg shadow-[4px_4px_0px_0px_#fff] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[2px_2px_0px_0px_#fff] transition-all px-6"
             >
-                {isPending ? (
-                    <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> CREATING...</>
-                ) : (
-                    "PUBLISH EVENT"
-                )}
+              {isPending ? (
+                <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> CREATING...</>
+              ) : (
+                "PUBLISH EVENT"
+              )}
             </Button>
           </div>
 
