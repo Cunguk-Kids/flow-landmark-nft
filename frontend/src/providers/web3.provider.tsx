@@ -5,19 +5,19 @@ import flowJson from '../../../flow.json';
 import { config } from "@onflow/fcl";
 
 config({
-  "accessNode.api": "http://localhost:8888",
+  "accessNode.api": "https://rest-testnet.onflow.org",
 })
-// export const flowConfig: FlowConfig = {
-//   flowNetwork: "testnet",
-//   discoveryWallet: "https://fcl-discovery.onflow.org/testnet/authn",
-//   accessNodeUrl: 'https://rest-testnet.onflow.org'
-// };
-
 export const flowConfig: FlowConfig = {
-  accessNodeUrl: 'http://localhost:8888',
-  flowNetwork: 'emulator',
-  discoveryWallet: 'https://fcl-discovery.onflow.org/emulator/authn',
+  flowNetwork: "testnet",
+  discoveryWallet: "https://fcl-discovery.onflow.org/testnet/authn",
+  accessNodeUrl: 'https://rest-testnet.onflow.org'
 };
+
+// export const flowConfig: FlowConfig = {
+//   accessNodeUrl: 'http://localhost:8888',
+//   flowNetwork: 'emulator',
+//   discoveryWallet: 'https://fcl-discovery.onflow.org/emulator/authn',
+// };
 export function Web3Provider(props: { children: ReactNode }) {
   return <FlowProvider config={flowConfig} flowJson={flowJson}>{props.children}</FlowProvider>;
 }
