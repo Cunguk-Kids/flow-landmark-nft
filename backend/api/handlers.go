@@ -51,7 +51,9 @@ type APIResponse struct {
 
 type MomentResponse struct {
 	*ent.NFTMoment
-	IsLiked bool `json:"is_liked"`
+	IsLiked      bool `json:"is_liked"`
+	LikeCount    int  `json:"like_count"`
+	CommentCount int  `json:"comment_count"`
 }
 
 type GetEventsResponse struct {
@@ -188,9 +190,14 @@ func (h *Handler) getMoments(c echo.Context) error {
 	// Mapping ke MomentResponse
 	var data []MomentResponse
 	for _, m := range moments {
+		lCount, _ := m.QueryLikes().Count(ctx)
+		cCount, _ := m.QueryComments().Count(ctx)
+
 		data = append(data, MomentResponse{
-			NFTMoment: m,
-			IsLiked:   likedMomentIDs[uint64(m.ID)],
+			NFTMoment:    m,
+			IsLiked:      likedMomentIDs[uint64(m.ID)],
+			LikeCount:    lCount,
+			CommentCount: cCount,
 		})
 	}
 
