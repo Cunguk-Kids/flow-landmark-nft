@@ -4,20 +4,28 @@ import { type ListingData } from '@/hooks/api/useGetListings';
 import { ShoppingCart, User, Ban } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useFlowCurrentUser } from '@onflow/react-sdk';
+import { useBuyItem } from '@/hooks/transactions/useBuyItem';
 
 interface ListingCardProps {
   listing: ListingData;
-  onBuy: (listingId: number, price: number) => void; // Callback saat klik beli
-  isBuying?: boolean; // Loading state
 }
 
-export default function ListingCard({ listing, onBuy, isBuying }: ListingCardProps) {
+export default function ListingCard({ listing }: ListingCardProps) {
   const { user } = useFlowCurrentUser();
-  const nft = listing.edges?.nft_accessory;
+  const { buy, isPending: isBuyingItem } = useBuyItem();
+  const nft = listing.edges?.nft_accessory || listing.edges?.nft_moment;
   const seller = listing.edges?.seller;
-  
-  const isOwner = user?.loggedIn && seller?.address && (user.addr === seller.address);
 
+  const isOwner = user?.loggedIn && seller?.address && (user.addr === seller.address);
+  const nftTypeID = listing.edges?.nft_accessory ? "A.f8d6e0586b0a20c7.NFTAccessory.NFT" : "A.f8d6e0586b0a20c7.NFTMoment.NFT";
+  const handleBuy = () => {
+    buy({
+      listingResourceID: listing.listing_id,
+      storefrontAddress: listing.edges?.seller?.address || "",
+      commissionRecipient: null,
+      nftTypeIdentifier: nftTypeID,
+    });
+  };
   return (
     <div className="
       group relative flex flex-col 
@@ -73,30 +81,30 @@ export default function ListingCard({ listing, onBuy, isBuying }: ListingCardPro
           </div>
 
           {/* BUY BUTTON */}
-{/* 4. BUY BUTTON (Logika Disable) */}
-             <Button
-                onClick={() => onBuy(listing.listing_id, listing.price)}
-                disabled={isBuying || Boolean(isOwner)} // Disable jika buying ATAU owner
-                className={`
+          {/* 4. BUY BUTTON (Logika Disable) */}
+          <Button
+            onClick={handleBuy}
+            disabled={isBuyingItem || Boolean(isOwner)} // Disable jika buying ATAU owner
+            className={`
                     font-black font-pixel text-xs h-10 px-4 rounded-lg transition-all flex items-center gap-2
-                    ${isOwner 
-                        ? "bg-gray-800 text-gray-500 border border-gray-700 cursor-not-allowed" // Style Disabled
-                        : "bg-white text-black hover:bg-green-500 hover:text-white shadow-[2px_2px_0px_0px_#22c55e] active:translate-y-1 active:shadow-none" // Style Active
-                    }
+                    ${isOwner
+                ? "bg-gray-800 text-gray-500 border border-gray-700 cursor-not-allowed" // Style Disabled
+                : "bg-white text-black hover:bg-green-500 hover:text-white shadow-[2px_2px_0px_0px_#22c55e] active:translate-y-1 active:shadow-none" // Style Active
+              }
                 `}
-             >
-                {isBuying ? (
-                    "..."
-                ) : isOwner ? (
-                    // Tampilan jika Owner
-                    <>
-                        <Ban size={14} /> OWNED
-                    </>
-                ) : (
-                    // Tampilan jika Pembeli
-                    <ShoppingCart size={16} />
-                )}
-             </Button>
+          >
+            {isBuyingItem ? (
+              "..."
+            ) : isOwner ? (
+              // Tampilan jika Owner
+              <>
+                <Ban size={14} /> OWNED
+              </>
+            ) : (
+              // Tampilan jika Pembeli
+              <ShoppingCart size={16} />
+            )}
+          </Button>
         </div>
       </div>
 

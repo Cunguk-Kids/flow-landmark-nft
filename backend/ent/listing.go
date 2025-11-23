@@ -25,6 +25,8 @@ type Listing struct {
 	Price float64 `json:"price,omitempty"`
 	// PaymentVaultType holds the value of the "payment_vault_type" field.
 	PaymentVaultType string `json:"payment_vault_type,omitempty"`
+	// NftTypeID holds the value of the "nft_type_id" field.
+	NftTypeID string `json:"nft_type_id,omitempty"`
 	// CustomID holds the value of the "custom_id" field.
 	CustomID *string `json:"custom_id,omitempty"`
 	// Expiry holds the value of the "expiry" field.
@@ -78,7 +80,7 @@ func (*Listing) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullFloat64)
 		case listing.FieldID, listing.FieldListingID:
 			values[i] = new(sql.NullInt64)
-		case listing.FieldPaymentVaultType, listing.FieldCustomID:
+		case listing.FieldPaymentVaultType, listing.FieldNftTypeID, listing.FieldCustomID:
 			values[i] = new(sql.NullString)
 		case listing.FieldExpiry:
 			values[i] = new(sql.NullTime)
@@ -122,6 +124,12 @@ func (_m *Listing) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field payment_vault_type", values[i])
 			} else if value.Valid {
 				_m.PaymentVaultType = value.String
+			}
+		case listing.FieldNftTypeID:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field nft_type_id", values[i])
+			} else if value.Valid {
+				_m.NftTypeID = value.String
 			}
 		case listing.FieldCustomID:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -197,6 +205,9 @@ func (_m *Listing) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("payment_vault_type=")
 	builder.WriteString(_m.PaymentVaultType)
+	builder.WriteString(", ")
+	builder.WriteString("nft_type_id=")
+	builder.WriteString(_m.NftTypeID)
 	builder.WriteString(", ")
 	if v := _m.CustomID; v != nil {
 		builder.WriteString("custom_id=")

@@ -18,11 +18,6 @@ function Marketplace() {
   const listings = listingsData?.data || [];
   const pagination = listingsData?.pagination;
 
-  // Handler beli (Nanti dihubungkan dengan useBuyItem)
-  const handleBuy = (listingId: number, price: number) => {
-    console.log(`Membeli item ${listingId} seharga ${price} FLOW`);
-  };
-
   return (
     <div className="min-h-screen bg-rpn-dark text-rpn-text font-sans pb-20 selection:bg-green-500 selection:text-black pt-24 px-4 md:px-8">
 
@@ -30,11 +25,11 @@ function Marketplace() {
       <div className="absolute inset-0 opacity-5 pointer-events-none fixed" style={{ backgroundImage: 'linear-gradient(#22c55e 1px, transparent 1px), linear-gradient(90deg, #22c55e 1px, transparent 1px)', backgroundSize: '50px 50px' }} />
 
       <div className="max-w-7xl mx-auto relative z-10">
-        <button 
-            onClick={() => navigate({ to: '/' })}
-            className="md:-left-24 absolute pointer-events-auto bg-rpn-card/80 backdrop-blur-md border border-rpn-blue/30 text-rpn-text p-3 rounded-xl hover:bg-rpn-blue hover:text-white transition-all group shadow-lg z-10"
-          >
-            <ArrowLeft size={24} className="group-hover:-translate-x-1 transition-transform" />
+        <button
+          onClick={() => navigate({ to: '/' })}
+          className="md:-left-24 absolute pointer-events-auto bg-rpn-card/80 backdrop-blur-md border border-rpn-blue/30 text-rpn-text p-3 rounded-xl hover:bg-rpn-blue hover:text-white transition-all group shadow-lg z-10"
+        >
+          <ArrowLeft size={24} className="group-hover:-translate-x-1 transition-transform" />
         </button>
         {/* --- MARKET HEADER --- */}
         <div className="flex flex-col md:flex-row justify-between items-end mb-12 gap-6 border-b-2 border-white/10 pb-8">
@@ -86,7 +81,6 @@ function Marketplace() {
               <ListingCard
                 key={item.listing_id}
                 listing={item}
-                onBuy={handleBuy}
               />
             ))}
           </div>

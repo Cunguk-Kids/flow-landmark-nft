@@ -40,6 +40,12 @@ func (_c *ListingCreate) SetPaymentVaultType(v string) *ListingCreate {
 	return _c
 }
 
+// SetNftTypeID sets the "nft_type_id" field.
+func (_c *ListingCreate) SetNftTypeID(v string) *ListingCreate {
+	_c.mutation.SetNftTypeID(v)
+	return _c
+}
+
 // SetCustomID sets the "custom_id" field.
 func (_c *ListingCreate) SetCustomID(v string) *ListingCreate {
 	_c.mutation.SetCustomID(v)
@@ -125,6 +131,9 @@ func (_c *ListingCreate) check() error {
 	if _, ok := _c.mutation.PaymentVaultType(); !ok {
 		return &ValidationError{Name: "payment_vault_type", err: errors.New(`ent: missing required field "Listing.payment_vault_type"`)}
 	}
+	if _, ok := _c.mutation.NftTypeID(); !ok {
+		return &ValidationError{Name: "nft_type_id", err: errors.New(`ent: missing required field "Listing.nft_type_id"`)}
+	}
 	if _, ok := _c.mutation.Expiry(); !ok {
 		return &ValidationError{Name: "expiry", err: errors.New(`ent: missing required field "Listing.expiry"`)}
 	}
@@ -171,6 +180,10 @@ func (_c *ListingCreate) createSpec() (*Listing, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.PaymentVaultType(); ok {
 		_spec.SetField(listing.FieldPaymentVaultType, field.TypeString, value)
 		_node.PaymentVaultType = value
+	}
+	if value, ok := _c.mutation.NftTypeID(); ok {
+		_spec.SetField(listing.FieldNftTypeID, field.TypeString, value)
+		_node.NftTypeID = value
 	}
 	if value, ok := _c.mutation.CustomID(); ok {
 		_spec.SetField(listing.FieldCustomID, field.TypeString, value)

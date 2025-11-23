@@ -8,3 +8,9 @@ export function cn(...inputs: ClassValue[]) {
 export function formatedDateRange(range: any) {
 
 }
+
+export const cleanFlowType = (typeStr: string) => {
+  return typeStr
+    .replace(/^Type<|>\(\)$/g, '') // Hapus 'Type<' di awal dan '>()' di akhir
+    .replace(/>$/, '');             // Jaga-jaga jika formatnya cuma 'Type<...>'
+};

@@ -2675,6 +2675,7 @@ type ListingMutation struct {
 	price                *float64
 	addprice             *float64
 	payment_vault_type   *string
+	nft_type_id          *string
 	custom_id            *string
 	expiry               *time.Time
 	clearedFields        map[string]struct{}
@@ -2933,6 +2934,42 @@ func (m *ListingMutation) ResetPaymentVaultType() {
 	m.payment_vault_type = nil
 }
 
+// SetNftTypeID sets the "nft_type_id" field.
+func (m *ListingMutation) SetNftTypeID(s string) {
+	m.nft_type_id = &s
+}
+
+// NftTypeID returns the value of the "nft_type_id" field in the mutation.
+func (m *ListingMutation) NftTypeID() (r string, exists bool) {
+	v := m.nft_type_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldNftTypeID returns the old "nft_type_id" field's value of the Listing entity.
+// If the Listing object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ListingMutation) OldNftTypeID(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldNftTypeID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldNftTypeID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldNftTypeID: %w", err)
+	}
+	return oldValue.NftTypeID, nil
+}
+
+// ResetNftTypeID resets all changes to the "nft_type_id" field.
+func (m *ListingMutation) ResetNftTypeID() {
+	m.nft_type_id = nil
+}
+
 // SetCustomID sets the "custom_id" field.
 func (m *ListingMutation) SetCustomID(s string) {
 	m.custom_id = &s
@@ -3130,7 +3167,7 @@ func (m *ListingMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *ListingMutation) Fields() []string {
-	fields := make([]string, 0, 5)
+	fields := make([]string, 0, 6)
 	if m.listing_id != nil {
 		fields = append(fields, listing.FieldListingID)
 	}
@@ -3139,6 +3176,9 @@ func (m *ListingMutation) Fields() []string {
 	}
 	if m.payment_vault_type != nil {
 		fields = append(fields, listing.FieldPaymentVaultType)
+	}
+	if m.nft_type_id != nil {
+		fields = append(fields, listing.FieldNftTypeID)
 	}
 	if m.custom_id != nil {
 		fields = append(fields, listing.FieldCustomID)
@@ -3160,6 +3200,8 @@ func (m *ListingMutation) Field(name string) (ent.Value, bool) {
 		return m.Price()
 	case listing.FieldPaymentVaultType:
 		return m.PaymentVaultType()
+	case listing.FieldNftTypeID:
+		return m.NftTypeID()
 	case listing.FieldCustomID:
 		return m.CustomID()
 	case listing.FieldExpiry:
@@ -3179,6 +3221,8 @@ func (m *ListingMutation) OldField(ctx context.Context, name string) (ent.Value,
 		return m.OldPrice(ctx)
 	case listing.FieldPaymentVaultType:
 		return m.OldPaymentVaultType(ctx)
+	case listing.FieldNftTypeID:
+		return m.OldNftTypeID(ctx)
 	case listing.FieldCustomID:
 		return m.OldCustomID(ctx)
 	case listing.FieldExpiry:
@@ -3212,6 +3256,13 @@ func (m *ListingMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetPaymentVaultType(v)
+		return nil
+	case listing.FieldNftTypeID:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetNftTypeID(v)
 		return nil
 	case listing.FieldCustomID:
 		v, ok := value.(string)
@@ -3320,6 +3371,9 @@ func (m *ListingMutation) ResetField(name string) error {
 		return nil
 	case listing.FieldPaymentVaultType:
 		m.ResetPaymentVaultType()
+		return nil
+	case listing.FieldNftTypeID:
+		m.ResetNftTypeID()
 		return nil
 	case listing.FieldCustomID:
 		m.ResetCustomID()

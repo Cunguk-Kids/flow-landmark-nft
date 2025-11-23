@@ -766,8 +766,8 @@ func ListingAvailable(ctx context.Context, ev flow.Event, client *ent.Client) {
 	// --- PERUBAHAN DI SINI: Validasi Tipe NFT menggunakan 'strings.Contains' ---
 	// (Ganti 'f8d...' dengan alamat Anda jika berbeda,
 	//  tapi sebaiknya cek nama unik kontraknya saja)
-	if !strings.Contains(nftType, ".NFTAccessory.") {
-		log.Printf("Tipe NFT %s bukan 'NFTAccessory', dilewati.", nftType)
+	if !strings.Contains(nftType, ".NFTAccessory.") && !strings.Contains(nftType, ".NFTMoment.") {
+		log.Printf("Tipe NFT %s bukan 'NFTAccessory' atau 'NFTMoment', dilewati.", nftType)
 		return
 	}
 	// --- AKHIR PERUBAHAN ---
@@ -785,6 +785,7 @@ func ListingAvailable(ctx context.Context, ev flow.Event, client *ent.Client) {
 		SetPrice(price).
 		SetExpiry(expiryTime).
 		SetPaymentVaultType(vaultType). // Simpan string tipe vault
+		SetNftTypeID(nftType).          // Simpan tipe NFT
 		SetSeller(sellerUser).
 		SetNftAccessory(nft).
 		Save(ctx)

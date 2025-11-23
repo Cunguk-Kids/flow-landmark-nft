@@ -70,6 +70,11 @@ func PaymentVaultType(v string) predicate.Listing {
 	return predicate.Listing(sql.FieldEQ(FieldPaymentVaultType, v))
 }
 
+// NftTypeID applies equality check predicate on the "nft_type_id" field. It's identical to NftTypeIDEQ.
+func NftTypeID(v string) predicate.Listing {
+	return predicate.Listing(sql.FieldEQ(FieldNftTypeID, v))
+}
+
 // CustomID applies equality check predicate on the "custom_id" field. It's identical to CustomIDEQ.
 func CustomID(v string) predicate.Listing {
 	return predicate.Listing(sql.FieldEQ(FieldCustomID, v))
@@ -223,6 +228,71 @@ func PaymentVaultTypeEqualFold(v string) predicate.Listing {
 // PaymentVaultTypeContainsFold applies the ContainsFold predicate on the "payment_vault_type" field.
 func PaymentVaultTypeContainsFold(v string) predicate.Listing {
 	return predicate.Listing(sql.FieldContainsFold(FieldPaymentVaultType, v))
+}
+
+// NftTypeIDEQ applies the EQ predicate on the "nft_type_id" field.
+func NftTypeIDEQ(v string) predicate.Listing {
+	return predicate.Listing(sql.FieldEQ(FieldNftTypeID, v))
+}
+
+// NftTypeIDNEQ applies the NEQ predicate on the "nft_type_id" field.
+func NftTypeIDNEQ(v string) predicate.Listing {
+	return predicate.Listing(sql.FieldNEQ(FieldNftTypeID, v))
+}
+
+// NftTypeIDIn applies the In predicate on the "nft_type_id" field.
+func NftTypeIDIn(vs ...string) predicate.Listing {
+	return predicate.Listing(sql.FieldIn(FieldNftTypeID, vs...))
+}
+
+// NftTypeIDNotIn applies the NotIn predicate on the "nft_type_id" field.
+func NftTypeIDNotIn(vs ...string) predicate.Listing {
+	return predicate.Listing(sql.FieldNotIn(FieldNftTypeID, vs...))
+}
+
+// NftTypeIDGT applies the GT predicate on the "nft_type_id" field.
+func NftTypeIDGT(v string) predicate.Listing {
+	return predicate.Listing(sql.FieldGT(FieldNftTypeID, v))
+}
+
+// NftTypeIDGTE applies the GTE predicate on the "nft_type_id" field.
+func NftTypeIDGTE(v string) predicate.Listing {
+	return predicate.Listing(sql.FieldGTE(FieldNftTypeID, v))
+}
+
+// NftTypeIDLT applies the LT predicate on the "nft_type_id" field.
+func NftTypeIDLT(v string) predicate.Listing {
+	return predicate.Listing(sql.FieldLT(FieldNftTypeID, v))
+}
+
+// NftTypeIDLTE applies the LTE predicate on the "nft_type_id" field.
+func NftTypeIDLTE(v string) predicate.Listing {
+	return predicate.Listing(sql.FieldLTE(FieldNftTypeID, v))
+}
+
+// NftTypeIDContains applies the Contains predicate on the "nft_type_id" field.
+func NftTypeIDContains(v string) predicate.Listing {
+	return predicate.Listing(sql.FieldContains(FieldNftTypeID, v))
+}
+
+// NftTypeIDHasPrefix applies the HasPrefix predicate on the "nft_type_id" field.
+func NftTypeIDHasPrefix(v string) predicate.Listing {
+	return predicate.Listing(sql.FieldHasPrefix(FieldNftTypeID, v))
+}
+
+// NftTypeIDHasSuffix applies the HasSuffix predicate on the "nft_type_id" field.
+func NftTypeIDHasSuffix(v string) predicate.Listing {
+	return predicate.Listing(sql.FieldHasSuffix(FieldNftTypeID, v))
+}
+
+// NftTypeIDEqualFold applies the EqualFold predicate on the "nft_type_id" field.
+func NftTypeIDEqualFold(v string) predicate.Listing {
+	return predicate.Listing(sql.FieldEqualFold(FieldNftTypeID, v))
+}
+
+// NftTypeIDContainsFold applies the ContainsFold predicate on the "nft_type_id" field.
+func NftTypeIDContainsFold(v string) predicate.Listing {
+	return predicate.Listing(sql.FieldContainsFold(FieldNftTypeID, v))
 }
 
 // CustomIDEQ applies the EQ predicate on the "custom_id" field.

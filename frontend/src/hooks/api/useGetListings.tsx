@@ -9,12 +9,18 @@ export interface ListingData {
   listing_id: number; // ID Resource Listing Flow
   price: number;
   payment_vault_type: string;
+  nft_type_id: string;
   expiry: string;
   edges?: {
     seller?: {
       address: string;
     };
     nft_accessory?: {
+      name: string;
+      thumbnail: string;
+      nft_id: number;
+    };
+    nft_moment?: {
       name: string;
       thumbnail: string;
       nft_id: number;

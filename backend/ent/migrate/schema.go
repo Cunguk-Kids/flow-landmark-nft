@@ -104,6 +104,7 @@ var (
 		{Name: "listing_id", Type: field.TypeUint64, Unique: true},
 		{Name: "price", Type: field.TypeFloat64},
 		{Name: "payment_vault_type", Type: field.TypeString},
+		{Name: "nft_type_id", Type: field.TypeString},
 		{Name: "custom_id", Type: field.TypeString, Nullable: true},
 		{Name: "expiry", Type: field.TypeTime},
 		{Name: "user_listings", Type: field.TypeInt},
@@ -116,7 +117,7 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "listings_users_listings",
-				Columns:    []*schema.Column{ListingsColumns[6]},
+				Columns:    []*schema.Column{ListingsColumns[7]},
 				RefColumns: []*schema.Column{UsersColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
