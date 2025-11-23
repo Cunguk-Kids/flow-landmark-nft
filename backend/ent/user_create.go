@@ -4,8 +4,10 @@ package ent
 
 import (
 	"backend/ent/attendance"
+	"backend/ent/comment"
 	"backend/ent/event"
 	"backend/ent/eventpass"
+	"backend/ent/like"
 	"backend/ent/listing"
 	"backend/ent/nftaccessory"
 	"backend/ent/nftmoment"
@@ -231,6 +233,36 @@ func (_c *UserCreate) AddListings(v ...*Listing) *UserCreate {
 	return _c.AddListingIDs(ids...)
 }
 
+// AddLikeIDs adds the "likes" edge to the Like entity by IDs.
+func (_c *UserCreate) AddLikeIDs(ids ...int) *UserCreate {
+	_c.mutation.AddLikeIDs(ids...)
+	return _c
+}
+
+// AddLikes adds the "likes" edges to the Like entity.
+func (_c *UserCreate) AddLikes(v ...*Like) *UserCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddLikeIDs(ids...)
+}
+
+// AddCommentIDs adds the "comments" edge to the Comment entity by IDs.
+func (_c *UserCreate) AddCommentIDs(ids ...int) *UserCreate {
+	_c.mutation.AddCommentIDs(ids...)
+	return _c
+}
+
+// AddComments adds the "comments" edges to the Comment entity.
+func (_c *UserCreate) AddComments(v ...*Comment) *UserCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddCommentIDs(ids...)
+}
+
 // Mutation returns the UserMutation object of the builder.
 func (_c *UserCreate) Mutation() *UserMutation {
 	return _c.mutation
@@ -435,6 +467,38 @@ func (_c *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(listing.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.LikesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.LikesTable,
+			Columns: []string{user.LikesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(like.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.CommentsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.CommentsTable,
+			Columns: []string{user.CommentsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(comment.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

@@ -1,6 +1,9 @@
 import { TrendingUp, Images, ArrowRight } from 'lucide-react';
+import { useNavigate } from '@tanstack/react-router';
 
 export default function ExploreMomentsCard() {
+  const navigate = useNavigate();
+
   // Fetch moments (using a dummy address or global if API supported it, 
   // but for now we'll use a known address or just show loading/empty state as placeholder)
   // Ideally, we'd have a useExploreMoments hook. 
@@ -41,7 +44,10 @@ export default function ExploreMomentsCard() {
       </div>
 
       {/* 2. Explore Button (Bottom Row - 2x1) */}
-      <div className="col-span-2 relative overflow-hidden group">
+      <div
+        onClick={() => navigate({ to: '/moments' })}
+        className="col-span-2 relative overflow-hidden group"
+      >
         <div className="absolute inset-0 bg-rpn-dark/5 group-hover:bg-rpn-dark/10 transition-colors rounded-xl" />
 
         <div className="relative h-full flex items-center justify-between px-4 py-2 cursor-pointer">

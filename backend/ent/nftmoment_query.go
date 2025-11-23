@@ -3,7 +3,9 @@
 package ent
 
 import (
+	"backend/ent/comment"
 	"backend/ent/eventpass"
+	"backend/ent/like"
 	"backend/ent/nftaccessory"
 	"backend/ent/nftmoment"
 	"backend/ent/predicate"
@@ -29,6 +31,8 @@ type NFTMomentQuery struct {
 	withOwner               *UserQuery
 	withEquippedAccessories *NFTAccessoryQuery
 	withMintedWithPass      *EventPassQuery
+	withLikes               *LikeQuery
+	withComments            *CommentQuery
 	withFKs                 bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
@@ -125,6 +129,50 @@ func (_q *NFTMomentQuery) QueryMintedWithPass() *EventPassQuery {
 			sqlgraph.From(nftmoment.Table, nftmoment.FieldID, selector),
 			sqlgraph.To(eventpass.Table, eventpass.FieldID),
 			sqlgraph.Edge(sqlgraph.O2O, true, nftmoment.MintedWithPassTable, nftmoment.MintedWithPassColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryLikes chains the current query on the "likes" edge.
+func (_q *NFTMomentQuery) QueryLikes() *LikeQuery {
+	query := (&LikeClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(nftmoment.Table, nftmoment.FieldID, selector),
+			sqlgraph.To(like.Table, like.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, nftmoment.LikesTable, nftmoment.LikesColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryComments chains the current query on the "comments" edge.
+func (_q *NFTMomentQuery) QueryComments() *CommentQuery {
+	query := (&CommentClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(nftmoment.Table, nftmoment.FieldID, selector),
+			sqlgraph.To(comment.Table, comment.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, nftmoment.CommentsTable, nftmoment.CommentsColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
@@ -327,6 +375,8 @@ func (_q *NFTMomentQuery) Clone() *NFTMomentQuery {
 		withOwner:               _q.withOwner.Clone(),
 		withEquippedAccessories: _q.withEquippedAccessories.Clone(),
 		withMintedWithPass:      _q.withMintedWithPass.Clone(),
+		withLikes:               _q.withLikes.Clone(),
+		withComments:            _q.withComments.Clone(),
 		// clone intermediate query.
 		sql:  _q.sql.Clone(),
 		path: _q.path,
@@ -363,6 +413,28 @@ func (_q *NFTMomentQuery) WithMintedWithPass(opts ...func(*EventPassQuery)) *NFT
 		opt(query)
 	}
 	_q.withMintedWithPass = query
+	return _q
+}
+
+// WithLikes tells the query-builder to eager-load the nodes that are connected to
+// the "likes" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *NFTMomentQuery) WithLikes(opts ...func(*LikeQuery)) *NFTMomentQuery {
+	query := (&LikeClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withLikes = query
+	return _q
+}
+
+// WithComments tells the query-builder to eager-load the nodes that are connected to
+// the "comments" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *NFTMomentQuery) WithComments(opts ...func(*CommentQuery)) *NFTMomentQuery {
+	query := (&CommentClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withComments = query
 	return _q
 }
 
@@ -445,10 +517,12 @@ func (_q *NFTMomentQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*NF
 		nodes       = []*NFTMoment{}
 		withFKs     = _q.withFKs
 		_spec       = _q.querySpec()
-		loadedTypes = [3]bool{
+		loadedTypes = [5]bool{
 			_q.withOwner != nil,
 			_q.withEquippedAccessories != nil,
 			_q.withMintedWithPass != nil,
+			_q.withLikes != nil,
+			_q.withComments != nil,
 		}
 	)
 	if _q.withOwner != nil || _q.withMintedWithPass != nil {
@@ -493,6 +567,20 @@ func (_q *NFTMomentQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*NF
 	if query := _q.withMintedWithPass; query != nil {
 		if err := _q.loadMintedWithPass(ctx, query, nodes, nil,
 			func(n *NFTMoment, e *EventPass) { n.Edges.MintedWithPass = e }); err != nil {
+			return nil, err
+		}
+	}
+	if query := _q.withLikes; query != nil {
+		if err := _q.loadLikes(ctx, query, nodes,
+			func(n *NFTMoment) { n.Edges.Likes = []*Like{} },
+			func(n *NFTMoment, e *Like) { n.Edges.Likes = append(n.Edges.Likes, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := _q.withComments; query != nil {
+		if err := _q.loadComments(ctx, query, nodes,
+			func(n *NFTMoment) { n.Edges.Comments = []*Comment{} },
+			func(n *NFTMoment, e *Comment) { n.Edges.Comments = append(n.Edges.Comments, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -591,6 +679,68 @@ func (_q *NFTMomentQuery) loadMintedWithPass(ctx context.Context, query *EventPa
 		for i := range nodes {
 			assign(nodes[i], n)
 		}
+	}
+	return nil
+}
+func (_q *NFTMomentQuery) loadLikes(ctx context.Context, query *LikeQuery, nodes []*NFTMoment, init func(*NFTMoment), assign func(*NFTMoment, *Like)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*NFTMoment)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	query.withFKs = true
+	query.Where(predicate.Like(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(nftmoment.LikesColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.nft_moment_likes
+		if fk == nil {
+			return fmt.Errorf(`foreign-key "nft_moment_likes" is nil for node %v`, n.ID)
+		}
+		node, ok := nodeids[*fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "nft_moment_likes" returned %v for node %v`, *fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (_q *NFTMomentQuery) loadComments(ctx context.Context, query *CommentQuery, nodes []*NFTMoment, init func(*NFTMoment), assign func(*NFTMoment, *Comment)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*NFTMoment)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	query.withFKs = true
+	query.Where(predicate.Comment(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(nftmoment.CommentsColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.nft_moment_comments
+		if fk == nil {
+			return fmt.Errorf(`foreign-key "nft_moment_comments" is nil for node %v`, n.ID)
+		}
+		node, ok := nodeids[*fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "nft_moment_comments" returned %v for node %v`, *fk, n.ID)
+		}
+		assign(node, n)
 	}
 	return nil
 }

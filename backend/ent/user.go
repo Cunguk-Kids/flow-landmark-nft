@@ -57,9 +57,13 @@ type UserEdges struct {
 	Attendances []*Attendance `json:"attendances,omitempty"`
 	// Listings holds the value of the listings edge.
 	Listings []*Listing `json:"listings,omitempty"`
+	// Likes holds the value of the likes edge.
+	Likes []*Like `json:"likes,omitempty"`
+	// Comments holds the value of the comments edge.
+	Comments []*Comment `json:"comments,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [6]bool
+	loadedTypes [8]bool
 }
 
 // EventPassesOrErr returns the EventPasses value or an error if the edge
@@ -114,6 +118,24 @@ func (e UserEdges) ListingsOrErr() ([]*Listing, error) {
 		return e.Listings, nil
 	}
 	return nil, &NotLoadedError{edge: "listings"}
+}
+
+// LikesOrErr returns the Likes value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) LikesOrErr() ([]*Like, error) {
+	if e.loadedTypes[6] {
+		return e.Likes, nil
+	}
+	return nil, &NotLoadedError{edge: "likes"}
+}
+
+// CommentsOrErr returns the Comments value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) CommentsOrErr() ([]*Comment, error) {
+	if e.loadedTypes[7] {
+		return e.Comments, nil
+	}
+	return nil, &NotLoadedError{edge: "comments"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -255,6 +277,16 @@ func (_m *User) QueryAttendances() *AttendanceQuery {
 // QueryListings queries the "listings" edge of the User entity.
 func (_m *User) QueryListings() *ListingQuery {
 	return NewUserClient(_m.config).QueryListings(_m)
+}
+
+// QueryLikes queries the "likes" edge of the User entity.
+func (_m *User) QueryLikes() *LikeQuery {
+	return NewUserClient(_m.config).QueryLikes(_m)
+}
+
+// QueryComments queries the "comments" edge of the User entity.
+func (_m *User) QueryComments() *CommentQuery {
+	return NewUserClient(_m.config).QueryComments(_m)
 }
 
 // Update returns a builder for updating this User.

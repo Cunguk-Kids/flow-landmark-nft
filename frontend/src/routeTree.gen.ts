@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SearchRouteImport } from './routes/search'
 import { Route as ProfileRouteImport } from './routes/profile'
+import { Route as MomentsRouteImport } from './routes/moments'
 import { Route as MarketplaceRouteImport } from './routes/marketplace'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
@@ -26,6 +27,11 @@ const SearchRoute = SearchRouteImport.update({
 const ProfileRoute = ProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MomentsRoute = MomentsRouteImport.update({
+  id: '/moments',
+  path: '/moments',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MarketplaceRoute = MarketplaceRouteImport.update({
@@ -63,6 +69,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/marketplace': typeof MarketplaceRoute
+  '/moments': typeof MomentsRoute
   '/profile': typeof ProfileRoute
   '/search': typeof SearchRoute
   '/events/$eventId': typeof EventsEventIdRoute
@@ -73,6 +80,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/marketplace': typeof MarketplaceRoute
+  '/moments': typeof MomentsRoute
   '/profile': typeof ProfileRoute
   '/search': typeof SearchRoute
   '/events/$eventId': typeof EventsEventIdRoute
@@ -84,6 +92,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/marketplace': typeof MarketplaceRoute
+  '/moments': typeof MomentsRoute
   '/profile': typeof ProfileRoute
   '/search': typeof SearchRoute
   '/events/$eventId': typeof EventsEventIdRoute
@@ -96,6 +105,7 @@ export interface FileRouteTypes {
     | '/'
     | '/about'
     | '/marketplace'
+    | '/moments'
     | '/profile'
     | '/search'
     | '/events/$eventId'
@@ -106,6 +116,7 @@ export interface FileRouteTypes {
     | '/'
     | '/about'
     | '/marketplace'
+    | '/moments'
     | '/profile'
     | '/search'
     | '/events/$eventId'
@@ -116,6 +127,7 @@ export interface FileRouteTypes {
     | '/'
     | '/about'
     | '/marketplace'
+    | '/moments'
     | '/profile'
     | '/search'
     | '/events/$eventId'
@@ -127,6 +139,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AboutRoute: typeof AboutRoute
   MarketplaceRoute: typeof MarketplaceRoute
+  MomentsRoute: typeof MomentsRoute
   ProfileRoute: typeof ProfileRoute
   SearchRoute: typeof SearchRoute
   EventsEventIdRoute: typeof EventsEventIdRoute
@@ -148,6 +161,13 @@ declare module '@tanstack/react-router' {
       path: '/profile'
       fullPath: '/profile'
       preLoaderRoute: typeof ProfileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/moments': {
+      id: '/moments'
+      path: '/moments'
+      fullPath: '/moments'
+      preLoaderRoute: typeof MomentsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/marketplace': {
@@ -199,6 +219,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AboutRoute: AboutRoute,
   MarketplaceRoute: MarketplaceRoute,
+  MomentsRoute: MomentsRoute,
   ProfileRoute: ProfileRoute,
   SearchRoute: SearchRoute,
   EventsEventIdRoute: EventsEventIdRoute,

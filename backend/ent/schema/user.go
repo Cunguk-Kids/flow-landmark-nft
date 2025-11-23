@@ -42,5 +42,7 @@ func (User) Edges() []ent.Edge {
 		edge.To("accessories", NFTAccessory.Type),
 		edge.To("attendances", Attendance.Type),
 		edge.To("listings", Listing.Type),
+		edge.To("likes", Like.Type),
+		edge.To("comments", Comment.Type),
 	}
 }

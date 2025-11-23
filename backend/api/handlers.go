@@ -3,8 +3,10 @@ package main
 import (
 	"backend/ent"
 	"backend/ent/attendance"
+	"backend/ent/comment"
 	"backend/ent/event"
 	"backend/ent/eventpass"
+	"backend/ent/like"
 	"backend/ent/listing"
 	"backend/ent/nftaccessory"
 	"backend/ent/nftmoment"
@@ -45,6 +47,11 @@ type APIResponse struct {
 	Data       interface{} `json:"data,omitempty"`
 	Pagination *Pagination `json:"pagination,omitempty"`
 	Error      string      `json:"error,omitempty"`
+}
+
+type MomentResponse struct {
+	*ent.NFTMoment
+	IsLiked bool `json:"is_liked"`
 }
 
 type GetEventsResponse struct {
@@ -137,9 +144,59 @@ func (h *Handler) getMoments(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, APIResponse{Error: err.Error()})
 	}
 
+	// 6.5 Cek 'IsLiked' jika ada viewer
+	viewerAddress := c.QueryParam("viewer")
+	likedMomentIDs := make(map[uint64]bool)
+
+	if viewerAddress != "" {
+		// Cari User ID dari viewer
+		viewer, err := h.DB.User.Query().Where(user.AddressEQ(viewerAddress)).Only(ctx)
+		if err == nil {
+			// Ambil semua ID moment yang di-like user ini, yang ada di list 'moments'
+			// (Optimasi: Filter 'moment_id' IN [moments IDs])
+			var momentIDs []uint64
+			for _, m := range moments {
+				momentIDs = append(momentIDs, m.NftID) // Note: Relasi Like pakai ID internal atau NftID?
+				// Schema Like: edge 'moment' ref 'likes'. Edge pakai ID internal ent.
+				// Jadi kita butuh ID internal moment (m.ID)
+			}
+
+			// Ambil ID internal moment
+			var internalIDs []int
+			for _, m := range moments {
+				internalIDs = append(internalIDs, m.ID)
+			}
+
+			likes, err := h.DB.Like.Query().
+				Where(
+					like.HasUserWith(user.IDEQ(viewer.ID)),
+					like.HasMomentWith(nftmoment.IDIn(internalIDs...)),
+				).
+				WithMoment().
+				All(ctx)
+
+			if err == nil {
+				for _, l := range likes {
+					if l.Edges.Moment != nil {
+						likedMomentIDs[uint64(l.Edges.Moment.ID)] = true
+					}
+				}
+			}
+		}
+	}
+
+	// Mapping ke MomentResponse
+	var data []MomentResponse
+	for _, m := range moments {
+		data = append(data, MomentResponse{
+			NFTMoment: m,
+			IsLiked:   likedMomentIDs[uint64(m.ID)],
+		})
+	}
+
 	// 7. Kembalikan Respon Standar (Terbungkus)
 	response := APIResponse{
-		Data:       moments,
+		Data:       data,
 		Pagination: pagination,
 	}
 	return c.JSON(http.StatusOK, response)
@@ -799,33 +856,23 @@ func (h *Handler) getEventPasses(c echo.Context) error {
 	// (Kita lakukan manual mapping agar swagger konsisten)
 	dtos := make([]*swagdto.DTOEventPass, len(passes))
 	for i, p := range passes {
-
-		// Map Owner
 		var ownerDto *swagdto.DTOUser
 		if p.Edges.Owner != nil {
-			ownerDto = &swagdto.DTOUser{
-				ID:      p.Edges.Owner.ID,
-				Address: p.Edges.Owner.Address,
-			}
+			ownerDto = &swagdto.DTOUser{ID: p.Edges.Owner.ID, Address: p.Edges.Owner.Address}
 		}
 
-		// Map Event
 		var eventDto *swagdto.EventResponse
 		if p.Edges.Event != nil {
 			eventDto = &swagdto.EventResponse{
-				ID:          p.Edges.Event.ID,
-				EventID:     p.Edges.Event.EventID,
-				Name:        p.Edges.Event.Name,
-				Description: p.Edges.Event.Description,
-				Thumbnail:   p.Edges.Event.Thumbnail,
-				Location:    p.Edges.Event.Location,
-				StartDate:   p.Edges.Event.StartDate,
-				Quota:       p.Edges.Event.Quota,
-				// (Edges event tidak perlu deep load di sini untuk hemat resource)
+				ID:        p.Edges.Event.ID,
+				EventID:   p.Edges.Event.EventID,
+				Name:      p.Edges.Event.Name,
+				Thumbnail: p.Edges.Event.Thumbnail,
+				StartDate: p.Edges.Event.StartDate,
+				Quota:     p.Edges.Event.Quota,
 			}
 		}
 
-		// Map Moment (Jika ada)
 		var momentDto *swagdto.MomentResponse
 		if p.Edges.Moment != nil {
 			momentDto = &swagdto.MomentResponse{
@@ -837,9 +884,13 @@ func (h *Handler) getEventPasses(c echo.Context) error {
 		}
 
 		dtos[i] = &swagdto.DTOEventPass{
-			ID:         p.ID,
-			PassID:     p.PassID,
-			IsRedeemed: p.IsUsed,
+			ID:          p.ID,
+			PassID:      p.PassID,
+			Name:        p.Name,
+			Description: p.Description,
+			Thumbnail:   p.Thumbnail,
+			EventType:   p.EventType,
+			IsRedeemed:  p.IsUsed,
 			Edges: swagdto.DTOEventPassEdges{
 				Owner:  ownerDto,
 				Event:  eventDto,
@@ -1186,5 +1237,181 @@ func (h *Handler) searchUsers(c echo.Context) error {
 			CurrentPage: page,
 			PageSize:    pageSize,
 		},
+	})
+}
+
+// @Summary     Toggle Like Moment
+// @Description Like atau Unlike sebuah moment.
+// @Tags        Social
+// @Accept      json
+// @Produce     json
+// @Param       id   path      int  true  "Moment ID (Internal ID)"
+// @Param       user query     string true  "User Address (0x...)"
+// @Success     200 {object} APIResponse "Success"
+// @Router      /moments/{id}/like [post]
+func (h *Handler) toggleLike(c echo.Context) error {
+	ctx := c.Request().Context()
+	idStr := c.Param("id")
+	userAddress := c.QueryParam("user")
+
+	if userAddress == "" {
+		return c.JSON(http.StatusBadRequest, APIResponse{Error: "User address is required"})
+	}
+
+	momentID, err := strconv.Atoi(idStr)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, APIResponse{Error: "Invalid Moment ID"})
+	}
+
+	// 1. Get User ID
+	u, err := h.DB.User.Query().Where(user.AddressEQ(userAddress)).Only(ctx)
+	if err != nil {
+		return c.JSON(http.StatusNotFound, APIResponse{Error: "User not found"})
+	}
+
+	// 2. Check if already liked
+	existingLike, err := h.DB.Like.Query().
+		Where(
+			like.HasUserWith(user.IDEQ(u.ID)),
+			like.HasMomentWith(nftmoment.IDEQ(momentID)),
+		).
+		Only(ctx)
+
+	if err != nil && !ent.IsNotFound(err) {
+		return c.JSON(http.StatusInternalServerError, APIResponse{Error: err.Error()})
+	}
+
+	if existingLike != nil {
+		// Unlike
+		err = h.DB.Like.DeleteOne(existingLike).Exec(ctx)
+		if err != nil {
+			return c.JSON(http.StatusInternalServerError, APIResponse{Error: err.Error()})
+		}
+		return c.JSON(http.StatusOK, APIResponse{Data: map[string]bool{"liked": false}})
+	} else {
+		// Like
+		_, err = h.DB.Like.Create().
+			SetUser(u).
+			SetMomentID(momentID).
+			Save(ctx)
+		if err != nil {
+			return c.JSON(http.StatusInternalServerError, APIResponse{Error: err.Error()})
+		}
+		return c.JSON(http.StatusOK, APIResponse{Data: map[string]bool{"liked": true}})
+	}
+}
+
+// @Summary     Create Comment
+// @Description Membuat komentar baru pada sebuah moment.
+// @Tags        Social
+// @Accept      json
+// @Produce     json
+// @Param       id   path      int  true  "Moment ID (Internal ID)"
+// @Param       body body      CreateCommentRequest true "Comment Content & User Address"
+// @Success     201 {object} APIResponse "Comment created"
+// @Router      /moments/{id}/comments [post]
+func (h *Handler) createComment(c echo.Context) error {
+	ctx := c.Request().Context()
+	idStr := c.Param("id")
+	momentID, err := strconv.Atoi(idStr)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, APIResponse{Error: "Invalid Moment ID"})
+	}
+
+	var req struct {
+		UserAddress string `json:"userAddress"`
+		Content     string `json:"content"`
+	}
+	if err := c.Bind(&req); err != nil {
+		return c.JSON(http.StatusBadRequest, APIResponse{Error: "Invalid request body"})
+	}
+
+	if req.UserAddress == "" || req.Content == "" {
+		return c.JSON(http.StatusBadRequest, APIResponse{Error: "User address and content are required"})
+	}
+
+	// 1. Get User
+	u, err := h.DB.User.Query().Where(user.AddressEQ(req.UserAddress)).Only(ctx)
+	if err != nil {
+		return c.JSON(http.StatusNotFound, APIResponse{Error: "User not found"})
+	}
+
+	// 2. Create Comment
+	comment, err := h.DB.Comment.Create().
+		SetContent(req.Content).
+		SetUser(u).
+		SetMomentID(momentID).
+		Save(ctx)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, APIResponse{Error: err.Error()})
+	}
+
+	return c.JSON(http.StatusCreated, APIResponse{Data: comment})
+}
+
+// @Summary     Get Comments
+// @Description Mengambil daftar komentar untuk sebuah moment.
+// @Tags        Social
+// @Accept      json
+// @Produce     json
+// @Param       id   path      int  true  "Moment ID (Internal ID)"
+// @Param       page query     int  false "Page number"
+// @Param       pageSize query int  false "Page size"
+// @Success     200 {object} APIResponse "List of comments"
+// @Router      /moments/{id}/comments [get]
+func (h *Handler) getComments(c echo.Context) error {
+	ctx := c.Request().Context()
+	idStr := c.Param("id")
+	momentID, err := strconv.Atoi(idStr)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, APIResponse{Error: "Invalid Moment ID"})
+	}
+
+	limit, offset, page, pageSize := getPagination(c)
+
+	query := h.DB.Comment.Query().
+		Where(comment.HasMomentWith(nftmoment.IDEQ(momentID)))
+
+	totalItems, err := query.Count(ctx)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, APIResponse{Error: err.Error()})
+	}
+
+	comments, err := query.
+		WithUser().
+		Limit(limit).
+		Offset(offset).
+		Order(ent.Desc("created_at")).
+		All(ctx)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, APIResponse{Error: err.Error()})
+	}
+
+	var data []map[string]interface{}
+	for _, cm := range comments {
+		userDto := map[string]interface{}{
+			"address":  cm.Edges.User.Address,
+			"nickname": cm.Edges.User.Nickname,
+			"pfp":      cm.Edges.User.Pfp,
+		}
+		data = append(data, map[string]interface{}{
+			"id":         cm.ID,
+			"content":    cm.Content,
+			"created_at": cm.CreatedAt,
+			"user":       userDto,
+		})
+	}
+
+	totalPages := int(math.Ceil(float64(totalItems) / float64(pageSize)))
+	pagination := &Pagination{
+		TotalItems:  totalItems,
+		TotalPages:  totalPages,
+		CurrentPage: page,
+		PageSize:    pageSize,
+	}
+
+	return c.JSON(http.StatusOK, APIResponse{
+		Data:       data,
+		Pagination: pagination,
 	})
 }

@@ -57,6 +57,11 @@ func main() {
 	e.POST("/moment/with-event-pass", h.mintMomentWithEventPass)
 	e.POST("/event/check-in", h.checkInUser)
 
+	// Social Routes
+	e.POST("/moments/:id/like", h.toggleLike)
+	e.POST("/moments/:id/comments", h.createComment)
+	e.GET("/moments/:id/comments", h.getComments)
+
 	log.Println("Server API dimulai di http://localhost:8000")
 	e.Logger.Fatal(e.Start(":8000"))
 }

@@ -36,6 +36,35 @@ var (
 			},
 		},
 	}
+	// CommentsColumns holds the columns for the "comments" table.
+	CommentsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "content", Type: field.TypeString},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "nft_moment_comments", Type: field.TypeInt},
+		{Name: "user_comments", Type: field.TypeInt},
+	}
+	// CommentsTable holds the schema information for the "comments" table.
+	CommentsTable = &schema.Table{
+		Name:       "comments",
+		Columns:    CommentsColumns,
+		PrimaryKey: []*schema.Column{CommentsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "comments_nft_moments_comments",
+				Columns:    []*schema.Column{CommentsColumns[4]},
+				RefColumns: []*schema.Column{NftMomentsColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+			{
+				Symbol:     "comments_users_comments",
+				Columns:    []*schema.Column{CommentsColumns[5]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+	}
 	// EventsColumns holds the columns for the "events" table.
 	EventsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
@@ -95,6 +124,40 @@ var (
 				Columns:    []*schema.Column{EventPassesColumns[8]},
 				RefColumns: []*schema.Column{UsersColumns[0]},
 				OnDelete:   schema.NoAction,
+			},
+		},
+	}
+	// LikesColumns holds the columns for the "likes" table.
+	LikesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "nft_moment_likes", Type: field.TypeInt},
+		{Name: "user_likes", Type: field.TypeInt},
+	}
+	// LikesTable holds the schema information for the "likes" table.
+	LikesTable = &schema.Table{
+		Name:       "likes",
+		Columns:    LikesColumns,
+		PrimaryKey: []*schema.Column{LikesColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "likes_nft_moments_likes",
+				Columns:    []*schema.Column{LikesColumns[2]},
+				RefColumns: []*schema.Column{NftMomentsColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+			{
+				Symbol:     "likes_users_likes",
+				Columns:    []*schema.Column{LikesColumns[3]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "like_user_likes_nft_moment_likes",
+				Unique:  true,
+				Columns: []*schema.Column{LikesColumns[3], LikesColumns[2]},
 			},
 		},
 	}
@@ -168,6 +231,8 @@ var (
 		{Name: "name", Type: field.TypeString},
 		{Name: "description", Type: field.TypeString},
 		{Name: "thumbnail", Type: field.TypeString},
+		{Name: "like_count", Type: field.TypeInt, Default: 0},
+		{Name: "comment_count", Type: field.TypeInt, Default: 0},
 		{Name: "event_pass_moment", Type: field.TypeInt, Unique: true, Nullable: true},
 		{Name: "user_moments", Type: field.TypeInt},
 	}
@@ -179,13 +244,13 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "nft_moments_event_passes_moment",
-				Columns:    []*schema.Column{NftMomentsColumns[5]},
+				Columns:    []*schema.Column{NftMomentsColumns[7]},
 				RefColumns: []*schema.Column{EventPassesColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
 			{
 				Symbol:     "nft_moments_users_moments",
-				Columns:    []*schema.Column{NftMomentsColumns[6]},
+				Columns:    []*schema.Column{NftMomentsColumns[8]},
 				RefColumns: []*schema.Column{UsersColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
@@ -214,8 +279,10 @@ var (
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
 		AttendancesTable,
+		CommentsTable,
 		EventsTable,
 		EventPassesTable,
+		LikesTable,
 		ListingsTable,
 		NftAccessoriesTable,
 		NftMomentsTable,
@@ -226,9 +293,13 @@ var (
 func init() {
 	AttendancesTable.ForeignKeys[0].RefTable = EventsTable
 	AttendancesTable.ForeignKeys[1].RefTable = UsersTable
+	CommentsTable.ForeignKeys[0].RefTable = NftMomentsTable
+	CommentsTable.ForeignKeys[1].RefTable = UsersTable
 	EventsTable.ForeignKeys[0].RefTable = UsersTable
 	EventPassesTable.ForeignKeys[0].RefTable = EventsTable
 	EventPassesTable.ForeignKeys[1].RefTable = UsersTable
+	LikesTable.ForeignKeys[0].RefTable = NftMomentsTable
+	LikesTable.ForeignKeys[1].RefTable = UsersTable
 	ListingsTable.ForeignKeys[0].RefTable = UsersTable
 	NftAccessoriesTable.ForeignKeys[0].RefTable = ListingsTable
 	NftAccessoriesTable.ForeignKeys[1].RefTable = NftMomentsTable

@@ -9,11 +9,17 @@ import (
 // Attendance is the predicate function for attendance builders.
 type Attendance func(*sql.Selector)
 
+// Comment is the predicate function for comment builders.
+type Comment func(*sql.Selector)
+
 // Event is the predicate function for event builders.
 type Event func(*sql.Selector)
 
 // EventPass is the predicate function for eventpass builders.
 type EventPass func(*sql.Selector)
+
+// Like is the predicate function for like builders.
+type Like func(*sql.Selector)
 
 // Listing is the predicate function for listing builders.
 type Listing func(*sql.Selector)

@@ -132,10 +132,14 @@ type GetAccessoriesResponse struct {
 }
 
 type DTOEventPass struct {
-	ID         int               `json:"id"`
-	PassID     uint64            `json:"pass_id"`
-	IsRedeemed bool              `json:"is_redeemed"`
-	Edges      DTOEventPassEdges `json:"edges"`
+	ID          int               `json:"id"`
+	PassID      uint64            `json:"pass_id"`
+	Name        string            `json:"name"`
+	Description string            `json:"description"`
+	Thumbnail   string            `json:"thumbnail"`
+	EventType   uint8             `json:"event_type"`
+	IsRedeemed  bool              `json:"is_redeemed"`
+	Edges       DTOEventPassEdges `json:"edges"`
 }
 type DTOEventPassEdges struct {
 	Owner  *DTOUser        `json:"owner,omitempty"`

@@ -103,7 +103,7 @@ export default function SellItemModal({ isOpen, onClose, onSuccess }: SellItemMo
             {/* STEP 1: SELECT TYPE */}
             {step === 'SELECT_TYPE' && (
                 <div className="grid grid-cols-2 gap-4 h-full pt-4">
-                    <button 
+                    {/* <button
                         onClick={() => handleTypeSelect('MOMENT')}
                         className="bg-rpn-card border-2 border-white/10 hover:border-rpn-blue hover:bg-rpn-blue/10 rounded-xl p-8 flex flex-col items-center justify-center gap-4 transition-all group"
                     >
@@ -111,7 +111,7 @@ export default function SellItemModal({ isOpen, onClose, onSuccess }: SellItemMo
                             <ImageIcon size={32} className="text-rpn-blue" />
                         </div>
                         <span className="font-bold uppercase text-sm">Sell Moment</span>
-                    </button>
+                    </button> */}
 
                     <button 
                          onClick={() => handleTypeSelect('ACCESSORY')}

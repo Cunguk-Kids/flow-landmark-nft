@@ -19,6 +19,8 @@ func (NFTMoment) Fields() []ent.Field {
 		field.String("name"),
 		field.String("description"),
 		field.String("thumbnail"),
+		field.Int("like_count").Default(0),
+		field.Int("comment_count").Default(0),
 	}
 }
 
@@ -36,5 +38,8 @@ func (NFTMoment) Edges() []ent.Edge {
 		edge.From("minted_with_pass", EventPass.Type).
 			Ref("moment").
 			Unique(),
+
+		edge.To("likes", Like.Type),
+		edge.To("comments", Comment.Type),
 	}
 }
