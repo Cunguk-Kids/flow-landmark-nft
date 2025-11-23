@@ -1,10 +1,11 @@
 'use client';
 
 import { type ListingData } from '@/hooks/api/useGetListings';
-import { ShoppingCart, User, Ban } from 'lucide-react';
+import { ShoppingCart, User, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useFlowCurrentUser } from '@onflow/react-sdk';
 import { useBuyItem } from '@/hooks/transactions/useBuyItem';
+import { useCancelListing } from '@/hooks/transactions/useCancelListing';
 
 interface ListingCardProps {
   listing: ListingData;
@@ -13,6 +14,7 @@ interface ListingCardProps {
 export default function ListingCard({ listing }: ListingCardProps) {
   const { user } = useFlowCurrentUser();
   const { buy, isPending: isBuyingItem } = useBuyItem();
+  const { cancelListing, isPending: isCanceling } = useCancelListing();
   const nft = listing.edges?.nft_accessory || listing.edges?.nft_moment;
   const seller = listing.edges?.seller;
 
@@ -26,6 +28,14 @@ export default function ListingCard({ listing }: ListingCardProps) {
       nftTypeIdentifier: nftTypeID,
     });
   };
+
+  const handleCancel = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Jangan trigger onBuy atau navigasi lain
+    if (confirm("Are you sure you want to remove this listing?")) {
+      cancelListing(listing.listing_id);
+    }
+  };
+
   return (
     <div className="
       group relative flex flex-col 
@@ -82,29 +92,39 @@ export default function ListingCard({ listing }: ListingCardProps) {
 
           {/* BUY BUTTON */}
           {/* 4. BUY BUTTON (Logika Disable) */}
-          <Button
-            onClick={handleBuy}
-            disabled={isBuyingItem || Boolean(isOwner)} // Disable jika buying ATAU owner
-            className={`
-                    font-black font-pixel text-xs h-10 px-4 rounded-lg transition-all flex items-center gap-2
-                    ${isOwner
-                ? "bg-gray-800 text-gray-500 border border-gray-700 cursor-not-allowed" // Style Disabled
-                : "bg-white text-black hover:bg-green-500 hover:text-white shadow-[2px_2px_0px_0px_#22c55e] active:translate-y-1 active:shadow-none" // Style Active
-              }
-                `}
-          >
-            {isBuyingItem ? (
-              "..."
-            ) : isOwner ? (
-              // Tampilan jika Owner
-              <>
-                <Ban size={14} /> OWNED
-              </>
-            ) : (
-              // Tampilan jika Pembeli
-              <ShoppingCart size={16} />
-            )}
-          </Button>
+          {isOwner ? (
+            // --- TOMBOL CANCEL (MERAH) ---
+            <Button
+              onClick={handleCancel}
+              disabled={isCanceling}
+              className="
+                        bg-red-500/10 text-red-500 border-2 border-red-500/50
+                        hover:bg-red-500 hover:text-white hover:border-red-500
+                        font-black font-pixel text-[10px] h-10 px-4 rounded-lg 
+                        transition-all flex items-center gap-2
+                    "
+            >
+              {isCanceling ? "..." : <Trash2 size={16} />}
+              {isCanceling ? "" : "DELIST"}
+            </Button>
+          ) : (
+            // --- TOMBOL BUY (HIJAU) ---
+            <Button
+              onClick={handleBuy}
+              disabled={isBuyingItem}
+              className="
+                        bg-white text-black 
+                        hover:bg-green-500 hover:text-white 
+                        font-black font-pixel text-xs h-10 px-4 rounded-lg 
+                        shadow-[2px_2px_0px_0px_#22c55e] 
+                        active:translate-y-1 active:shadow-none
+                        transition-all flex items-center gap-2
+                    "
+            >
+              {isBuyingItem ? "..." : <ShoppingCart size={16} />}
+              {isBuyingItem ? "" : "BUY"}
+            </Button>
+          )}
         </div>
       </div>
 

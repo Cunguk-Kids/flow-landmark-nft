@@ -798,7 +798,7 @@ func ListingAvailable(ctx context.Context, ev flow.Event, client *ent.Client) {
 }
 
 func ListingCompleted(ctx context.Context, ev flow.Event, client *ent.Client) {
-	log.Println("Memproses event ListingCompleted...")
+	log.Println("Memproses event Listing Completed...")
 
 	// --- 1. Parsing Event ---
 	var Fields = ev.Value.FieldsMappedByName()
@@ -810,27 +810,10 @@ func ListingCompleted(ctx context.Context, ev flow.Event, client *ent.Client) {
 		return
 	}
 
-	// Ambil 'purchased'
-	purchasedCadence, err := getCadenceField[cadence.Bool](Fields, "purchased")
-	if err != nil {
-		log.Println("Gagal parsing 'purchased':", err)
-		return
-	}
-
 	// --- 2. Konversi Tipe Go ---
 	listingID := uint64(listingIDCadence)
-	wasPurchased := bool(purchasedCadence)
-
+	log.Println(listingIDCadence.String())
 	// --- 3. Logika Bisnis ---
-
-	// 'ListingCompleted' juga di-emit saat 'unlist' (membatalkan penjualan)
-	// Kita hanya peduli jika 'purchased' adalah 'true'
-	if !wasPurchased {
-		log.Printf("Listing ID %d di-unlist (tidak dibeli), mengabaikan penghapusan.", listingID)
-		// (Anda mungkin ingin 'handler' terpisah untuk 'unlist'
-		//  jika Anda perlu memperbarui 'isListed' flag)
-		return
-	}
 
 	// 4. Temukan 'Listing' di DB
 	// (Ini menggunakan 'ListingIDEQ' dari skema 'Listing' Anda)
@@ -840,19 +823,59 @@ func ListingCompleted(ctx context.Context, ev flow.Event, client *ent.Client) {
 
 	if err != nil {
 		if ent.IsNotFound(err) {
-			log.Printf("Listing ID %d sudah dihapus, dilewati.", listingID)
+			log.Printf("Listing ID %d tidak ditemukan di DB, tidak ada yang perlu dihapus.", listingID)
 		} else {
-			log.Printf("Error query 'Listing' %d: %v", listingID, err)
+			log.Printf("Error saat query Listing %d: %v", listingID, err)
 		}
 		return
 	}
 
-	// 5. HAPUS 'Listing' dari database
+	// 5. Hapus Listing
 	err = client.Listing.DeleteOne(listingRecord).Exec(ctx)
 	if err != nil {
-		log.Printf("Gagal menghapus 'Listing' ID %d: %v", listingID, err)
+		log.Printf("Gagal menghapus Listing ID %d: %v", listingID, err)
 	} else {
-		log.Printf("Berhasil menghapus 'Listing' ID %d (terjual).", listingID)
+		log.Printf("Listing ID %d berhasil dihapus (Completed/Purchased).", listingID)
+	}
+}
+
+func ListingDestroyed(ctx context.Context, ev flow.Event, client *ent.Client) {
+	log.Println("Memproses event ListingDestroyed...")
+
+	// --- 1. Parsing Event ---
+	var Fields = ev.Value.FieldsMappedByName()
+
+	listingIDCadence, err := getCadenceField[cadence.UInt64](Fields, "listingResourceID")
+	if err != nil {
+		log.Println("Gagal parsing 'listingResourceID':", err)
+		return
+	}
+
+	// --- 2. Konversi Tipe Go ---
+	listingID := uint64(listingIDCadence)
+
+	// --- 3. Hapus Listing dari DB ---
+	// Kita cari dulu untuk memastikan ada, lalu hapus.
+	// Atau bisa langsung DeleteFunc dengan Where, tapi DeleteOne lebih aman jika kita ingin log.
+
+	listingRecord, err := client.Listing.Query().
+		Where(listing.ListingIDEQ(listingID)).
+		Only(ctx)
+
+	if err != nil {
+		if ent.IsNotFound(err) {
+			log.Printf("Listing ID %d tidak ditemukan di DB, mungkin sudah dihapus sebelumnya.", listingID)
+		} else {
+			log.Printf("Error saat query Listing %d untuk dihapus: %v", listingID, err)
+		}
+		return
+	}
+
+	err = client.Listing.DeleteOne(listingRecord).Exec(ctx)
+	if err != nil {
+		log.Printf("Gagal menghapus Listing ID %d (Destroyed): %v", listingID, err)
+	} else {
+		log.Printf("Listing ID %d berhasil dihapus karena ResourceDestroyed.", listingID)
 	}
 }
 
