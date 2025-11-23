@@ -1,9 +1,9 @@
 'use client';
 
-import React from 'react';
 import { type ListingData } from '@/hooks/api/useGetListings';
-import { ShoppingCart, User } from 'lucide-react';
+import { ShoppingCart, User, Ban } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useFlowCurrentUser } from '@onflow/react-sdk';
 
 interface ListingCardProps {
   listing: ListingData;
@@ -12,8 +12,11 @@ interface ListingCardProps {
 }
 
 export default function ListingCard({ listing, onBuy, isBuying }: ListingCardProps) {
+  const { user } = useFlowCurrentUser();
   const nft = listing.edges?.nft_accessory;
   const seller = listing.edges?.seller;
+  
+  const isOwner = user?.loggedIn && seller?.address && (user.addr === seller.address);
 
   return (
     <div className="
@@ -70,13 +73,30 @@ export default function ListingCard({ listing, onBuy, isBuying }: ListingCardPro
           </div>
 
           {/* BUY BUTTON */}
-          <Button
-            onClick={() => onBuy(listing.listing_id, listing.price)}
-            disabled={isBuying}
-            className="bg-white text-black hover:bg-green-500 hover:text-white font-black font-pixel text-xs h-10 px-4 rounded-lg shadow-[2px_2px_0px_0px_#22c55e] transition-all active:translate-y-1 active:shadow-none"
-          >
-            {isBuying ? "..." : <ShoppingCart size={16} />}
-          </Button>
+{/* 4. BUY BUTTON (Logika Disable) */}
+             <Button
+                onClick={() => onBuy(listing.listing_id, listing.price)}
+                disabled={isBuying || Boolean(isOwner)} // Disable jika buying ATAU owner
+                className={`
+                    font-black font-pixel text-xs h-10 px-4 rounded-lg transition-all flex items-center gap-2
+                    ${isOwner 
+                        ? "bg-gray-800 text-gray-500 border border-gray-700 cursor-not-allowed" // Style Disabled
+                        : "bg-white text-black hover:bg-green-500 hover:text-white shadow-[2px_2px_0px_0px_#22c55e] active:translate-y-1 active:shadow-none" // Style Active
+                    }
+                `}
+             >
+                {isBuying ? (
+                    "..."
+                ) : isOwner ? (
+                    // Tampilan jika Owner
+                    <>
+                        <Ban size={14} /> OWNED
+                    </>
+                ) : (
+                    // Tampilan jika Pembeli
+                    <ShoppingCart size={16} />
+                )}
+             </Button>
         </div>
       </div>
 
