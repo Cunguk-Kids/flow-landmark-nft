@@ -1,6 +1,6 @@
 package transactions
 
 const (
-	deployerAddress   = "f8d6e0586b0a20c7"
-	NFTTestnetAddress = "f8d6e0586b0a20c7"
+	deployerAddress   = "1bb6b1e0a5170088"
+	NFTTestnetAddress = "631e88ae7f1d7c20"
 )

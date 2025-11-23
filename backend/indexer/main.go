@@ -19,25 +19,25 @@ import (
 )
 
 const (
-	ContractAddress = "f8d6e0586b0a20c7" // Alamat tempat kontrak di-deploy
+	ContractAddress = "1bb6b1e0a5170088" // Alamat tempat kontrak di-deploy
 )
 
 var (
 	FlowCapabilityControllerIssued = "flow.StorageCapabilityControllerIssued"
-	NFTMomentMinted                = "A.f8d6e0586b0a20c7.NFTMoment.Minted"
-	NFTAccessoryMinted             = "A.f8d6e0586b0a20c7.AccessoryPack.AccessoryDistributed"
-	NFTMomentEquipAccessory        = "A.f8d6e0586b0a20c7.NFTMoment.AccessoryEquipped"
-	NFTMomentUnequipAccessory      = "A.f8d6e0586b0a20c7.NFTMoment.AccessoryUnequipped"
-	EventCreated                   = "A.f8d6e0586b0a20c7.EventManager.EventCreated"
-	ProfileUpdated                 = "A.f8d6e0586b0a20c7.UserProfile.ProfileUpdated"
-	UserRegisteredEvent            = "A.f8d6e0586b0a20c7.EventManager.UserRegistered"
-	UserCheckedInEvent             = "A.f8d6e0586b0a20c7.EventManager.UserCheckedIn"
-	EventPassMinted                = "A.f8d6e0586b0a20c7.EventPass.Minted"
-	ListingAvailable               = "A.f8d6e0586b0a20c7.NFTStorefrontV2.ListingAvailable"
-	ListingCompleted               = "A.f8d6e0586b0a20c7.NFTStorefrontV2.ListingCompleted"
-	ListingDestroyed               = "A.f8d6e0586b0a20c7.NFTStorefrontV2.Listing.ResourceDestroyed"
-	NFTDeposited                   = "A.f8d6e0586b0a20c7.NonFungibleToken.Deposited"
-	NFTMomentMintedWithEventPass   = "A.f8d6e0586b0a20c7.NFTMoment.MintedWithEventPass"
+	NFTMomentMinted                = "A.1bb6b1e0a5170088.NFTMoment.Minted"
+	NFTAccessoryMinted             = "A.1bb6b1e0a5170088.AccessoryPack.AccessoryDistributed"
+	NFTMomentEquipAccessory        = "A.1bb6b1e0a5170088.NFTMoment.AccessoryEquipped"
+	NFTMomentUnequipAccessory      = "A.1bb6b1e0a5170088.NFTMoment.AccessoryUnequipped"
+	EventCreated                   = "A.1bb6b1e0a5170088.EventManager.EventCreated"
+	ProfileUpdated                 = "A.1bb6b1e0a5170088.UserProfile.ProfileUpdated"
+	UserRegisteredEvent            = "A.1bb6b1e0a5170088.EventManager.UserRegistered"
+	UserCheckedInEvent             = "A.1bb6b1e0a5170088.EventManager.UserCheckedIn"
+	EventPassMinted                = "A.1bb6b1e0a5170088.EventPass.Minted"
+	ListingAvailable               = "A.2d55b98eb200daef.NFTStorefrontV2.ListingAvailable"
+	ListingCompleted               = "A.2d55b98eb200daef.NFTStorefrontV2.ListingCompleted"
+	ListingDestroyed               = "A.2d55b98eb200daef.NFTStorefrontV2.Listing.ResourceDestroyed"
+	NFTDeposited                   = "A.631e88ae7f1d7c20.NonFungibleToken.Deposited"
+	NFTMomentMintedWithEventPass   = "A.1bb6b1e0a5170088.NFTMoment.MintedWithEventPass"
 )
 
 func main() {
@@ -54,7 +54,7 @@ func main() {
 	}
 
 	grpcClient, err := grpc.NewBaseClient(
-		grpc.EmulatorHost,
+		grpc.TestnetHost,
 		grpcOpts.WithTransportCredentials(insecure.NewCredentials()),
 	)
 
