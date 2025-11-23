@@ -9,6 +9,7 @@ import GachaCard from "@/components/cards/GachaCard";
 import MintMomentCard from "@/components/cards/MintMomentCard";
 import ExploreMomentsCard from "@/components/cards/ExploreMomentsCard";
 import AboutUsCard from "@/components/cards/AboutUsCard";
+import MarketplaceCard from "@/components/cards/MarketplaceCard";
 
 export const Route = createFileRoute("/")({
   component: Index,
@@ -240,27 +241,7 @@ function Index() {
             </div>
           </div>
 
-          {/* Info Card - Different size */}
-          <div className="md:col-span-4 md:row-span-2 card-brutalist bg-card p-8 relative overflow-hidden">
-            <h2 className="text-display text-xl md:text-2xl text-card-foreground mb-4 leading-tight">
-              Comprehensive
-              <br />
-              Programs For Complex
-              <br />
-              Journeys
-            </h2>
-
-            <div className="absolute bottom-6 right-6 w-16 h-16 pixel-pattern text-primary opacity-30" />
-
-            <div className="mt-4 flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
-                <span className="text-xl">📊</span>
-              </div>
-              <span className="inline-block text-sm font-bold text-primary">
-                20% Better Outcomes
-              </span>
-            </div>
-          </div>
+          <MarketplaceCard className="col-span-1 row-span-3 md:col-span-4 md:row-span-2" />
 
           {/* Small CTA Card */}
           {/* 2. LEARN ABOUT US (Tengah) */}
