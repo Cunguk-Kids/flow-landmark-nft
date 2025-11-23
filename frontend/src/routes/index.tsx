@@ -7,6 +7,7 @@ import { useRef } from "react";
 import ProfileCard from "@/components/ProfileCard";
 import GachaCard from "@/components/cards/GachaCard";
 import MintMomentCard from "@/components/cards/MintMomentCard";
+import ExploreMomentsCard from "@/components/cards/ExploreMomentsCard";
 import AboutUsCard from "@/components/cards/AboutUsCard";
 
 export const Route = createFileRoute("/")({
@@ -213,8 +214,6 @@ function FindPeopleHeroCard() {
   )
 }
 
-export default EventsHeroCard;
-
 function Index() {
   return (
     <div className="min-h-screen bg-background p-4 md:p-6">
@@ -230,8 +229,16 @@ function Index() {
           <FindPeopleHeroCard />
           <GachaCard />
 
-          {/* 3. ADD NEW MOMENT (Kanan) */}
-          <MintMomentCard />
+          {/* 3. ADD NEW MOMENT & EXPLORE (Kanan - 2x2 Grid) */}
+          <div className="col-span-1 row-span-2 md:col-span-2 md:row-span-2 card-brutalist bg-white p-2 md:p-3 relative overflow-hidden">
+            <div className="grid grid-cols-2 grid-rows-2 gap-2 h-full">
+              {/* (1,1) Mint Moment Button */}
+              <MintMomentCard className="col-span-1 row-span-1 shadow-none border-none" />
+
+              {/* (1,2) & (2,1-2,2) Explore Cards */}
+              <ExploreMomentsCard />
+            </div>
+          </div>
 
           {/* Info Card - Different size */}
           <div className="md:col-span-4 md:row-span-2 card-brutalist bg-card p-8 relative overflow-hidden">

@@ -348,7 +348,7 @@ export default function MintMomentModal({ isOpen, onClose }: MintMomentModalProp
 
           {/* Payment Method Summary */}
           <div className="pt-3 border-t border-white/10 flex justify-between items-center bg-black/20 p-2 rounded">
-            <span className="text-xs text-rpn-muted font-bold uppercase">Payment Method</span>
+            <span className="text-xs text-rpn-muted font-bold uppercase">Method</span>
             {mode === 'FREE' ? (
               <span className="text-xs font-mono text-yellow-400 font-bold flex items-center gap-1 bg-yellow-400/10 px-2 py-1 rounded border border-yellow-400/30">
                 <Gift size={12} /> FREE MINT
