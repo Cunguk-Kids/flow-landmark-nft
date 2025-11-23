@@ -60,7 +60,7 @@ export function useEquipAccessory() {
   const { transactionStatus, error: statusError } = useFlowTransactionStatus({ id: txId });
 
   const isSealed = transactionStatus?.status === 4;
-  const isPending = isMutating || (!!txId && !isSealed);
+  const isPending = isMutating || (!!txId && !isSealed && transactionStatus?.status !== 5);
 
   const equip = (momentID: number, accessoryID: number) => {
     mutate({

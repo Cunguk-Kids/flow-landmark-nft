@@ -37,7 +37,7 @@ export function useCancelListing() {
   const { transactionStatus } = useFlowTransactionStatus({ id: txId });
 
   const isSealed = transactionStatus?.status === 4;
-  const isPending = isCanceling || (!!txId && !isSealed);
+  const isPending = isCanceling || (!!txId && !isSealed && transactionStatus?.status !== 5);
 
   const cancelListing = (listingResourceID: number) => {
     mutate({

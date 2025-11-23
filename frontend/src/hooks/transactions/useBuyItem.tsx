@@ -94,7 +94,7 @@ interface BuyItemArgs {
   storefrontAddress: string;
   commissionRecipient?: string | null;
   // Kita perlu tahu tipe NFT (Aksesori atau Momen) agar transaksi bisa resolve path yang benar
-  nftTypeIdentifier: string; 
+  nftTypeIdentifier: string;
 }
 
 export function useBuyItem() {
@@ -103,13 +103,13 @@ export function useBuyItem() {
   const { transactionStatus, error: statusError } = useFlowTransactionStatus({ id: txId });
 
   const isSealed = transactionStatus?.status === 4;
-  const isPending = isMutating || (!!txId && !isSealed);
+  const isPending = isMutating || (!!txId && !isSealed && transactionStatus?.status !== 5);
 
-  const buy = ({ 
-    listingResourceID, 
-    storefrontAddress, 
-    commissionRecipient = null, 
-    nftTypeIdentifier 
+  const buy = ({
+    listingResourceID,
+    storefrontAddress,
+    commissionRecipient = null,
+    nftTypeIdentifier
   }: BuyItemArgs) => {
     mutate({
       cadence: BUY_ITEM_TX,

@@ -70,7 +70,7 @@ func main() {
 
 	dataCh, errCh, initErr := grpcClient.SubscribeEventsByBlockHeight(
 		ctx,
-		290706056,
+		291752429,
 		flow.EventFilter{
 			EventTypes: []string{
 				NFTMomentMinted, NFTAccessoryMinted, NFTMomentEquipAccessory, NFTMomentUnequipAccessory,

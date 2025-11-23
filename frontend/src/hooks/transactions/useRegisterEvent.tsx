@@ -25,24 +25,24 @@ transaction(eventID: UInt64) {
 
 export function useRegisterEvent() {
   // 1. Setup Mutasi FCL
-  const { 
-    mutate, 
-    data: txId, 
-    isPending: isMutating, 
-    error: txError 
+  const {
+    mutate,
+    data: txId,
+    isPending: isMutating,
+    error: txError
   } = useFlowMutate();
 
   // 2. Setup Status Pemantauan
-  const { 
-    transactionStatus, 
-    error: statusError 
-  } = useFlowTransactionStatus({ 
-    id: txId 
+  const {
+    transactionStatus,
+    error: statusError
+  } = useFlowTransactionStatus({
+    id: txId
   });
 
   // 3. Helper States
   const isSealed = transactionStatus?.status === 4; // 4 = SEALED (Selesai & Aman)
-  const isPending = isMutating || (!!txId && !isSealed); // Loading selama proses
+  const isPending = isMutating || (!!txId && !isSealed && transactionStatus?.status !== 5); // Loading selama proses
   const error = txError || statusError;
 
   // 4. Fungsi Pemicu

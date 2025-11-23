@@ -1,6 +1,8 @@
 'use client';
 
-import { useFlowMutate, useFlowTransactionStatus } from '@onflow/react-sdk';
+import { useFlowMutate, useFlowTransactionStatus, useFlowCurrentUser } from '@onflow/react-sdk';
+import { useQueryClient } from '@tanstack/react-query';
+import { useEffect } from 'react';
 
 const UPDATE_PROFILE_TX = `
 import "UserProfile"
@@ -57,10 +59,19 @@ export interface UpdateProfileDTO {
 }
 
 export function useUpdateProfile() {
-  const { mutate, data: txId, isPending, error: txError, reset } = useFlowMutate();
+  const { mutate, data: txId, isPending: isMutating, error: txError, reset } = useFlowMutate();
   const { transactionStatus, error: statusError } = useFlowTransactionStatus({ id: txId });
+  const { user } = useFlowCurrentUser();
+  const queryClient = useQueryClient();
 
   const isSealed = transactionStatus?.status === 4;
+  const isPending = isMutating || (!!txId && !isSealed && transactionStatus?.status !== 5);
+
+  useEffect(() => {
+    if (isSealed && user?.addr) {
+      queryClient.invalidateQueries({ queryKey: ['user-profile', user.addr] });
+    }
+  }, [isSealed, user?.addr, queryClient]);
 
   const toNullable = (val?: string) => {
     if (!val || val.trim() === '') return null;
@@ -85,11 +96,11 @@ export function useUpdateProfile() {
         arg(toNullable(data.nickname), t.Optional(t.String)),
         arg(toNullable(data.bio), t.Optional(t.String)),
         arg(socialsArg, t.Dictionary({ key: t.String, value: t.String })),
-        
+
         arg(toNullable(data.pfp), t.Optional(t.String)),
         arg(toNullable(data.shortDescription), t.Optional(t.String)),
         arg(toNullable(data.bgImage), t.Optional(t.String)),
-        arg(data.highlightedEventPassIds || [], t.Array(t.Optional(t.UInt64))), 
+        arg(data.highlightedEventPassIds || [], t.Array(t.Optional(t.UInt64))),
         arg(data.momentID, t.Optional(t.UInt64))
       ]
     });

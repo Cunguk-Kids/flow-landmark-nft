@@ -62,7 +62,7 @@ export function useCreateEvent() {
   const { transactionStatus, error: statusError } = useFlowTransactionStatus({ id: txId });
 
   const isSealed = transactionStatus?.status === 4;
-  const isPending = isMutating || (!!txId && !isSealed);
+  const isPending = isMutating || (!!txId && !isSealed && transactionStatus?.status !== 5);
 
   const createEvent = (data: CreateEventDTO) => {
     // Konversi Tipe
@@ -70,7 +70,7 @@ export function useCreateEvent() {
     // Timestamp harus dalam detik (UFix64 format string "123.0")
     const startTs = (data.startDate.getTime() / 1000).toFixed(1);
     const endTs = (data.endDate.getTime() / 1000).toFixed(1);
-    
+
     // Fix64 format string "0.0"
     const latStr = data.lat.toFixed(4);
     const longStr = data.long.toFixed(4);
