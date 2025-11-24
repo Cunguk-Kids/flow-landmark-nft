@@ -3,9 +3,10 @@
 import { useState } from 'react';
 import { Ticket, Plus } from 'lucide-react';
 import HighlightPassModal from '@/components/modals/HighlightPassModal';
+import { useGetEventPassesByIds } from '@/hooks/api/useGetEventPassesByIds';
 
 interface HighlightPassTriggerProps {
-  currentProfile: any; // Gunakan UserProfileData di atas
+  currentProfile: any;
   onSuccess: () => void;
 }
 
@@ -14,12 +15,9 @@ export default function HighlightPassTrigger({ currentProfile, onSuccess }: High
 
   const highlightedIDs = currentProfile?.highlighted_eventPass_ids || [];
 
-  const myPasses = currentProfile?.edges?.event_passes || [];
-
-  const highlightedPasses = highlightedIDs.map((id: any) =>
-    myPasses.find((p: any) => Number(p.pass_id) === Number(id))
-  ).filter(Boolean);
-
+  // Fetch full details untuk highlighted passes
+  const { data: fetchedPasses } = useGetEventPassesByIds(highlightedIDs);
+  const myPasses = fetchedPasses || [];
   return (
     <>
       {/* TRIGGER UI */}
@@ -40,23 +38,23 @@ export default function HighlightPassTrigger({ currentProfile, onSuccess }: High
         {/* GRID 2x2 */}
         <div className="flex-1 bg-rpn-dark/30 rounded-xl border-2 border-dashed border-rpn-blue/10 p-2 flex items-center justify-center relative overflow-hidden">
 
-          {highlightedPasses.length > 0 ? (
+          {myPasses.length > 0 ? (
             <div className="grid grid-cols-2 gap-2 w-full h-full">
               {/* Render Slot 1-4 */}
               {[0, 1, 2, 3].map((i) => {
-                const pass = highlightedPasses[i];
+                const pass = myPasses[i];
                 return (
                   <div key={i} className="aspect-square bg-rpn-card border border-white/5 rounded-lg overflow-hidden relative flex items-center justify-center group/item">
                     {pass ? (
                       <>
                         <img
-                          src={pass.thumbnail}
+                          src={pass.edges?.event?.thumbnail || pass.thumbnail}
                           alt="Badge"
                           className="w-full h-full object-cover"
                         />
                         {/* Tooltip Nama Event */}
                         <div className="absolute bottom-0 left-0 w-full bg-black/60 text-[6px] text-white text-center py-0.5 truncate px-1 opacity-0 group-hover/item:opacity-100 transition-opacity">
-                          {pass.name}
+                          {pass.edges?.event?.name || pass.name}
                         </div>
                       </>
                     ) : (
@@ -80,7 +78,6 @@ export default function HighlightPassTrigger({ currentProfile, onSuccess }: High
       </div>
 
       {/* MODAL */}
-      {/* Kita kirim 'myPasses' langsung ke modal agar tidak perlu fetch lagi */}
       <HighlightPassModal
         isOpen={isOpen}
         onClose={() => setIsOpen(false)}

@@ -41,13 +41,13 @@ const fetchPassesByIds = async (ids: number[]) => {
 
   // OPSI 2: Fetch Parallel (Jika backend belum support bulk filter)
   const promises = ids.map(id =>
-    api.get<PassesResponse>(`/event-passes`, {
-      params: { pass_id: id, pageSize: 1 }
+    api.get<PassesResponse>(`/event-passes/${id}`, {
+      params: { pageSize: 1 }
     }).then(res => res.data.data[0])
   );
 
   const results = await Promise.all(promises);
-  return results.filter(Boolean); // Hapus yang null/undefined
+  return results.filter(Boolean);
 };
 
 export function useGetEventPassesByIds(ids: number[] | undefined) {
