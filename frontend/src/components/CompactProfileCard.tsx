@@ -15,7 +15,6 @@ export default function CompactProfileCard({
   className = "",
   user: initialUser,
 }: CompactProfileCardProps) {
-  console.log(address)
   // 1. Fetch Data Lengkap
   const { data: fetchedProfile, isLoading } = useUserProfile(address);
 
@@ -32,7 +31,6 @@ export default function CompactProfileCard({
   const sourceForIds = fetchedProfile; // Hanya percaya data dari API untuk ID
   const highlightedMomentID = sourceForIds?.highlighted_moment_id ? Number(sourceForIds.highlighted_moment_id) : undefined;
   const highlightedPassIDs = sourceForIds?.highlighted_eventPass_ids || [];
-  console.log(highlightedMomentID)
   const passIdsNum = highlightedPassIDs.map(Number).filter((id: number) => id > 0);
 
   // Fetch Data Featured

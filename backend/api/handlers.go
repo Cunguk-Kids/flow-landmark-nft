@@ -679,19 +679,24 @@ func (h *Handler) getEventByID(c echo.Context) error {
 	}
 
 	isRegistered := false
+	isCheckedIn := false
 
 	// Hanya cek jika viewerAddress dikirim
 	if viewerAddress != "" {
 		// Cek apakah ada 'Attendance' yang menghubungkan Event ini dengan User ini
-		count, _ := h.DB.Attendance.Query().
+		att, err := h.DB.Attendance.Query().
 			Where(
 				attendance.HasEventWith(event.EventIDEQ(ev.EventID)),
 				attendance.HasUserWith(user.AddressEQ(viewerAddress)),
 			).
-			Count(ctx)
+			Only(ctx)
 
-		if count > 0 {
+		if err == nil && att != nil {
 			isRegistered = true
+			// Cek apakah user sudah check-in
+			if att.CheckedIn {
+				isCheckedIn = true
+			}
 		}
 	}
 
@@ -736,6 +741,7 @@ func (h *Handler) getEventByID(c echo.Context) error {
 		EndDate:      ev.EndDate,
 		Quota:        ev.Quota,
 		IsRegistered: isRegistered,
+		IsCheckedIn:  isCheckedIn,
 		Edges: swagdto.EventEdges{
 			Host:        hostResponse,
 			Attendances: attendanceResponses,
@@ -1014,9 +1020,13 @@ func (h *Handler) getEventPassByID(c echo.Context) error {
 	}
 
 	response := &swagdto.DTOEventPass{
-		ID:         p.ID,
-		PassID:     p.PassID,
-		IsRedeemed: p.IsUsed,
+		ID:          p.ID,
+		PassID:      p.PassID,
+		IsRedeemed:  p.IsUsed,
+		Name:        p.Name,
+		Thumbnail:   p.Thumbnail,
+		Description: p.Description,
+		EventType:   p.EventType,
 		Edges: swagdto.DTOEventPassEdges{
 			Owner:  ownerDto,
 			Event:  eventDto,
@@ -1027,76 +1037,6 @@ func (h *Handler) getEventPassByID(c echo.Context) error {
 	return c.JSON(http.StatusOK, swagdto.GetEventPassDetailResponse{
 		Data: response,
 	})
-}
-
-func mapUserToDTO(u *ent.User) *swagdto.DTOUserProfile {
-
-	// 1. Map Moments
-	var moments []*swagdto.MomentResponse
-	for _, m := range u.Edges.Moments {
-		moments = append(moments, &swagdto.MomentResponse{
-			ID:        m.ID,
-			NftID:     m.NftID,
-			Name:      m.Name,
-			Thumbnail: m.Thumbnail,
-			// (Edges moment bisa disederhanakan di sini untuk mencegah circular loop atau load berlebih)
-		})
-	}
-
-	// 2. Map Accessories
-	var accessories []*swagdto.DTOAccessory
-	for _, a := range u.Edges.Accessories {
-		accessories = append(accessories, &swagdto.DTOAccessory{
-			ID:        a.ID,
-			NftID:     a.NftID,
-			Name:      a.Name,
-			Thumbnail: a.Thumbnail,
-		})
-	}
-
-	// 3. Map EventPasses
-	var passes []*swagdto.DTOEventPass
-	for _, p := range u.Edges.EventPasses {
-		passes = append(passes, &swagdto.DTOEventPass{
-			ID:         p.ID,
-			PassID:     p.PassID,
-			IsRedeemed: p.IsUsed,
-		})
-	}
-
-	// 4. Map Hosted Events
-	var hostedEvents []*swagdto.EventResponse
-	for _, e := range u.Edges.HostedEvents {
-		hostedEvents = append(hostedEvents, &swagdto.EventResponse{
-			ID:        e.ID,
-			EventID:   e.EventID,
-			Name:      e.Name,
-			Thumbnail: e.Thumbnail,
-			StartDate: e.StartDate,
-		})
-	}
-
-	// 5. Construct DTO User
-	return &swagdto.DTOUserProfile{
-		ID:                      u.ID,
-		Address:                 u.Address,
-		Nickname:                u.Nickname,
-		Bio:                     u.Bio,
-		Pfp:                     u.Pfp,
-		ShortDescription:        u.ShortDescription,
-		BgImage:                 u.BgImage,
-		HighlightedEventPassIds: u.HighlightedEventPassIds,
-		HighlightedMomentID:     u.HighlightedMomentID,
-		Socials:                 u.Socials,
-		IsFreeMinted:            u.IsFreeMinted,
-		Edges: swagdto.DTOUserProfileEdges{
-			Moments:      moments,
-			Accessories:  accessories,
-			EventPasses:  passes,
-			HostedEvents: hostedEvents,
-			// Listings: ... (tambahkan jika perlu)
-		},
-	}
 }
 
 // --- HANDLERS ---
@@ -1146,16 +1086,12 @@ func (h *Handler) getUsers(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, APIResponse{Error: err.Error()})
 	}
 
-	// Mapping ke DTO
-	dtos := make([]*swagdto.DTOUserProfile, len(users))
-	for i, u := range users {
-		dtos[i] = mapUserToDTO(u)
-	}
+	// Return users directly without DTO mapping
 
 	// Response
-	return c.JSON(http.StatusOK, swagdto.GetUsersResponse{
-		Data: dtos,
-		Pagination: &swagdto.Pagination{
+	return c.JSON(http.StatusOK, APIResponse{
+		Data: users,
+		Pagination: &Pagination{
 			TotalItems:  totalItems,
 			TotalPages:  int(math.Ceil(float64(totalItems) / float64(pageSize))),
 			CurrentPage: page,
@@ -1198,9 +1134,9 @@ func (h *Handler) getUserByAddress(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, APIResponse{Error: err.Error()})
 	}
 
-	// Mapping & Response
-	return c.JSON(http.StatusOK, swagdto.GetUserProfileResponse{
-		Data: mapUserToDTO(u),
+	// Return user directly without DTO mapping
+	return c.JSON(http.StatusOK, APIResponse{
+		Data: u,
 	})
 }
 
@@ -1261,16 +1197,12 @@ func (h *Handler) searchUsers(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, APIResponse{Error: err.Error()})
 	}
 
-	// 5. Mapping ke DTO (Gunakan helper yang sudah kita buat)
-	dtos := make([]*swagdto.DTOUserProfile, len(users))
-	for i, u := range users {
-		dtos[i] = mapUserToDTO(u)
-	}
+	// 5. Return users directly without DTO mapping
 
 	// 6. Return Response
-	return c.JSON(http.StatusOK, swagdto.GetUsersResponse{
-		Data: dtos,
-		Pagination: &swagdto.Pagination{
+	return c.JSON(http.StatusOK, APIResponse{
+		Data: users,
+		Pagination: &Pagination{
 			TotalItems:  totalItems,
 			TotalPages:  int(math.Ceil(float64(totalItems) / float64(pageSize))),
 			CurrentPage: page,

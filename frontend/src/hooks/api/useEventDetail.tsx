@@ -16,6 +16,7 @@ interface GetEventDetailResponse {
     start_date: string;
     quota: number;
     is_registered: boolean;
+    is_checked_in: boolean;
     attendees?: [{
       id: number;
       user_address: string;
@@ -33,12 +34,15 @@ interface GetEventDetailResponse {
   };
 }
 
-const fetchEventById = async (id: string, userAddress: string) => {
+const fetchEventById = async (id: string, userAddress?: string) => {
   try {
     // PANGGIL ENDPOINT SPESIFIK
-    const response = await api.get<GetEventDetailResponse>(
-      `/events/${id}?viewer=${userAddress}`
-    );
+    // Add viewer parameter only if userAddress is provided
+    const url = userAddress
+      ? `/events/${id}?viewer=${userAddress}`
+      : `/events/${id}`;
+
+    const response = await api.get<GetEventDetailResponse>(url);
 
     const ev = response.data.data;
 
@@ -53,6 +57,7 @@ const fetchEventById = async (id: string, userAddress: string) => {
       organizer: ev.edges?.host?.address || "Unknown",
       attendees: ev.edges?.attendances,
       isRegistered: ev.is_registered,
+      isCheckedIn: ev.is_checked_in,
       price: 0,
       quota: ev.quota
     } as UIEvent;
@@ -65,11 +70,11 @@ const fetchEventById = async (id: string, userAddress: string) => {
   }
 };
 
-export function useEventDetail(id: string, userAddress: string) {
+export function useEventDetail(id: string, userAddress?: string) {
   return useQuery({
-    queryKey: ['event-detail', id],
+    queryKey: ['event-detail', id, userAddress],
     queryFn: () => fetchEventById(id, userAddress),
-    enabled: !!id && !!userAddress,
+    enabled: !!id, // Only require id, userAddress is optional
     retry: false, // Jangan retry kalau 404
   });
 }

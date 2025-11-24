@@ -21,7 +21,7 @@ export default function ProfileCard({ className = "", address }: ProfileCardProp
   const targetAddress = address || user?.addr;
   const { data: profile, refetch: refetchProfile } = useUserProfile(targetAddress);
   const { isSealed, setup, isPending: isSetupPending } = useSetupAccount();
-  console.log(profile)
+
   const { triggerTransition } = useTransition();
   const navigate = useNavigate();
   const cardRef = useRef<HTMLDivElement>(null);
@@ -129,8 +129,8 @@ export default function ProfileCard({ className = "", address }: ProfileCardProp
                    =====================================================
                 */}
               <ProfileShowcase
-                highlightedMomentID={profile.highlightedMomentID ? Number(profile.highlightedMomentID) : undefined}
-                highlightedPassIDs={profile.highlightedEventPassIds} // Kirim array ID
+                highlightedMomentID={profile.highlighted_moment_id ? Number(profile.highlighted_moment_id) : undefined}
+                highlightedPassIDs={profile.highlighted_eventPass_ids} // Kirim array ID
               />
 
               {/* TEXT INFO */}

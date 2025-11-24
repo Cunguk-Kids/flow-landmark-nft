@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useUserProfile } from '@/hooks/api/useUserProfile';
+import { useGetEventPassesByIds } from '@/hooks/api/useGetEventPassesByIds';
 import { ArrowLeft, MapPin, Calendar, Share2, Hexagon, Copy, Check, Plus, Ticket, Box } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
@@ -27,6 +28,9 @@ function PublicProfile() {
     setIsCopied(true);
     setTimeout(() => setIsCopied(false), 2000);
   };
+
+  const { data: fetchedPasses } = useGetEventPassesByIds(profile?.highlighted_eventPass_ids);
+  const myPass = fetchedPasses || [];
 
   // --- LOADING STATE ---
   if (isLoading) {
@@ -55,14 +59,6 @@ function PublicProfile() {
 
   // Logic untuk Featured Moment (Read Only)
   const featuredMoment = profile.edges?.moments?.find((m: any) => Number(m.nft_id) === Number(profile.highlighted_moment_id));
-
-  // Logic untuk Featured Passes (Read Only)
-  const highlightedIDs = profile.highlighted_eventPass_ids || [];
-  const myPasses = profile.edges?.event_passes || [];
-  const highlightedPasses = highlightedIDs.map((id: any) =>
-    myPasses.find((p: any) => Number(p.pass_id) === Number(id))
-  ).filter(Boolean);
-
 
   // --- RENDER UTAMA (Sama seperti Profile Sendiri) ---
   return (
@@ -232,21 +228,21 @@ function PublicProfile() {
                   </h3>
                 </div>
                 <div className="flex-1 bg-rpn-dark/30 rounded-xl border-2 border-dashed border-rpn-blue/10 p-2 flex items-center justify-center relative overflow-hidden">
-                  {highlightedPasses.length > 0 ? (
+                  {myPass.length > 0 ? (
                     <div className="grid grid-cols-2 gap-2 w-full h-full">
                       {[0, 1, 2, 3].map((i) => {
-                        const pass = highlightedPasses[i];
+                        const pass = myPass[i];
                         return (
                           <div key={i} className="aspect-square bg-rpn-card border border-white/5 rounded-lg overflow-hidden relative flex items-center justify-center group/item">
                             {pass ? (
                               <>
                                 <img
-                                  src={pass.thumbnail}
+                                  src={pass.edges?.event?.thumbnail || pass.thumbnail}
                                   alt="Badge"
                                   className="w-full h-full object-cover"
                                 />
                                 <div className="absolute bottom-0 left-0 w-full bg-black/60 text-[6px] text-white text-center py-0.5 truncate px-1 opacity-0 group-hover/item:opacity-100 transition-opacity">
-                                  {pass.name}
+                                  {pass.edges?.event?.name || pass.name}
                                 </div>
                               </>
                             ) : (

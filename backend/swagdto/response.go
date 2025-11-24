@@ -42,6 +42,7 @@ type EventResponse struct {
 	EndDate      time.Time  `json:"end_date"`
 	Quota        uint64     `json:"quota"`
 	IsRegistered bool       `json:"is_registered"`
+	IsCheckedIn  bool       `json:"is_checked_in"`
 	Edges        EventEdges `json:"edges"` // <-- Menggunakan struct 'edges' bersih
 }
 

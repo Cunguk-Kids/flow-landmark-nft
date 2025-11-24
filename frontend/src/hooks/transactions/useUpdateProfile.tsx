@@ -89,7 +89,6 @@ export function useUpdateProfile() {
 
     // Konversi ke format Cadence Dictionary { key, value }
     const socialsArg = Object.keys(cleanSocials).map(k => ({ key: k, value: cleanSocials[k] }));
-    console.log(data)
     mutate({
       cadence: UPDATE_PROFILE_TX,
       args: (arg, t) => [

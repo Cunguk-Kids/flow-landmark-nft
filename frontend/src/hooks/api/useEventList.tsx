@@ -55,6 +55,7 @@ export interface UIEvent {
   price: number;    // (Sementara hardcode atau ambil dari logic lain)
   quota: number;
   isRegistered: boolean;
+  isCheckedIn: boolean;
   attendees?: [{
     id: number;
     user_address: string;
@@ -94,6 +95,7 @@ export function useEventList(page: number = 1) {
         price: 0, // (Backend belum kirim harga tiket, asumsi gratis/0 untuk MVP)
         quota: ev.quota,
         isRegistered: false,
+        isCheckedIn: false,
         attendees: ev.edges?.attendances,
       }));
 
