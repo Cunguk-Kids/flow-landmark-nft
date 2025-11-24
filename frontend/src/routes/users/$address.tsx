@@ -17,7 +17,7 @@ function PublicProfile() {
 
   // Fetch data profil orang lain
   const { data: profile, isLoading } = useUserProfile(address);
-  console.log(profile, 'woi')
+
   // State untuk interaksi
   const [isCopied, setIsCopied] = useState(false);
 

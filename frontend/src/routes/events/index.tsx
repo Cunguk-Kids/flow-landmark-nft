@@ -125,7 +125,6 @@ function Events() {
                   transition={{ delay: index * 0.1 }} // Efek muncul berurutan
                 >
                   {/* EventCard menerima data yang sudah di-transformasi oleh Hook */}
-                  {console.log(event, 'woi all')}
                   <EventCard event={event} />
                 </motion.div>
               ))}

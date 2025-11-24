@@ -1014,9 +1014,13 @@ func (h *Handler) getEventPassByID(c echo.Context) error {
 	}
 
 	response := &swagdto.DTOEventPass{
-		ID:         p.ID,
-		PassID:     p.PassID,
-		IsRedeemed: p.IsUsed,
+		ID:          p.ID,
+		PassID:      p.PassID,
+		IsRedeemed:  p.IsUsed,
+		Name:        p.Name,
+		Thumbnail:   p.Thumbnail,
+		Description: p.Description,
+		EventType:   p.EventType,
 		Edges: swagdto.DTOEventPassEdges{
 			Owner:  ownerDto,
 			Event:  eventDto,

@@ -11,7 +11,7 @@ export function EventCard({ event }: EventCardProps) {
   const eventDate = new Date(event.date);
   const month = eventDate.toLocaleString("en-US", { month: "short" }).toUpperCase();
   const day = eventDate.getDate();
-  console.log(event, 'woi')
+
   return (
     <div className="group relative h-full">
       {/* Card Container */}

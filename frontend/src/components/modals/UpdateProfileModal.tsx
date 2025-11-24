@@ -146,7 +146,7 @@ export default function UpdateProfileModal({ currentProfile, onSuccess }: Update
 
     updateProfile(payload);
   };
-  console.log(currentProfile)
+
   return (
     <>
       {/* TOMBOL PEMICU */}

@@ -24,26 +24,12 @@ interface PassesResponse {
 const fetchPassesByIds = async (ids: number[]) => {
   if (ids.length === 0) return [];
 
-  // Kita kirim request dengan multiple ID
-  // Backend harus support ?pass_id_in=1,2,3 atau similar
-  // Atau kita panggil Promise.all jika backend belum support bulk fetch (sementara)
-
-  // OPSI 1: Backend Support Bulk (Ideal)
-  /*
-  const response = await api.get<PassesResponse>(`/event-passes`, {
-    params: {
-      pass_ids: ids.join(','), 
-      pageSize: ids.length
-    }
-  });
-  return response.data.data;
-  */
-
-  // OPSI 2: Fetch Parallel (Jika backend belum support bulk filter)
   const promises = ids.map(id =>
     api.get<PassesResponse>(`/event-passes/${id}`, {
       params: { pageSize: 1 }
-    }).then(res => res.data.data[0])
+    }).then(res => {
+      return res.data.data
+    })
   );
 
   const results = await Promise.all(promises);

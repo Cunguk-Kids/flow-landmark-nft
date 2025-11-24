@@ -18,7 +18,7 @@ function Profile() {
   const navigate = useNavigate();
   const { user } = useFlowCurrentUser();
   const { data: profile, isLoading, refetch } = useUserProfile(user?.addr);
-  console.log(profile)
+
   const handleBack = () => {
     navigate({ to: '/' });
   };
