@@ -33,12 +33,15 @@ interface GetEventDetailResponse {
   };
 }
 
-const fetchEventById = async (id: string, userAddress: string) => {
+const fetchEventById = async (id: string, userAddress?: string) => {
   try {
     // PANGGIL ENDPOINT SPESIFIK
-    const response = await api.get<GetEventDetailResponse>(
-      `/events/${id}?viewer=${userAddress}`
-    );
+    // Add viewer parameter only if userAddress is provided
+    const url = userAddress
+      ? `/events/${id}?viewer=${userAddress}`
+      : `/events/${id}`;
+
+    const response = await api.get<GetEventDetailResponse>(url);
 
     const ev = response.data.data;
 
@@ -65,11 +68,11 @@ const fetchEventById = async (id: string, userAddress: string) => {
   }
 };
 
-export function useEventDetail(id: string, userAddress: string) {
+export function useEventDetail(id: string, userAddress?: string) {
   return useQuery({
-    queryKey: ['event-detail', id],
+    queryKey: ['event-detail', id, userAddress],
     queryFn: () => fetchEventById(id, userAddress),
-    enabled: !!id && !!userAddress,
+    enabled: !!id, // Only require id, userAddress is optional
     retry: false, // Jangan retry kalau 404
   });
 }
