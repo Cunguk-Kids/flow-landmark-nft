@@ -49,7 +49,7 @@ export default function MintMomentModal({ isOpen, onClose }: MintMomentModalProp
   const isMinting = isMintingPass || isMintingFree;
 
   // Filter unused passes
-  const unusedPasses = passesData?.data.filter(p => !p.is_redeemed) || [];
+  const unusedPasses = (passesData?.data || []).filter(p => !p.is_redeemed);
   const selectedPass = unusedPasses.find(p => String(p.pass_id) === selectedPassId);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
