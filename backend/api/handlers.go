@@ -248,6 +248,8 @@ func (h *Handler) getAccessories(c echo.Context) error {
 		query = query.Where(
 			// Filter berdasarkan relasi 'owner'
 			nftaccessory.HasOwnerWith(user.AddressEQ(ownerAddress)),
+			// Filter: HANYA tampilkan yang TIDAK equipped (equipped_on_moment adalah NULL)
+			nftaccessory.Not(nftaccessory.HasEquippedOnMoment()),
 		)
 	}
 	// --- AKHIR LOGIKA BARU ---
