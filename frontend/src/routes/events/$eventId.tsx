@@ -18,7 +18,7 @@ function EventDetailPage() {
   const navigate = useNavigate();
   const { user } = useFlowCurrentUser();
   const { data: event, isLoading, refetch } = useEventDetail(eventId, user?.addr);
-
+  console.log(event, 'woi')
   const {
     register,
     isPending: isRegistering,
@@ -285,10 +285,10 @@ function EventDetailPage() {
                 <div className="space-y-2">
                   <Button
                     onClick={handleCheckIn}
-                    disabled={isCheckingIn || event.attendees?.[0]?.checked_in}
+                    disabled={isCheckingIn || event.isCheckedIn || !event.isRegistered}
                     className={`
                                 w-full h-14 font-black text-lg uppercase rounded-xl shadow-lg transition-all
-                                ${event.attendees?.[0]?.checked_in
+                                ${event.isCheckedIn
                         ? "bg-blue-900/50 text-blue-400 border-2 border-blue-900 cursor-not-allowed hover:bg-blue-900/50 shadow-none"
                         : "bg-rpn-blue hover:bg-white hover:text-rpn-blue text-white"
                       }
@@ -298,7 +298,7 @@ function EventDetailPage() {
                       <span className="flex items-center gap-2">
                         <Loader2 className="animate-spin" /> Checking in...
                       </span>
-                    ) : event.attendees?.[0]?.checked_in ? (
+                    ) : event.isCheckedIn ? (
                       <span className="flex items-center gap-2">
                         <ShieldCheck /> Already Checked In
                       </span>
@@ -307,7 +307,7 @@ function EventDetailPage() {
                     )}
                   </Button>
 
-                  {event.attendees?.[0]?.checked_in && (
+                  {event.isCheckedIn && (
                     <p className="text-xs text-center text-blue-400 font-mono">
                       ✓ You have checked in to this event
                     </p>

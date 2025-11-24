@@ -16,6 +16,7 @@ interface GetEventDetailResponse {
     start_date: string;
     quota: number;
     is_registered: boolean;
+    is_checked_in: boolean;
     attendees?: [{
       id: number;
       user_address: string;
@@ -56,6 +57,7 @@ const fetchEventById = async (id: string, userAddress?: string) => {
       organizer: ev.edges?.host?.address || "Unknown",
       attendees: ev.edges?.attendances,
       isRegistered: ev.is_registered,
+      isCheckedIn: ev.is_checked_in,
       price: 0,
       quota: ev.quota
     } as UIEvent;

@@ -679,19 +679,24 @@ func (h *Handler) getEventByID(c echo.Context) error {
 	}
 
 	isRegistered := false
+	isCheckedIn := false
 
 	// Hanya cek jika viewerAddress dikirim
 	if viewerAddress != "" {
 		// Cek apakah ada 'Attendance' yang menghubungkan Event ini dengan User ini
-		count, _ := h.DB.Attendance.Query().
+		att, err := h.DB.Attendance.Query().
 			Where(
 				attendance.HasEventWith(event.EventIDEQ(ev.EventID)),
 				attendance.HasUserWith(user.AddressEQ(viewerAddress)),
 			).
-			Count(ctx)
+			Only(ctx)
 
-		if count > 0 {
+		if err == nil && att != nil {
 			isRegistered = true
+			// Cek apakah user sudah check-in
+			if att.CheckedIn {
+				isCheckedIn = true
+			}
 		}
 	}
 
@@ -736,6 +741,7 @@ func (h *Handler) getEventByID(c echo.Context) error {
 		EndDate:      ev.EndDate,
 		Quota:        ev.Quota,
 		IsRegistered: isRegistered,
+		IsCheckedIn:  isCheckedIn,
 		Edges: swagdto.EventEdges{
 			Host:        hostResponse,
 			Attendances: attendanceResponses,
